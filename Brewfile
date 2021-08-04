@@ -1,0 +1,2 @@
+# js runtime
+brew "deno"

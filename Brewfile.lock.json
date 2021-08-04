@@ -1,0 +1,47 @@
+{
+  "entries": {
+    "brew": {
+      "deno": {
+        "version": "1.11.4",
+        "bottle": {
+          "rebuild": 0,
+          "root_url": "https://ghcr.io/v2/homebrew/core",
+          "files": {
+            "arm64_big_sur": {
+              "cellar": ":any_skip_relocation",
+              "url": "https://ghcr.io/v2/homebrew/core/deno/blobs/sha256:2e2d8281682670daf1e61cea9024a1b8a422802858648aee70f3f4aae1c56949",
+              "sha256": "2e2d8281682670daf1e61cea9024a1b8a422802858648aee70f3f4aae1c56949"
+            },
+            "big_sur": {
+              "cellar": ":any_skip_relocation",
+              "url": "https://ghcr.io/v2/homebrew/core/deno/blobs/sha256:1262cad5987e51a63e5743e7638ebbc56d51bc507b0316a2e04c07f99c94b998",
+              "sha256": "1262cad5987e51a63e5743e7638ebbc56d51bc507b0316a2e04c07f99c94b998"
+            },
+            "catalina": {
+              "cellar": ":any_skip_relocation",
+              "url": "https://ghcr.io/v2/homebrew/core/deno/blobs/sha256:515b62906fc640c6f9576928c8dd63b3b480b18ecdccfc7f0639e7822ca77352",
+              "sha256": "515b62906fc640c6f9576928c8dd63b3b480b18ecdccfc7f0639e7822ca77352"
+            },
+            "mojave": {
+              "cellar": ":any_skip_relocation",
+              "url": "https://ghcr.io/v2/homebrew/core/deno/blobs/sha256:0865e18da9b868d7fe286ff453b09ca936aefbc37833d46d6aa33e0bf466342a",
+              "sha256": "0865e18da9b868d7fe286ff453b09ca936aefbc37833d46d6aa33e0bf466342a"
+            }
+          }
+        }
+      }
+    }
+  },
+  "system": {
+    "macos": {
+      "big_sur": {
+        "HOMEBREW_VERSION": "3.2.0-126-g83aa3ff",
+        "HOMEBREW_PREFIX": "/usr/local",
+        "Homebrew/homebrew-core": "fd6a13bf9738c0c1490f126e998e87bbcbde3e61",
+        "CLT": "11.3.0.32.62",
+        "Xcode": "12.5.1",
+        "macOS": "11.4"
+      }
+    }
+  }
+}

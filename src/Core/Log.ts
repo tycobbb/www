@@ -8,29 +8,29 @@ enum LogLevel {
 // -- impls --
 export class Log {
   // -- props --
-  private level: LogLevel
+  #level: LogLevel
 
   // -- lifetime --
   constructor(level: LogLevel = LogLevel.Debug) {
-    this.level = level
+    this.#level = level
   }
 
   // -- commands --
   error(...messages: string[]) {
-    this.add(LogLevel.Error, messages)
+    this.#add(LogLevel.Error, messages)
   }
 
   info(...messages: string[]) {
-    this.add(LogLevel.Info, messages)
+    this.#add(LogLevel.Info, messages)
   }
 
   debug(...messages: string[]) {
-    this.add(LogLevel.Debug, messages)
+    this.#add(LogLevel.Debug, messages)
   }
 
   // -- c/helpers
-  private add(level: LogLevel, messages: string[]) {
-    if (level <= this.level) {
+  #add(level: LogLevel, messages: string[]) {
+    if (level <= this.#level) {
       console.log(...messages)
     }
   }

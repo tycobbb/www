@@ -1,6 +1,5 @@
 import { Args, parse } from "https://deno.land/std@0.100.0/flags/mod.ts"
-import { exists } from "https://deno.land/std@0.100.0/fs/mod.ts"
-import { Config, Paths } from "../Domain/mod.ts"
+import { Config, Path, Paths } from "../Domain/mod.ts"
 
 export class Parse {
   // -- props --
@@ -25,16 +24,17 @@ export class Parse {
 
   // -- c/helpers
   async decodePaths(args: Args): Promise<Paths> {
-    const root = args._[0]
-    if (root == null) {
-      return new Paths(".")
+    const path = args._[0]
+    if (path == null) {
+      throw new Error("must provide a path")
     }
 
-    if (typeof root !== "string") {
+    if (typeof path !== "string") {
       throw new Error("path must be a string")
     }
 
-    if (!await exists(root)) {
+    const root = new Path(path)
+    if (!await root.exists()) {
       throw new Error("path must exist")
     }
 

@@ -1,4 +1,3 @@
-import { exists } from "https://deno.land/std@0.100.0/fs/mod.ts"
 import { Paths } from "../Domain/mod.ts"
 import { Action } from "./Action.ts"
 
@@ -14,11 +13,11 @@ export class Clean implements Action {
   // -- commands --
   async call() {
     const dst = this.paths.dst
-    if (!await exists(dst)) {
+    if (!await dst.exists()) {
       return
     }
 
-    await Deno.remove(dst, {
+    await Deno.remove(dst.str, {
       recursive: true
     })
   }

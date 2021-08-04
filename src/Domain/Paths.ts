@@ -1,20 +1,20 @@
-import { join } from "https://deno.land/std@0.100.0/path/mod.ts"
+import { Path } from "./Path.ts"
 
 export class Paths {
   // -- props --
-  private root: string
+  private root: Path
 
   // -- lifetime --
-  constructor(root: string) {
+  constructor(root: Path) {
     this.root = root
   }
 
   // -- queries --
-  get src(): string {
+  get src(): Path {
     return this.root
   }
 
-  get dst(): string {
-    return join(this.root, "dist")
+  get dst(): Path {
+    return this.root.join("dist")
   }
 }

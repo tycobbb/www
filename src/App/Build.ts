@@ -1,6 +1,5 @@
-import { join } from "https://deno.land/std@0.100.0/path/mod.ts"
 import { log } from "../Core/mod.ts"
-import { Paths } from "../Domain/mod.ts"
+import { Paths, Path } from "../Domain/mod.ts"
 import { Action } from "./Action.ts"
 
 export class Build implements Action {
@@ -19,21 +18,21 @@ export class Build implements Action {
     // traverse proj dir
     for await (const files of this.walk([src])) {
       for (const file of files) {
-        log.debug(`- ${file.slice(src.length - 1)}`)
+        log.debug(`- ${file.str.slice(src.length - 1)}`)
       }
     }
   }
 
   // -- queries --
-  private async *walk(dirs: string[]): AsyncIterable<string[]> {
+  private async *walk(dirs: Path[]): AsyncIterable<Path[]> {
     // partition children into dirs and files
     const nodes = []
     const files = []
 
     for (const dir of dirs) {
-      for await (const child of Deno.readDir(dir)) {
-        // build path (TODO: file/path domain obj?)
-        const path = join(dir, child.name)
+      for await (const child of Deno.readDir(dir.str)) {
+        // build path
+        const path = dir.join(child.name)
 
         // add to partition
         if (child.isDirectory) {

@@ -6,11 +6,14 @@ import { Flat } from "../Flat.ts"
 
 // -- impls --
 export class BuildFile {
+  // -- module --
+  static get get(): BuildFile { return new BuildFile() }
+
   // -- deps --
   #cfg: Config
 
   // -- lifetime --
-  constructor(cfg: Config) {
+  constructor(cfg: Config = Config.get) {
     this.#cfg = cfg
   }
 

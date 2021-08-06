@@ -2,12 +2,15 @@ import { Config } from "../Config/mod.ts"
 import { Action } from "./Action.ts"
 
 export class Clean implements Action {
+  // -- module --
+  static get get(): Clean { return new Clean() }
+
   // -- props --
   #cfg: Config
 
   // -- lifetime --
-  constructor(paths: Config) {
-    this.#cfg = paths
+  constructor(cfg = Config.get) {
+    this.#cfg = cfg
   }
 
   // -- commands --

@@ -3,14 +3,17 @@ import { File, Dir, Flat, BuildFile } from "../File/mod.ts"
 import { Action } from "./Action.ts"
 
 export class Build implements Action {
+  // -- module --
+  static get get(): Build { return new Build() }
+
   // -- deps --
   #cfg: Config
   #build: BuildFile
 
   // -- lifetime --
-  constructor(cfg: Config) {
+  constructor(cfg = Config.get, build = BuildFile.get) {
     this.#cfg = cfg
-    this.#build = new BuildFile(cfg)
+    this.#build = build
   }
 
   // -- commands --

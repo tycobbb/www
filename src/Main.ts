@@ -1,14 +1,14 @@
-import { DecodeConfig, Clean, Build } from "./App/mod.ts"
+import { Config, Clean, Build } from "./App/mod.ts"
 
 // -- main --
 async function Main(): Promise<void> {
   // decode config
-  const cfg = await new DecodeConfig(Deno.args).call()
+  await Config.set(Deno.args)
 
   // build list of actions
   const actions = [
-    new Clean(cfg),
-    new Build(cfg)
+    Clean.get,
+    Build.get,
   ]
 
   // run actions sequentially

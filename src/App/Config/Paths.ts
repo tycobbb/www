@@ -1,4 +1,4 @@
-import { Path } from "../Core/mod.ts"
+import { Path } from "../../Core/mod.ts"
 
 export class Paths {
   // -- props --

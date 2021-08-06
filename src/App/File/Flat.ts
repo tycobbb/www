@@ -1,8 +1,8 @@
-import { Path } from "../Core/mod.ts"
+import { Path } from "../../Core/mod.ts"
 
-export class Dir {
+export class Flat {
   // -- kind --
-  readonly kind = "dir"
+  readonly kind = "flat"
 
   // -- props --
   #path: Path

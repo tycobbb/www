@@ -1,9 +1,11 @@
-import { log } from "../Core/mod.ts"
-import { Config, File, Dir } from "../Domain/mod.ts"
-import { Entry } from "./Entry.ts"
+import { log } from "../../../Core/mod.ts"
+import { Config } from "../../Config/mod.ts"
+import { File } from "../File.ts"
+import { Dir } from "../Dir.ts"
+import { Flat } from "../Flat.ts"
 
 // -- impls --
-export class BuildOne {
+export class BuildFile {
   // -- deps --
   #cfg: Config
 
@@ -13,14 +15,14 @@ export class BuildOne {
   }
 
   // -- commands --
-  async call(entry: Entry) {
-    log.debug(`- ${entry.path.str}`)
+  async call(file: File) {
+    log.d(`- ${file.path.str}`)
 
-    switch (entry.kind) {
+    switch (file.kind) {
       case "dir":
-        await this.#addDir(entry); break;
-      case "file":
-        await this.#addFile(entry); break
+        await this.#addDir(file); break;
+      case "flat":
+        await this.#addFlat(file); break
     }
   }
 
@@ -30,8 +32,8 @@ export class BuildOne {
     await dst.mkdir()
   }
 
-  // this would be `FileRepo#add` if it were worth making
-  async #addFile(file: File) {
+  // this would be `FlatRepo#add` if it were worth making
+  async #addFlat(file: File) {
     // use absolute path for symlinks
     const p = this.#cfg.paths
     const src = p.cwd.resolve(file.path)

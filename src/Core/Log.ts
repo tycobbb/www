@@ -16,15 +16,15 @@ export class Log {
   }
 
   // -- commands --
-  error(...messages: string[]) {
+  e(...messages: string[]) {
     this.#add(LogLevel.Error, messages)
   }
 
-  info(...messages: string[]) {
+  i(...messages: string[]) {
     this.#add(LogLevel.Info, messages)
   }
 
-  debug(...messages: string[]) {
+  d(...messages: string[]) {
     this.#add(LogLevel.Debug, messages)
   }
 

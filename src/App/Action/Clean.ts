@@ -1,4 +1,4 @@
-import { Config } from "../Domain/mod.ts"
+import { Config } from "../Config/mod.ts"
 import { Action } from "./Action.ts"
 
 export class Clean implements Action {

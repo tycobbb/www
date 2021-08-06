@@ -1,17 +1,16 @@
-import { Config, File, Dir } from "../Domain/mod.ts"
+import { Config } from "../Config/mod.ts"
+import { File, Dir, Flat, BuildFile } from "../File/mod.ts"
 import { Action } from "./Action.ts"
-import { Entry } from "./Entry.ts"
-import { BuildOne } from "./BuildOne.ts"
 
 export class Build implements Action {
   // -- deps --
   #cfg: Config
-  #build: BuildOne
+  #build: BuildFile
 
   // -- lifetime --
   constructor(cfg: Config) {
     this.#cfg = cfg
-    this.#build = new BuildOne(cfg)
+    this.#build = new BuildFile(cfg)
   }
 
   // -- commands --
@@ -25,18 +24,18 @@ export class Build implements Action {
     const root = new Dir(src)
 
     // traverse proj dir and build every file
-    for await (const entries of this.#walk([root])) {
-      for (const entry of entries) {
-        this.#build.call(entry)
+    for await (const files of this.#walk([root])) {
+      for (const file of files) {
+        this.#build.call(file)
       }
     }
   }
 
   // -- queries --
-  async *#walk(level: Dir[]): AsyncIterable<Entry[]> {
+  async *#walk(level: Dir[]): AsyncIterable<File[]> {
     // partition children into dirs and files
     const nodes: Dir[] = []
-    const files: File[] = []
+    const files: Flat[] = []
 
     // for each dir in the level
     for (const dir of level) {
@@ -52,7 +51,7 @@ export class Build implements Action {
         if (child.isDirectory) {
           nodes.push(new Dir(path))
         } else {
-          files.push(new File(path))
+          files.push(new Flat(path))
         }
       }
     }

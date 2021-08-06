@@ -1,9 +1,9 @@
-import { Parse, Clean, Build } from "./App/mod.ts"
+import { DecodeConfig, Clean, Build } from "./App/mod.ts"
 
 // -- main --
 async function Main(): Promise<void> {
   // decode config
-  const cfg = await new Parse(Deno.args).call()
+  const cfg = await new DecodeConfig(Deno.args).call()
 
   // build list of actions
   const actions = [

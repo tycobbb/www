@@ -1,4 +1,4 @@
-import { detect, EOL } from "https://deno.land/std@0.100.0/fs/mod.ts"
+import { detect } from "https://deno.land/std@0.100.0/fs/mod.ts"
 import { log, run, Path } from "../../Core/mod.ts"
 
 export class ParseIgnores {
@@ -12,9 +12,10 @@ export class ParseIgnores {
 
   // -- command --
   async call(): Promise<Set<string>> {
+    // decode raw paths
     const raw = await this.#decode()
 
-    // sanitize paths
+    // clean raw paths and uniq them
     const uniq = new Set<string>()
 
     for (let path of raw) {

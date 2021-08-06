@@ -3,12 +3,10 @@ import { Path } from "../Core/mod.ts"
 export class Paths {
   // -- props --
   #root: Path
-  #ignores: Set<string>
 
   // -- lifetime --
-  constructor(root: Path, ignores: Set<string>) {
+  constructor(root: Path) {
     this.#root = root
-    this.#ignores = ignores
   }
 
   // -- queries --
@@ -20,8 +18,7 @@ export class Paths {
     return this.#root.join("dist")
   }
 
-  isIgnored(path: Path): boolean {
-    const relative = path.str.slice(this.#root.length - 1)
-    return this.#ignores.has(relative)
+  get cwd(): Path {
+    return new Path(this.#root.str, Deno.cwd())
   }
 }

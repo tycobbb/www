@@ -7,8 +7,8 @@ async function Main(): Promise<void> {
 
   // build list of actions
   const actions = [
-    new Clean(cfg.paths),
-    new Build(cfg.paths)
+    new Clean(cfg),
+    new Build(cfg)
   ]
 
   // run actions sequentially

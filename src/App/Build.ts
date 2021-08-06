@@ -1,30 +1,33 @@
-import { log } from "../Core/mod.ts"
-import { Paths, Entry, File, Dir } from "../Domain/mod.ts"
+import { Config, File, Dir } from "../Domain/mod.ts"
 import { Action } from "./Action.ts"
+import { Entry } from "./Entry.ts"
+import { BuildOne } from "./BuildOne.ts"
 
 export class Build implements Action {
-  // -- props --
-  #paths: Paths
+  // -- deps --
+  #cfg: Config
+  #build: BuildOne
 
   // -- lifetime --
-  constructor(paths: Paths) {
-    this.#paths = paths
+  constructor(cfg: Config) {
+    this.#cfg = cfg
+    this.#build = new BuildOne(cfg)
   }
 
   // -- commands --
   async call() {
-    const { src, dst } = this.#paths
+    const { src, dst } = this.#cfg.paths
 
     // build dist dir
-    await Deno.mkdir(dst.str, { recursive: true })
+    await dst.mkdir()
 
     // construct entry point
-    const root: Dir = { kind: "dir", path: src }
+    const root = new Dir(src)
 
-    // traverse proj dir
-    for await (const files of this.#walk([root])) {
-      for (const file of files) {
-        log.debug(`- ${file.path.str}`)
+    // traverse proj dir and build every file
+    for await (const entries of this.#walk([root])) {
+      for (const entry of entries) {
+        this.#build.call(entry)
       }
     }
   }
@@ -41,15 +44,15 @@ export class Build implements Action {
       for await (const child of dir.path.children()) {
         // if not ignored
         const path = dir.path.join(child.name)
-        if (this.#paths.isIgnored(path)) {
+        if (this.#cfg.isIgnored(path)) {
           continue
         }
 
         // add to partition
         if (child.isDirectory) {
-          nodes.push({ kind: "dir", path })
+          nodes.push(new Dir(path))
         } else {
-          files.push({ kind: "file", path })
+          files.push(new File(path))
         }
       }
     }

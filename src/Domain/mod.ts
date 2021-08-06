@@ -1,4 +1,5 @@
-export { Config } from "./Config.ts"
+export { Config, Environment } from "./Config.ts"
 export { Paths } from "./Paths.ts"
 
-export type { Entry, File, Dir } from "./Entry.ts"
+export { File } from "./File.ts"
+export { Dir } from "./Dir.ts"

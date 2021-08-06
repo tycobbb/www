@@ -1,22 +1,20 @@
-import { Paths } from "../Domain/mod.ts"
+import { Config } from "../Domain/mod.ts"
 import { Action } from "./Action.ts"
 
 export class Clean implements Action {
   // -- props --
-  #paths: Paths
+  #cfg: Config
 
   // -- lifetime --
-  constructor(paths: Paths) {
-    this.#paths = paths
+  constructor(paths: Config) {
+    this.#cfg = paths
   }
 
   // -- commands --
   async call() {
-    const dst = this.#paths.dst
-    if (!await dst.exists()) {
-      return
+    const dst = this.#cfg.paths.dst
+    if (await dst.exists()) {
+      await dst.rm()
     }
-
-    await Deno.remove(dst.str, { recursive: true })
   }
 }

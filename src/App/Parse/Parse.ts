@@ -1,6 +1,6 @@
 import { Args, parse } from "https://deno.land/std@0.100.0/flags/mod.ts"
 import { Path } from "../../Core/mod.ts"
-import { Config, Paths } from "../../Domain/mod.ts"
+import { Config, Environment, Paths } from "../../Domain/mod.ts"
 import { ParseIgnores } from "./ParseIgnores.ts"
 
 export class Parse {
@@ -17,15 +17,25 @@ export class Parse {
     // parse args
     const args = parse(this.#args)
 
-    // decode paths
-    const paths = await this.decodePaths(args)
+    // parse components
+    const env = this.#decodeEnv(args)
+    const paths = await this.#decodePaths(args)
+    const ignores = await this.#decodeIgnores(paths)
 
     // build config
-    return new Config(paths)
+    return new Config(env, paths, ignores)
   }
 
   // -- c/helpers
-  async decodePaths(args: Args): Promise<Paths> {
+  #decodeEnv(args: Args): Environment {
+    if (args.prod || Deno.env.get("PROD") != null) {
+      return Environment.Prod
+    }
+
+    return Environment.Dev
+  }
+
+  async #decodePaths(args: Args): Promise<Paths> {
     // parse root path from cmd line args
     const path = args._[0]
     if (path == null) {
@@ -36,15 +46,17 @@ export class Parse {
       throw new Error("path must be a string")
     }
 
-    const root = new Path(path)
+    const root = Path.base(path)
     if (!await root.exists()) {
       throw new Error("path must exist")
     }
 
-    // parse ignored paths
-    const ignores = await new ParseIgnores(root).call()
-
     // produce paths
-    return new Paths(root, ignores)
+    return new Paths(root)
+  }
+
+  async #decodeIgnores(paths: Paths): Promise<Set<string>> {
+    const parse = new ParseIgnores(paths.src)
+    return await parse.call()
   }
 }

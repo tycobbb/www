@@ -4,15 +4,15 @@ include ./Makefile.base.mk
 help-colw = 7
 
 # -- data --
-ds-src = src
+ds-src = ./src
 ds-root = $(ds-src)/Main.ts
-ds-build = build
+ds-build = ./build
 ds-binary = $(ds-build)/www
 dr-root = ./test/fixtures
 
 # -- tools --
 ts-deno = deno --unstable
-ts-opts = --allow-read --allow-write --allow-run
+ts-opts = --allow-read --allow-write --allow-run --allow-env
 
 ti-brew = brew
 tb-deno = $(ts-deno)

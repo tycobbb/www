@@ -1,2 +1,2 @@
 export { Clean } from "./Clean.ts"
-export { Build } from "./Build.ts"
+export { Scan } from "./Scan.ts"

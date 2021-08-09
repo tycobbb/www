@@ -6,7 +6,7 @@ import { DecodeConfig } from "./Services/mod.ts"
 // -- impls --
 export class Config {
   // -- module --
-  static get get(): Config { return this.#shared }
+  static get = () => this.#shared
 
   // -- props --
   // the execution environment

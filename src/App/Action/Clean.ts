@@ -3,13 +3,13 @@ import { Action } from "./Action.ts"
 
 export class Clean implements Action {
   // -- module --
-  static get get(): Clean { return new Clean() }
+  static get = () => new Clean()
 
   // -- props --
   #cfg: Config
 
   // -- lifetime --
-  constructor(cfg = Config.get) {
+  constructor(cfg = Config.get()) {
     this.#cfg = cfg
   }
 

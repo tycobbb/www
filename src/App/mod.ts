@@ -4,5 +4,5 @@ export {
 
 export {
   Clean,
-  Build
+  Scan
 } from "./Action/mod.ts"

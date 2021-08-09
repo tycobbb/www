@@ -64,7 +64,7 @@ export class Scan implements Action {
           continue
         }
 
-        // partiion directories
+        // partition directories
         if (child.isDirectory) {
           nodes.push({ kind: "dir", path })
           continue

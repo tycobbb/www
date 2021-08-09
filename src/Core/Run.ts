@@ -1,5 +1,5 @@
 // -- queries --
-// runs a command and return the outpout
+// runs a command and return the output
 export async function run(...cmd: string[]): Promise<string> {
   // run child proc
   const proc = Deno.run({ cmd, stdout: "piped" })

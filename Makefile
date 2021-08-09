@@ -17,6 +17,7 @@ ts-opts = --allow-read --allow-write --allow-run --allow-env
 ti-brew = brew
 tb-deno = $(ts-deno)
 tr-deno = $(ts-deno)
+tt-deno = $(ts-deno)
 
 # -- init --
 ## [i]init dev env
@@ -64,3 +65,12 @@ run: r
 r:
 	$(tr-deno) run $(ts-opts) $(ds-root) $(dr-root)
 .PHONY: r
+
+# -- test --
+## run the [t]ests
+test: t
+.PHONY: test
+
+t:
+	$(tt-deno) test $(ts-opts)
+.PHONY: t

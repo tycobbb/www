@@ -29,6 +29,11 @@ export class Path {
     return this.str.length
   }
 
+  // the file extension if one exists
+  extension(): string | null {
+    return this.#path.match(/[^\.]*(\..*)/)?.[1] || null
+  }
+
   // -- operators --
   // add components to the relative path
   join(...components: string[]): Path {

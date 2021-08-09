@@ -4,7 +4,7 @@ import { FileRepo } from "../File/mod.ts"
 import { Action } from "./Action.ts"
 
 type NewFile = {
-  kind: "dir" | "flat",
+  kind: "dir" | "flat" | "page" | "template",
   path: Path
 }
 
@@ -39,6 +39,10 @@ export class Scan implements Action {
             await this.#files.addDir(file.path); break;
           case "flat":
             await this.#files.addFlat(file.path); break;
+          case "page":
+            this.#files.addPage(file.path); break;
+          case "template":
+            this.#files.addTemplate(file.path); break;
         }
       }
     }
@@ -60,11 +64,21 @@ export class Scan implements Action {
           continue
         }
 
-        // add to partition
+        // partiion directories
         if (child.isDirectory) {
           nodes.push({ kind: "dir", path })
-        } else {
-          files.push({ kind: "flat", path })
+          continue
+        }
+
+        // otherwise partition based on file extension
+        const ext = path.extension()
+        switch (ext) {
+          case ".p.html":
+            files.push({ kind: "page", path }); break
+          case ".t.html":
+            files.push({ kind: "template", path }); break
+          default:
+            files.push({ kind: "flat", path }); break
         }
       }
     }

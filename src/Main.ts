@@ -1,4 +1,4 @@
-import { Config, Clean, Scan } from "./App/mod.ts"
+import { Config, Clean, Scan, Build } from "./App/mod.ts"
 
 // -- main --
 async function Main(): Promise<void> {
@@ -9,6 +9,7 @@ async function Main(): Promise<void> {
   const actions = [
     Clean.get(),
     Scan.get(),
+    Build.get(),
   ]
 
   // run actions sequentially

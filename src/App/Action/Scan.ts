@@ -1,6 +1,7 @@
 import { log, Path } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
-import { FileRepo } from "../File/mod.ts"
+import { PageRepo } from "../Page/mod.ts"
+import { CopyDir, CopyFile } from "../File/mod.ts"
 import { Action } from "./Action.ts"
 
 type NewFile = {
@@ -14,10 +15,10 @@ export class Scan implements Action {
 
   // -- deps --
   #cfg: Config
-  #files: FileRepo
+  #files: PageRepo
 
   // -- lifetime --
-  constructor(cfg = Config.get(), files = FileRepo.get()) {
+  constructor(cfg = Config.get(), files = PageRepo.get()) {
     this.#cfg = cfg
     this.#files = files
   }
@@ -36,13 +37,13 @@ export class Scan implements Action {
 
         switch (file.kind) {
           case "dir":
-            await this.#files.addDir(file.path); break;
+            await new CopyDir(file.path).call(); break;
           case "flat":
-            await this.#files.addFlat(file.path); break;
+            await new CopyFile(file.path).call(); break;
           case "page":
             this.#files.addPage(file.path); break;
           case "template":
-            this.#files.addTemplate(file.path); break;
+            this.#files.addLayout(file.path); break;
         }
       }
     }
@@ -75,7 +76,7 @@ export class Scan implements Action {
         switch (ext) {
           case ".p.html":
             files.push({ kind: "page", path }); break
-          case ".t.html":
+          case ".l.html":
             files.push({ kind: "template", path }); break
           default:
             files.push({ kind: "flat", path }); break

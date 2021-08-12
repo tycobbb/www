@@ -29,16 +29,32 @@ export class Path {
     return this.str.length
   }
 
-  // the file extension if one exists
+  // the file extension, if one exists
   extension(): string | null {
-    return this.#path.match(/[^\.]*(\..*)/)?.[1] || null
+    return this.components()?.[1] || null
+  }
+
+  // the [path, extension] of the relative path, if possible
+  components(): [string, string] | null {
+    // if relative part has a path and extension
+    const match = this.#path.match(/([^\.]*)(\..*)/)
+    if (match == null || match.length !== 3) {
+      return null
+    }
+
+    // return them as a tuple
+    return [match[1], match[2]]
   }
 
   // -- operators --
+  // sets the relative part of the path
+  set(path: string): Path {
+    return new Path(path, this.#base)
+  }
+
   // add components to the relative path
   join(...components: string[]): Path {
-    const path = join(this.#path, ...components)
-    return new Path(path, this.#base)
+    return this.set(join(this.#path, ...components))
   }
 
   // resolve relative path against another path
@@ -52,13 +68,18 @@ export class Path {
     return new Path("", str)
   }
 
+  // -- debugging --
+  toString(): string {
+    return this.str
+  }
+
   // -----------------
   // ~~ file system ~~
   // -----------------
 
   // -- commands --
   // copy to the dst path
-  async copy(dst: Path): Promise<void> {
+  async copy(dst: Path) {
     await Deno.copyFile(this.str, dst.str)
   }
 
@@ -66,22 +87,28 @@ export class Path {
   async symlink(
     dst: Path,
     options: Deno.SymlinkOptions = { type: "file" },
-  ): Promise<void> {
+  ) {
     await Deno.symlink(this.str, dst.str, options)
   }
 
   // removes the file; defaults to recursive
   async rm(
     options: Deno.RemoveOptions = { recursive: true },
-  ): Promise<void> {
+  ) {
     await Deno.remove(this.str, options)
   }
 
   // makes a directory; defaults to recursive
   async mkdir(
     options: Deno.MkdirOptions = { recursive: true },
-  ): Promise<void> {
+  ) {
     await Deno.mkdir(this.str, options)
+  }
+
+  // reads the contents of the path as a string
+  async write(text: string) {
+    const data = new TextEncoder().encode(text)
+    await Deno.writeFile(this.str, data)
   }
 
   // -- queries --

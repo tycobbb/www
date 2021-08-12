@@ -11,10 +11,8 @@ export class Config {
   // -- props --
   // the execution environment
   readonly env: Env
-
   // a collection of config paths
   readonly paths: Paths
-
   // the set of ignored paths
   readonly ignored: Set<string>
 

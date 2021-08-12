@@ -21,4 +21,8 @@ export class Paths {
   get cwd(): Path {
     return new Path(this.#root.str, Deno.cwd())
   }
+
+  get layout(): Path {
+    return this.#root.join("main.l.html")
+  }
 }

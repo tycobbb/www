@@ -1,3 +1,2 @@
-export { FileRepo } from "./FileRepo.ts"
-export { Page } from "./Page.ts"
-export { Template } from "./Template.ts"
+export * from "./Services/mod.ts"
+export type { File, FileRef } from "./File.ts"

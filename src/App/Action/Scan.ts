@@ -5,7 +5,7 @@ import { CopyDir, CopyFile } from "../File/mod.ts"
 import { Action } from "./Action.ts"
 
 type NewFile = {
-  kind: "dir" | "flat" | "page" | "template",
+  kind: "dir" | "flat" | "page" | "layout",
   path: Path
 }
 
@@ -40,9 +40,12 @@ export class Scan implements Action {
             await new CopyDir(file.path).call(); break;
           case "flat":
             await new CopyFile(file.path).call(); break;
-          case "page":
+            case "page":
+            // TODO: probably makes more sense to add stuff to a PageGraph than
+            // to a repo at this stage, so we can resolve components later. it's
+            // a factory for pages basically.
             this.#files.addPage(file.path); break;
-          case "template":
+          case "layout":
             this.#files.addLayout(file.path); break;
         }
       }
@@ -77,7 +80,7 @@ export class Scan implements Action {
           case ".p.html":
             files.push({ kind: "page", path }); break
           case ".l.html":
-            files.push({ kind: "template", path }); break
+            files.push({ kind: "layout", path }); break
           default:
             files.push({ kind: "flat", path }); break
         }

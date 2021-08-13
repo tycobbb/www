@@ -1,3 +1,4 @@
+import { Args } from "https://deno.land/std@0.100.0/flags/mod.ts"
 import { Path } from "../../Core/mod.ts"
 import { Env } from "./Env.ts"
 import { Paths } from "./Paths.ts"
@@ -38,7 +39,7 @@ export class Config {
   static #shared: Config
 
   // set the shared config
-  static async set(args: string[]) {
+  static async set(args: Args) {
     this.#shared = await new DecodeConfig(args).call()
   }
 }

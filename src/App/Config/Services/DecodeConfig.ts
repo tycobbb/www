@@ -1,4 +1,4 @@
-import { Args, parse } from "https://deno.land/std@0.100.0/flags/mod.ts"
+import { Args } from "https://deno.land/std@0.100.0/flags/mod.ts"
 import { Path, lines, run } from "../../../Core/mod.ts"
 import { Config } from "../Config.ts"
 import { Env } from "../Env.ts"
@@ -6,21 +6,18 @@ import { Paths } from "../Paths.ts"
 
 export class DecodeConfig {
   // -- props --
-  #args: string[]
+  #args: Args
 
   // -- lifetime --
-  constructor(args: string[]) {
+  constructor(args: Args) {
     this.#args = args
   }
 
   // -- command --
   async call(): Promise<Config> {
-    // parse args
-    const args = parse(this.#args)
-
     // parse components
-    const env = this.#decodeEnv(args)
-    const paths = await this.#decodePaths(args)
+    const env = this.#decodeEnv()
+    const paths = await this.#decodePaths()
     const ignores = await this.#decodeIgnores(paths)
 
     // build config
@@ -28,17 +25,17 @@ export class DecodeConfig {
   }
 
   // -- c/helpers
-  #decodeEnv(args: Args): Env {
-    if (args.prod || Deno.env.get("PROD") != null) {
+  #decodeEnv(): Env {
+    if (this.#args.prod || Deno.env.get("PROD") != null) {
       return Env.Prod
     } else {
       return Env.Dev
     }
   }
 
-  async #decodePaths(args: Args): Promise<Paths> {
+  async #decodePaths(): Promise<Paths> {
     // parse root path from cmd line args
-    const path = args._[0]
+    const path = this.#args._[0]
     if (path == null) {
       throw new Error("must provide a path")
     }

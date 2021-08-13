@@ -22,6 +22,7 @@ export class Page {
   }
 
   // -- commands --
+  // parse the page, matching it to a layout. throws if no layout exists.
   async parse(cfg = Config.get(), files = PageRepo.get()) {
     // read file to string
     const text = await this.#path.read()
@@ -43,34 +44,18 @@ export class Page {
     })()
 
     // parse the partial
-    this.#partial = Partial.parse(text, (doc) => {
-      // for any body elements
-      for (const $body of doc.getElementsByTagName("body")) {
-        const $parent = $body.parentNode
-        if ($parent == null) {
-          throw new Error(`${this.#path}: body had no parent`)
-        }
-
-        // move all of its children into the parent
-        for (const $child of $body.children) {
-          $parent.insertBefore($child, $body)
-        }
-
-        // and remove the body
-        $body.remove()
-      }
-    })
+    this.#partial = Partial.parse(text)
   }
 
+  // compile the page, producing a `File`
   compile(vars: Vars = {}): File {
     if (this.#partial == null || this.#layout == null) {
       throw new Error("must `parse` page before compiling")
     }
 
-    // compile layout & page
-    const text = this.#layout.compile({
-      body: this.#partial.compile(vars)
-    })
+    // bind page and compile into layout
+    const body = this.#partial.bind(vars)
+    const text = this.#layout.compile({ body })
 
     // strip type from extension (e.g. .p.html > .html)
     const parts = this.#path.components()
@@ -82,6 +67,7 @@ export class Page {
     ext = ext.split(".").slice(-1)[0]
     const path = this.#path.set(`${seg}.${ext}`)
 
+    // produce file
     return { path, text }
   }
 }

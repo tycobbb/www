@@ -1,5 +1,6 @@
-import { assert } from "https://deno.land/std@0.103.0/testing/asserts.ts"
+import { assert, assertEquals, assertMatch } from "https://deno.land/std@0.103.0/testing/asserts.ts"
 
+// -- asserts --
 // asserts that the actual string contains the substring
 export function assertIncludes(actual: string, substring: string) {
   assert(actual.includes(substring), `${actual} did not include ${substring}`)
@@ -9,3 +10,6 @@ export function assertIncludes(actual: string, substring: string) {
 export function assertNotIncludes(actual: string, substring: string) {
   assert(!actual.includes(substring), `${actual} included ${substring}`)
 }
+
+// -- reexports --
+export { assert, assertEquals, assertMatch }

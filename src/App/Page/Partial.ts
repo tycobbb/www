@@ -1,10 +1,8 @@
-import {
-  DOMParser,
-  HTMLDocument
-} from "https://deno.land/x/deno_dom@v0.1.13-alpha/deno-dom-wasm.ts"
+import { DOMParser, HTMLDocument, Element } from "https://deno.land/x/deno_dom@v0.1.13-alpha/deno-dom-wasm.ts"
 
 // -- types --
-export type Vars = { [key: string]: string }
+export type Var = string | BoundPartial
+export type Vars = { [key: string]: Var }
 export type Compile = (vars: Vars) => string
 
 // -- impls --
@@ -12,65 +10,106 @@ export type Compile = (vars: Vars) => string
 // and compile the resulting html string
 export class Partial {
   // -- props --
-  #compile: Compile
+  #doc: HTMLDocument
 
   // -- lifetime --
-  constructor(compile: Compile) {
-    this.#compile = compile
+  constructor(doc: HTMLDocument) {
+    this.#doc = doc
   }
 
   // -- commands --
-  // compile the template to a string, substituting any vars
-  compile(vars: Vars): string {
-    return this.#compile(vars)
+  // bind the partial's variables, producing a bound copy
+  bind(vars: Vars = {}): BoundPartial {
+    // get document
+    const $doc = this.$doc()
+
+    // get document head
+    const $head = $doc.querySelector("head")
+    if ($head == null) {
+      throw new Error("document was missing <head>")
+    }
+
+    // extract vars
+    const $vars = this.#doc.getElementsByTagName("v$")
+
+    // substitute all vars
+    for (const $var of $vars) {
+      const val = vars[$var.id]
+
+      // remove missing vars
+      if (val == null) {
+        $var.remove()
+      }
+      // directly substitute strings
+      else if (typeof val === "string") {
+        $var.replaceWith(val)
+      }
+      // merge bound partials
+      else {
+        // get the child doc
+        const $child = val.$doc()
+
+        // merge every child of the head into this document's head
+        const $hcs = $child.querySelector("head")?.children || []
+        for (const $hc of $hcs || []) {
+          $head.appendChild($hc)
+        }
+
+        // replace the var with the children of the body
+        const $bcs = $child.querySelector("body")?.children || []
+        $var.replaceWith(...$bcs)
+      }
+    }
+
+    return new BoundPartial(this.#doc)
+  }
+
+  // get the document element
+  $doc(): Element {
+    const $doc = this.#doc.documentElement
+    if ($doc == null) {
+      throw new Error("could not find document element")
+    }
+
+    return $doc
   }
 
   // -- factories --
   // parse the partial from text content
-  //
-  // - arguments:
-  //   - text: the text content to parse
-  //   - prepare: a fn to modify the doc just after parsing
-  //
-  // - returns: a parsed template
-  static parse(
-    text: string,
-    prepare: ((doc: HTMLDocument) => void) | null = null
-  ): Partial {
+  static parse(text: string): Partial {
     // parse html
     const doc = new DOMParser().parseFromString(text, "text/html")
     if (doc == null) {
       throw new Error("could not parse template")
     }
 
-    // prepare the document, if necessary
-    if (prepare != null) {
-      prepare(doc)
+    return new Partial(doc)
+  }
+}
+
+export class BoundPartial {
+  // -- props --
+  #doc: HTMLDocument
+
+  // -- lifetime --
+  constructor(doc: HTMLDocument) {
+    this.#doc = doc
+  }
+
+  // -- commands --
+  // compile the partial to a string
+  compile(): string {
+    return this.$doc().outerHTML
+  }
+
+  // -- queries --
+  // get the document element
+  $doc(): Element {
+    const $doc = this.#doc.documentElement
+    if ($doc == null) {
+      throw new Error("could not find document element")
     }
 
-    // extract vars
-    const $vars = doc.getElementsByTagName("v$")
-
-    // build template
-    return new Partial((vars) => {
-      // substitute all vars
-      for (const $var of $vars) {
-        const val = vars[$var.id]
-
-        if (val == null) {
-          $var.remove()
-        } else {
-          $var.replaceWith(val)
-        }
-      }
-
-      // convert to string
-      const $doc = doc.documentElement
-      if ($doc == null) {
-        throw new Error("could not find document element")
-      }
-
-      return $doc.outerHTML
-    })
+    return $doc
   }
 }

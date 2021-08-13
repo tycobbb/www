@@ -13,6 +13,7 @@ export class Layout {
   }
 
   // -- commands --
+  // parse the layout
   async parse() {
     // read file to string
     const text = await this.#path.read()
@@ -21,11 +22,12 @@ export class Layout {
     this.#partial = Partial.parse(text)
   }
 
+  // compile the layout, producing an html string
   compile(vars: Vars): string {
     if (this.#partial == null) {
       throw new Error("must `parse` layout before compiling")
     }
 
-    return this.#partial.compile(vars)
+    return this.#partial.bind(vars).compile()
   }
 }

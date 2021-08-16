@@ -1,5 +1,5 @@
 import { Cli } from "./Cli/mod.ts"
-import { Config, Clean, Scan, Build } from "./App/mod.ts"
+import { Config, Action, Clean, Scan, Build, Watch } from "./App/mod.ts"
 
 // -- main --
 async function Main(): Promise<void> {
@@ -15,11 +15,18 @@ async function Main(): Promise<void> {
   await Config.set(cli.args)
 
   // build list of actions
-  const actions = [
+  const actions: Action[] = [
     Clean.get(),
     Scan.get(),
     Build.get(),
   ]
+
+  // add server actions if up
+  if (cli.isUp) {
+    actions.push(
+      Watch.get()
+    )
+  }
 
   // run actions sequentially
   for (const action of actions) {

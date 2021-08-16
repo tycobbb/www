@@ -1,5 +1,4 @@
-import { join } from "https://deno.land/std@0.100.0/path/mod.ts"
-import { exists } from "https://deno.land/std@0.100.0/fs/mod.ts"
+import { join, relative } from "https://deno.land/std@0.100.0/path/mod.ts"
 
 // a file path relative path support and file system methods
 export class Path {
@@ -57,9 +56,14 @@ export class Path {
     return this.set(join(this.#path, ...components))
   }
 
-  // resolve relative path against another path
-  resolve(path: Path): Path {
+  // rebase relative path against this path
+  rebase(path: Path): Path {
     return new Path(path.#path, this.str)
+  }
+
+  // resolves the string as a path relative to this path
+  resolve(path: string) {
+    return new Path(relative(this.str, path), this.str)
   }
 
   // -- factories --
@@ -112,9 +116,22 @@ export class Path {
   }
 
   // -- queries --
-  // checks if something exists at this path
+  // checks if a file exists at this path
   async exists(): Promise<boolean> {
-    return await exists(this.str)
+    return await this.stat() != null
+  }
+
+  // gets the file info for this path, if a file exists
+  async stat(): Promise<Deno.FileInfo | null> {
+    try {
+      return await Deno.lstat(this.str)
+    } catch (err) {
+      if (err instanceof Deno.errors.NotFound) {
+        return null
+      }
+
+      throw err
+    }
   }
 
   // reads the contents of the path as a string

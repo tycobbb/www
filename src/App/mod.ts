@@ -1,9 +1,2 @@
-export {
-  Config,
-} from "./Config/mod.ts"
-
-export {
-  Clean,
-  Scan,
-  Build
-} from "./Action/mod.ts"
+export * from "./Config/mod.ts"
+export * from "./Action/mod.ts"

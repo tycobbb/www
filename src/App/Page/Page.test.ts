@@ -1,4 +1,4 @@
-import { stubConfig, assertEquals, assertIncludes, assertMatch } from "../../../test/mod.ts"
+import { stubConfig, assertEquals, assertIncludes } from "../../Test/mod.ts"
 import { Page } from "./Page.ts"
 import { PageRepo } from "./Services/mod.ts"
 

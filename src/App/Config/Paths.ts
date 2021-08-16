@@ -15,7 +15,7 @@ export class Paths {
   }
 
   get dst(): Path {
-    return this.#root.join("dist")
+    return this.#root.join("../dist")
   }
 
   get cwd(): Path {

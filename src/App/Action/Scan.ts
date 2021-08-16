@@ -1,11 +1,12 @@
 import { log, Path } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
 import { PageRepo } from "../Page/mod.ts"
-import { CopyDir, CopyFile } from "../File/mod.ts"
+import { FileEvents, FileEvent } from "../File/mod.ts"
 import { Action } from "./Action.ts"
+import { ProcessFile } from "./Services/mod.ts"
 
 type NewFile = {
-  kind: "dir" | "flat" | "page" | "layout",
+  kind: "dir" | "file"
   path: Path
 }
 
@@ -15,12 +16,18 @@ export class Scan implements Action {
 
   // -- deps --
   #cfg: Config
-  #files: PageRepo
+  #process: ProcessFile
+  #evts: FileEvents
 
   // -- lifetime --
-  constructor(cfg = Config.get(), files = PageRepo.get()) {
+  constructor(
+    cfg = Config.get(),
+    process = ProcessFile.get(),
+    evts = FileEvents.get()
+  ) {
     this.#cfg = cfg
-    this.#files = files
+    this.#process = process
+    this.#evts = evts
   }
 
   // -- commands --
@@ -37,16 +44,9 @@ export class Scan implements Action {
 
         switch (file.kind) {
           case "dir":
-            await new CopyDir(file.path).call(); break;
-          case "flat":
-            await new CopyFile(file.path).call(); break;
-            case "page":
-            // TODO: probably makes more sense to add stuff to a PageGraph than
-            // to a repo at this stage, so we can resolve components later. it's
-            // a factory for pages basically.
-            this.#files.addPage(file.path); break;
-          case "layout":
-            this.#files.addLayout(file.path); break;
+            this.#evts.add(FileEvent.copyDir(file.path)); break;
+          case "file":
+            this.#process.call(file.path); break;
         }
       }
     }
@@ -68,21 +68,11 @@ export class Scan implements Action {
           continue
         }
 
-        // partition directories
+        // partition files and directories
         if (child.isDirectory) {
           nodes.push({ kind: "dir", path })
-          continue
-        }
-
-        // otherwise partition based on file extension
-        const ext = path.extension()
-        switch (ext) {
-          case ".p.html":
-            files.push({ kind: "page", path }); break
-          case ".l.html":
-            files.push({ kind: "layout", path }); break
-          default:
-            files.push({ kind: "flat", path }); break
+        } else {
+          files.push({ kind: "file", path })
         }
       }
     }

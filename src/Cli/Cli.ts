@@ -1,6 +1,7 @@
 import { Args, parse } from "https://deno.land/std@0.100.0/flags/mod.ts"
 import { log } from "../Core/mod.ts"
 
+// interface to cli i/o
 export class Cli {
   // -- props --
   #args: Args
@@ -11,6 +12,7 @@ export class Cli {
   }
 
   // -- commands --
+  // prints the usage and exits
   usage() {
     this.#hdoc(`
       usage:
@@ -32,6 +34,7 @@ export class Cli {
   }
 
   // -- c/helpers
+  // draws a heredoc string; trims whitespace and leading padding
   #hdoc(str: string) {
     // detect the leading padding
     let ns = 0
@@ -56,24 +59,29 @@ export class Cli {
     this.#draw(cleaned)
   }
 
+  // draw a string to the console
   #draw(str: string) {
     log.i(str)
   }
 
   // -- queries --
+  // get the parsed args
   get args(): Args {
     return this.#args
   }
 
+  // if the `h/help` flag is set
   get isHelp(): boolean {
     return this.#args.h || this.#args.help
   }
 
+  // if the `u/up` flag is set
   get isUp(): boolean {
     return this.#args.u || this.#args.up
   }
 
   // -- factories --
+  // build the cli from raw cmd line args
   static parse(args: string[]) {
     return new Cli(parse(args))
   }

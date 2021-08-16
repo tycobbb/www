@@ -1,4 +1,4 @@
-import { assertIncludes, assertNotIncludes, assertMatch } from "../../../test/mod.ts"
+import { assertIncludes, assertNotIncludes, assertMatch } from "../../Test/mod.ts"
 import { Partial } from "./Partial.ts"
 
 // -- setup --

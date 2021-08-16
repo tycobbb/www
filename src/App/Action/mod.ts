@@ -1,3 +1,5 @@
+export type { Action } from "./Action.ts"
 export { Clean } from "./Clean.ts"
 export { Scan } from "./Scan.ts"
 export { Build } from "./Build.ts"
+export { Watch } from "./Watch.ts"

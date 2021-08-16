@@ -6,7 +6,7 @@ import { log } from "./Log.ts"
 export function lines(content: string): string[] {
   const eol = detect(content)
   if (eol == null) {
-    log.d(`- could not detect newline for ${content}`)
+    log.d(`- could not detect newline for '${content}'`)
     return []
   }
 

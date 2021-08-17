@@ -1,5 +1,5 @@
 import { Cli } from "./Cli/mod.ts"
-import { Action, Init, Clean, Scan, Build, Watch } from "./App/mod.ts"
+import { Action, Init, Clean, Scan, Build, Watch, Serve } from "./App/mod.ts"
 
 // -- main --
 async function Main(): Promise<void> {
@@ -30,13 +30,17 @@ async function Main(): Promise<void> {
     // add server actions if bringing it up
     if (cli.isServerUp) {
       actions.push(
-        Watch.get()
+        Watch.get(),
+        Serve.get(),
       )
     }
 
     // run actions sequentially
     for (const action of actions) {
-      await action.call()
+      const end = action.call()
+      if (action.isSerial) {
+        await end
+      }
     }
   }
   // let the cli handle any errors

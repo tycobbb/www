@@ -18,4 +18,9 @@ export class Build implements Action {
   async call(): Promise<void> {
     await this.#pages.compile()
   }
+
+  // -- queries --
+  get isSerial(): boolean {
+    return true
+  }
 }

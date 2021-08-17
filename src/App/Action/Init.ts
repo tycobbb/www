@@ -24,4 +24,9 @@ export class Init implements Action {
     // run persistent file sync process
     new SyncFiles().start()
   }
+
+  // -- queries --
+  get isSerial(): boolean {
+    return true
+  }
 }

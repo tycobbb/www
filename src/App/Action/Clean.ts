@@ -21,4 +21,9 @@ export class Clean implements Action {
       await dst.rm()
     }
   }
+
+  // -- queries --
+  get isSerial(): boolean {
+    return true
+  }
 }

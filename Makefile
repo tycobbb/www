@@ -12,7 +12,7 @@ dr-root = ./test/fixtures
 
 # -- tools --
 ts-deno = deno --unstable
-ts-opts = --allow-read --allow-write --allow-run --allow-env --allow-plugin
+ts-opts = --allow-read --allow-write --allow-run --allow-env --allow-plugin --allow-net
 
 ti-brew = brew
 tb-deno = $(ts-deno)

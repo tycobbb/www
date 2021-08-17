@@ -49,6 +49,10 @@ export class Cli {
   start() {
     this.#evts.on((e) => {
       switch (e.kind) {
+      case "info":
+        log.i(`- ${e.message}`); break
+      case "warning":
+        log.e(`! warn: ${e.message}`); break
       case "copy-dir": // falls through
       case "copy-file":
         log.d(`- copy: ${e.file.relative}`); break
@@ -56,8 +60,6 @@ export class Cli {
         log.i(`- delete: ${e.file.relative}`); break
       case "save-file":
         log.i(`- update: ${e.file.path.relative}`); break
-      case "warning":
-        log.e(`! warn: ${e.message}`); break
       default: break
       }
 

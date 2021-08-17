@@ -86,4 +86,8 @@ export class Scan implements Action {
       yield *this.#walk(nodes.map((f) => f.path))
     }
   }
+
+  get isSerial(): boolean {
+    return true
+  }
 }

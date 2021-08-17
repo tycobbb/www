@@ -109,6 +109,10 @@ export class Watch implements Action {
     }
   }
 
+  get isSerial(): boolean {
+    return false
+  }
+
   // -- helpers --
   // debounce the action for the given path; should maybe be moved into core
   #debounce(path: Path, action: () => void) {

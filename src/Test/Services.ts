@@ -19,8 +19,9 @@ class MockEvents implements Events {
   all: Event[] = []
 
   // -- Events --
-  add(evt: Event): void {
+  add(evt: Event): Promise<void> {
     this.all.push(evt)
+    return Promise.resolve()
   }
 
   on(_: EventListener): void {

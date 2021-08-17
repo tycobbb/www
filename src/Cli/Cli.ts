@@ -58,6 +58,8 @@ export class Cli {
         log.i(`- update: ${e.file.path.relative}`); break
       default: break
       }
+
+      return Promise.resolve()
     })
   }
 

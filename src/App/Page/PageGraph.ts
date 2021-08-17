@@ -77,18 +77,18 @@ export class PageGraph {
   async compile(): Promise<void> {
     // process all the pending nodes, emitting events for basic files and
     // updating the graph nodes (pages, layouts)
-    await Promise.all(this.#pending.map(async (n) => {
+    for (const n of this.#pending) {
       switch (n.kind) {
       case "dir":
-        this.#evts.add(Event.copyDir(n.path)); break
+        await this.#evts.add(Event.copyDir(n.path)); break
       case "file":
-        this.#evts.add(Event.copyFile(n.path)); break
+        await this.#evts.add(Event.copyFile(n.path)); break
       case "page":
         await this.#createOrModifyPageAtPath(n.path); break;
       case "layout":
         await this.#createOrModifyLayoutAtPath(n.path); break;
       }
-    }))
+    }
 
     // clear pending nodes
     this.#pending = []

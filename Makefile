@@ -66,6 +66,11 @@ r:
 	$(tr-deno) run $(ts-opts) $(ds-root) $(dr-root)
 .PHONY: r
 
+## run the tool as a server
+r/up:
+	$(tr-deno) run $(ts-opts) $(ds-root) $(dr-root) --up
+.PHONY: r/up
+
 # -- test --
 ## run the [t]ests
 test: t

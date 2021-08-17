@@ -11,14 +11,12 @@ export class EventStream implements Events {
   #listeners: EventListener[] = []
 
   // -- commands --
-  add(evt: Event) {
-    for (const listener of this.#listeners) {
-      listener(evt)
-    }
+  async add(evt: Event): Promise<void> {
+    await Promise.all(this.#listeners.map((action) => action(evt)))
   }
 
   // add a listener to this event stream
-  on(listener: EventListener) {
+  on(listener: EventListener): void {
     this.#listeners.push(listener)
   }
 }

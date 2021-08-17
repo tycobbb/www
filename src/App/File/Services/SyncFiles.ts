@@ -21,7 +21,8 @@ export class SyncFiles {
   }
 
   // -- commands --
-  run(): void {
+  // starts syncing files
+  start(): void {
     this.#evts.on(async (e) => {
       switch (e.kind) {
       case "copy-dir":

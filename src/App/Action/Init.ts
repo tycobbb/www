@@ -22,6 +22,6 @@ export class Init implements Action {
     await Config.set(this.#args)
 
     // run persistent file sync process
-    new SyncFiles().run()
+    new SyncFiles().start()
   }
 }

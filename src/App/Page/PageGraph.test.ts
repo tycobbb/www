@@ -17,7 +17,7 @@ test("PageGraph ~ it links a page and layout", async () => {
   pages.addPathToFile(src.join("./bz.l.html"))
   pages.addPathToFile(src.join("./b1.p.html"))
 
-  await pages.resolve()
+  await pages.compile()
   assertLength(evts.all, 1)
   assertEquals(evts.all[0].kind, "save-file")
 })

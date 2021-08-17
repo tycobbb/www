@@ -1,10 +1,11 @@
+import { lazy } from "../../../Core/mod.ts"
 import { Event } from "../Event.ts"
 import { Events, EventListener } from "./Events.ts"
 
 // a concrete stream of application events
 export class EventStream implements Events {
   // -- module --
-  static get = () => new EventStream()
+  static get = lazy(() => new EventStream())
 
   // -- props --
   #listeners: EventListener[] = []

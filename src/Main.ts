@@ -6,13 +6,17 @@ async function Main(): Promise<void> {
   // build cli
   const cli = Cli.parse(Deno.args)
 
-  // show usage if necessary
+  // show usage if flagged
   if (cli.isHelp) {
     cli.usage()
   }
+  // otherwise start listening for events
+  else {
+    cli.start()
+  }
 
   // init the app state
-  Init.get(cli.args).call()
+  await Init.get(cli.args).call()
 
   // build list of actions
   const actions: Action[] = [

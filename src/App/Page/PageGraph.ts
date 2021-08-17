@@ -54,8 +54,27 @@ export class PageGraph {
     })
   }
 
-  // resolves any pending paths
-  async resolve(): Promise<void> {
+  // remove the page or layout for this path, if one exists
+  deletePath(path: Path): void {
+    const id = path.relative
+
+    // if this matches a page, delete it
+    const page = this.#pagesById[id]
+    if (page != null) {
+      delete this.#pagesById[id]
+      return
+    }
+
+    // otherwise, if it matches a layout, delete it
+    // TODO: what to do with pages depending on this layout (maybe nothing)
+    const layout = this.#layoutsById[id]
+    if (layout != null) {
+      delete this.#layoutsById[id]
+    }
+  }
+
+  // resolves any pending paths and compiles dirty pages
+  async compile(): Promise<void> {
     // process all the pending nodes, emitting events for basic files and
     // updating the graph nodes (pages, layouts)
     await Promise.all(this.#pending.map(async (n) => {

@@ -1,14 +1,8 @@
 import { Path } from "../../Core/mod.ts"
-import { Config } from "../Config/mod.ts"
 import { File } from "../File/mod.ts"
 import { Layout } from "./Layout.ts"
 import { Partial, Vars } from "./Partial.ts"
-import { PageGraph } from "./PageGraph.ts"
 
-// -- constants --
-const kLayoutPattern = /^\s*<!--\s*layout:\s*(\S+)\s*-->\n/
-
-// -- impls --
 // a page (.p.html) that is compiled and inserted into a layout
 export class Page {
   // -- props --

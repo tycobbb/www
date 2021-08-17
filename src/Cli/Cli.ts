@@ -1,20 +1,28 @@
 import { Args, parse } from "https://deno.land/std@0.100.0/flags/mod.ts"
 import { log } from "../Core/mod.ts"
+import { Event, Events, EventStream } from "../App/mod.ts"
 
 // interface to cli i/o
 export class Cli {
+  // -- deps --
+  #evts: Events
+
   // -- props --
   #args: Args
 
   // -- lifetime --
-  constructor(args: Args) {
+  constructor(
+    args: Args,
+    evts: Events = EventStream.get(),
+  ) {
+    this.#evts = evts
     this.#args = args
   }
 
   // -- commands --
   // prints the usage and exits
   usage() {
-    this.#hdoc(`
+    log.i(this.#hdoc(`
       usage:
         www [options] <src>
 
@@ -28,12 +36,43 @@ export class Cli {
 
       environment:
         PROD=1  starts in production
-    `)
+    `))
 
     Deno.exit(1)
   }
 
-  // -- c/helpers
+  // starts listening for output
+  start() {
+    this.#evts.on((e) => {
+      switch (e.kind) {
+      case "copy-dir": // falls through
+      case "copy-file":
+        log.d(`- copy: ${e.file.relative}`); break
+      case "delete-file":
+        log.i(`- delete: ${e.file.relative}`); break
+      case "save-file":
+        log.i(`- update: ${e.file.path.relative}`); break
+      default: break
+      }
+    })
+  }
+
+  // -- queries --
+  // get the parsed args
+  get args(): Args {
+    return this.#args
+  }
+
+  // if the `h/help` flag is set
+  get isHelp(): boolean {
+    return this.#args.h || this.#args.help
+  }
+
+  // if the `u/up` flag is set
+  get isServerUp(): boolean {
+    return this.#args.u || this.#args.up
+  }
+
   // draws a heredoc string; trims whitespace and leading padding
   #hdoc(str: string) {
     // detect the leading padding
@@ -56,28 +95,7 @@ export class Cli {
       .trim()
 
     // draw the heredoc
-    this.#draw(cleaned)
-  }
-
-  // draw a string to the console
-  #draw(str: string) {
-    log.i(str)
-  }
-
-  // -- queries --
-  // get the parsed args
-  get args(): Args {
-    return this.#args
-  }
-
-  // if the `h/help` flag is set
-  get isHelp(): boolean {
-    return this.#args.h || this.#args.help
-  }
-
-  // if the `u/up` flag is set
-  get isServerUp(): boolean {
-    return this.#args.u || this.#args.up
+    return cleaned
   }
 
   // -- factories --

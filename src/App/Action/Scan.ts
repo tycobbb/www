@@ -3,11 +3,14 @@ import { Config } from "../Config/mod.ts"
 import { PageGraph } from "../Page/mod.ts"
 import { Action } from "./Action.ts"
 
+// -- types --
 type NewFile = {
-  kind: "dir" | "file"
   path: Path
+  isDirectory: boolean
 }
 
+// -- impls --
+// traverse the file tree and add pages to graph
 export class Scan implements Action {
   // -- module --
   static get = () => new Scan()
@@ -38,7 +41,7 @@ export class Scan implements Action {
         const path = file.path
 
         // if this is a directory, copy it
-        if (file.kind == "dir") {
+        if (file.isDirectory) {
           this.#pages.addPathToDir(path)
         } else {
           this.#pages.addPathToFile(path)
@@ -65,9 +68,9 @@ export class Scan implements Action {
 
         // partition files and directories
         if (child.isDirectory) {
-          nodes.push({ kind: "dir", path })
+          nodes.push({ path, isDirectory: true })
         } else {
-          files.push({ kind: "file", path })
+          files.push({ path, isDirectory: false })
         }
       }
     }

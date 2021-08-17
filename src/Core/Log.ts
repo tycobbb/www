@@ -11,7 +11,7 @@ export class Log {
   #level: LogLevel
 
   // -- lifetime --
-  constructor(level: LogLevel = LogLevel.Debug) {
+  constructor(level: LogLevel = LogLevel.Info) {
     this.#level = level
   }
 

@@ -1,30 +1,36 @@
-import { Path, switchTo } from "../../Core/mod.ts"
+import { log, Path, switchTo } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
 import { PageGraph } from "../Page/mod.ts"
-import { FileEvents, FileEvent } from "../File/mod.ts"
+import { Event, EventStream } from "../Event/mod.ts"
 import { Action } from "./Action.ts"
 
+// -- types --
+type WatchEvent
+  = { kind: "add", path: Path, isDirectory: boolean }
+  | { kind: "delete", path: Path }
+
+// -- impls --
 export class Watch implements Action {
   // -- module --
   static get = () => new Watch()
 
   // -- deps --
   #cfg: Config
+  #evts: EventStream
   #pages: PageGraph
-  #files: FileEvents
 
   // -- props --
-  #evts: {[key:string]: ReturnType<typeof switchTo>} = {}
+  #fsEvts: {[key:string]: ReturnType<typeof switchTo>} = {}
 
   // -- lifetime --
   constructor(
     cfg = Config.get(),
+    evts = EventStream.get(),
     pages = PageGraph.get(),
-    files = FileEvents.get()
   ) {
     this.#cfg = cfg
+    this.#evts = evts
     this.#pages = pages
-    this.#files = files
   }
 
   // -- commands --
@@ -36,59 +42,83 @@ export class Watch implements Action {
 
     // for every fs event, debounce an event on the path. we often get multiple
     // modifies in quick succession and need to dedupe them.
-    for await (const evt of watch) {
-      for (const epath of evt.paths) {
+    for await (const {kind: fsKind, paths: fsPaths} of watch) {
+      for (const fsPath of fsPaths) {
         // skip ignored paths
-        const path = cwd.resolve(epath)
+        const path = cwd.resolve(fsPath)
         if (this.#cfg.isIgnored(path)) {
           continue
         }
 
         // debounce events for this path
         this.#debounce(path, async () => {
-          switch(evt.kind) {
-            case "create":
-              console.log(`create ${path.relative}`)
-              // TODO: check extension, need to recompile some files
-              // await new CopyFile(path).call()
-              break
-            case "modify": {
-              const stat = await path.stat()
-              if (stat == null) {
-                console.log(`delete ${path.relative}`)
-                // await new RmFile(path).call()
-              } else if (stat.isDirectory) {
-                console.log(`modify dir ${path.relative}`)
-                // await new CopyDir(path).call()
-              } else {
-                console.log(`modify file ${path.relative}`)
-                // TODO: check extension, need to recompile some files
-                // await new CopyFile(path).call()
-              }
+          // get the watch event
+          const evt = await this.#mapWatchEvent(fsKind, path)
+          if (evt == null) {
+            return
+          }
 
-              break
+          // if it's a delete, remove it from the graph and fs
+          if (evt.kind === "delete") {
+            this.#pages.deletePath(evt.path)
+            this.#evts.add(Event.deleteFile(evt.path))
+          }
+          // otherwise, add it to the graph and recompile
+          else {
+            if (evt.isDirectory) {
+              this.#pages.addPathToDir(evt.path)
+            } else {
+              this.#pages.addPathToFile(evt.path)
             }
-            case "remove":
-              console.log(`remove ${path.relative}`)
-              // await new RmFile(path).call()
-              break
-            default: break
+
+            await this.#pages.compile()
           }
         })
       }
     }
   }
 
-  // -- c/helpers
+
+  // -- queries --
+  // transform an fs event into a watch event
+  async #mapWatchEvent(
+    kind: Deno.FsEvent["kind"],
+    path: Path
+  ): Promise<WatchEvent | null> {
+    switch(kind) {
+      case "create":
+        // falls through; treat create & modify the same
+      case "modify": {
+        const stat = await path.stat()
+
+        // if file stat is missing, this is a delete (does happen)
+        if (stat == null) {
+          return { kind: "delete", path }
+        }
+        // otherwise, add the file based on its type
+        else {
+          return { kind: "add", path, isDirectory: stat.isDirectory }
+        }
+      }
+      case "remove":
+        return { kind: "delete", path }
+      default:
+        log.e(`unknown FsEvent: ${kind} -> ${path.str}`)
+        return null
+    }
+  }
+
+  // -- helpers --
+  // debounce the action for the given path; should maybe be moved into core
   #debounce(path: Path, action: () => void) {
     const key = path.relative
 
     // grab the switch for this path
-    const onEvent = this.#evts[key] ||= switchTo(50)
+    const onEvent = this.#fsEvts[key] ||= switchTo(50)
 
     // set the new action
     onEvent(() => {
-      delete this.#evts[key]
+      delete this.#fsEvts[key]
       action()
     })
   }

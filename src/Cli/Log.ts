@@ -8,7 +8,7 @@ export enum LogLevel {
 // -- impls --
 export class Log {
   // -- module --
-  static get = () => this.#shared
+  static get = () => this.shared
 
   // -- props --
   #level: LogLevel
@@ -27,11 +27,11 @@ export class Log {
 
   // -- shared --
   // a mutable shared instance; generally don't want to do things like this
-  static #shared: Log
+  static shared: Log
 
   // set the shared log
   static set(level: LogLevel) {
-    this.#shared = new Log(level)
+    this.shared = new Log(level)
   }
 }
 

@@ -7,7 +7,7 @@ import { DecodeConfig } from "./Services/mod.ts"
 // -- impls --
 export class Config {
   // -- module --
-  static get = () => this.#shared
+  static get = () => this.shared
 
   // -- props --
   // the execution environment
@@ -36,10 +36,10 @@ export class Config {
   // -- shared --
   // a mutable shared instance; generally don't want to do things like this but
   // the config is special
-  static #shared: Config
+  static shared: Config
 
   // set the shared config
   static async set(args: Args) {
-    this.#shared = await new DecodeConfig(args).call()
+    this.shared = await new DecodeConfig(args).call()
   }
 }

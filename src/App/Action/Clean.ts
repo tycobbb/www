@@ -5,7 +5,7 @@ export class Clean implements Action {
   // -- module --
   static get = () => new Clean()
 
-  // -- props --
+  // -- deps --
   #cfg: Config
 
   // -- lifetime --

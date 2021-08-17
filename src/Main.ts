@@ -1,5 +1,5 @@
 import { Cli } from "./Cli/mod.ts"
-import { Config, Action, Clean, Scan, Build, Watch } from "./App/mod.ts"
+import { Action, Init, Clean, Scan, Build, Watch } from "./App/mod.ts"
 
 // -- main --
 async function Main(): Promise<void> {
@@ -11,8 +11,8 @@ async function Main(): Promise<void> {
     cli.usage()
   }
 
-  // decode config
-  await Config.set(cli.args)
+  // init the app state
+  Init.get(cli.args).call()
 
   // build list of actions
   const actions: Action[] = [
@@ -21,8 +21,8 @@ async function Main(): Promise<void> {
     Build.get(),
   ]
 
-  // add server actions if up
-  if (cli.isUp) {
+  // add server actions if bringing it up
+  if (cli.isServerUp) {
     actions.push(
       Watch.get()
     )

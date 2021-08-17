@@ -1,1 +1,1 @@
-export { FileEvents } from "./Events.ts"
+export { SyncFiles } from "./SyncFiles.ts"

@@ -1,4 +1,5 @@
 export type { Action } from "./Action.ts"
+export { Init } from "./Init.ts"
 export { Clean } from "./Clean.ts"
 export { Scan } from "./Scan.ts"
 export { Build } from "./Build.ts"

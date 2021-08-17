@@ -5,14 +5,27 @@ import { Partial, Vars } from "./Partial.ts"
 export class Layout {
   // -- props --
   #path: Path
-  #partial: Partial | null = null
+  #dirty: boolean
+  #partial: Partial
 
   // -- lifetime --
-  constructor(path: Path) {
+  constructor(path: Path, partial: Partial) {
     this.#path = path
+    this.#dirty = true
+    this.#partial = partial
   }
 
   // -- commands --
+  // mark the layout as dirty
+  mark() {
+    this.#dirty = true
+  }
+
+  // rebuild the layout's partial
+  rebuild(partial: Partial) {
+    this.#partial = partial
+  }
+
   // parse the layout
   async parse() {
     // read file to string
@@ -29,5 +42,10 @@ export class Layout {
     }
 
     return this.#partial.bind(vars).compile()
+  }
+  // -- queries --
+  // if the layout is dirty
+  get isDirty(): boolean {
+    return this.#dirty
   }
 }

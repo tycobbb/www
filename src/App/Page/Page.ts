@@ -1,9 +1,9 @@
 import { Path } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
 import { File } from "../File/mod.ts"
-import { PageRepo } from "./Services/mod.ts"
 import { Layout } from "./Layout.ts"
 import { Partial, Vars } from "./Partial.ts"
+import { PageGraph } from "./PageGraph.ts"
 
 // -- constants --
 const kLayoutPattern = /^\s*<!--\s*layout:\s*(\S+)\s*-->\n/
@@ -13,17 +13,39 @@ const kLayoutPattern = /^\s*<!--\s*layout:\s*(\S+)\s*-->\n/
 export class Page {
   // -- props --
   #path: Path
-  #layout: Layout | null = null
-  #partial: Partial | null = null
+  #layout: Layout
+  #dirty: boolean
+  #partial: Partial
 
   // -- lifetime --
-  constructor(path: Path) {
+  constructor(path: Path, partial: Partial, layout: Layout) {
     this.#path = path
+    this.#layout = layout
+    this.#dirty = true
+    this.#partial = partial
   }
 
   // -- commands --
+  // mark the page as dirty
+  mark() {
+    this.#dirty = true
+  }
+
+  // mark the page if the layout is dirty
+  inferMarkFromParent() {
+    if (this.#layout.isDirty) {
+      this.mark()
+    }
+  }
+
+  // rebuild the page's partial and layout
+  rebuild(partial: Partial, layout: Layout) {
+    this.#layout = layout
+    this.#partial = partial
+  }
+
   // parse the page, matching it to a layout. throws if no layout exists.
-  async parse(cfg = Config.get(), files = PageRepo.get()) {
+  async parse(cfg = Config.get(), files = PageGraph.get()) {
     // read file to string
     const text = await this.#path.read()
 
@@ -69,5 +91,11 @@ export class Page {
 
     // produce file
     return { path, text }
+  }
+
+  // -- queries --
+  // if the page is dirty
+  get isDirty(): boolean {
+    return this.#dirty
   }
 }

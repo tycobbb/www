@@ -76,7 +76,7 @@ export class Cli {
   }
 
   // if the `u/up` flag is set
-  get isUp(): boolean {
+  get isServerUp(): boolean {
     return this.#args.u || this.#args.up
   }
 

@@ -1,4 +1,5 @@
 import { DOMParser, HTMLDocument, Element } from "https://deno.land/x/deno_dom@v0.1.13-alpha/deno-dom-wasm.ts"
+import { Path } from "../../Core/mod.ts"
 
 // -- types --
 export type Var = string | BoundPartial
@@ -75,9 +76,14 @@ export class Partial {
   }
 
   // -- factories --
-  // parse the partial from text content
+  // read a partial from the path
+  static async read(path: Path): Promise<Partial> {
+    const text = await path.read()
+    return Partial.parse(text)
+  }
+
+  // parse the partial from text
   static parse(text: string): Partial {
-    // parse html
     const doc = new DOMParser().parseFromString(text, "text/html")
     if (doc == null) {
       throw new Error("could not parse template")

@@ -1,9 +1,7 @@
-import { log, Path } from "../../Core/mod.ts"
+import { Path } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
-import { PageRepo } from "../Page/mod.ts"
-import { FileEvents, FileEvent } from "../File/mod.ts"
+import { PageGraph } from "../Page/mod.ts"
 import { Action } from "./Action.ts"
-import { ProcessFile } from "./Services/mod.ts"
 
 type NewFile = {
   kind: "dir" | "file"
@@ -16,18 +14,15 @@ export class Scan implements Action {
 
   // -- deps --
   #cfg: Config
-  #process: ProcessFile
-  #evts: FileEvents
+  #pages: PageGraph
 
   // -- lifetime --
   constructor(
     cfg = Config.get(),
-    process = ProcessFile.get(),
-    evts = FileEvents.get()
+    pages = PageGraph.get(),
   ) {
     this.#cfg = cfg
-    this.#process = process
-    this.#evts = evts
+    this.#pages = pages
   }
 
   // -- commands --
@@ -40,13 +35,13 @@ export class Scan implements Action {
     // traverse proj dir and scan every file
     for await (const files of this.#walk([src])) {
       for (const file of files) {
-        log.d(`- ${file.path.str}`)
+        const path = file.path
 
-        switch (file.kind) {
-          case "dir":
-            this.#evts.add(FileEvent.copyDir(file.path)); break;
-          case "file":
-            this.#process.call(file.path); break;
+        // if this is a directory, copy it
+        if (file.kind == "dir") {
+          this.#pages.addPathToDir(path)
+        } else {
+          this.#pages.addPathToFile(path)
         }
       }
     }

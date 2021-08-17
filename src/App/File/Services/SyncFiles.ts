@@ -1,40 +1,39 @@
-import { lazy } from "../../../Core/mod.ts"
 import { Config } from "../../Config/mod.ts"
-import { FileEvent } from "../Event.ts"
-import { FileRef, File } from "../File.ts"
+import { Events, EventStream } from "../../Event/mod.ts"
+import { File, FileRef } from "../../File/mod.ts"
 
-// an event bus for file events (may also process them)
-export class FileEvents {
+// an stream of application events
+export class SyncFiles {
   // -- module --
-  static get = lazy(() => new FileEvents())
+  static get = () => new SyncFiles()
 
   // -- deps --
   #cfg: Config
+  #evts: Events
 
   // -- lifetime --
-  constructor(cfg = Config.get()) {
+  constructor(
+    cfg = Config.get(),
+    evts: Events = EventStream.get(),
+  ) {
     this.#cfg = cfg
+    this.#evts = evts
   }
 
-  // -- command --
-  // add a new event to the event bus
-  add(evt: FileEvent) {
-    this.#process(evt)
-  }
-
-  // -- c/processing
-  // run the fs operation for this event
-  async #process(evt: FileEvent) {
-    switch (evt.kind) {
+  // -- commands --
+  run(): void {
+    this.#evts.on(async (e) => {
+      switch (e.kind) {
       case "copy-dir":
-        await this.#copyDir(evt.file); break
+        await this.#copyDir(e.file); break
       case "copy-file":
-        await this.#copyFile(evt.file); break
+        await this.#copyFile(e.file); break
       case "delete-file":
-        await this.#deleteFile(evt.file); break
+        await this.#deleteFile(e.file); break
       case "save-file":
-        await this.#saveFile(evt.file); break
-    }
+        await this.#saveFile(e.file); break
+      }
+    })
   }
 
   // copy a dir to its dst path

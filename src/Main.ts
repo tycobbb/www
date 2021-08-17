@@ -15,26 +15,33 @@ async function Main(): Promise<void> {
     cli.start()
   }
 
-  // init the app state
-  await Init.get(cli.args).call()
+  // run the app
+  try {
+    // init the app state
+    await Init.get(cli.args).call()
 
-  // build list of actions
-  const actions: Action[] = [
-    Clean.get(),
-    Scan.get(),
-    Build.get(),
-  ]
+    // build list of actions
+    const actions: Action[] = [
+      Clean.get(),
+      Scan.get(),
+      Build.get(),
+    ]
 
-  // add server actions if bringing it up
-  if (cli.isServerUp) {
-    actions.push(
-      Watch.get()
-    )
+    // add server actions if bringing it up
+    if (cli.isServerUp) {
+      actions.push(
+        Watch.get()
+      )
+    }
+
+    // run actions sequentially
+    for (const action of actions) {
+      await action.call()
+    }
   }
-
-  // run actions sequentially
-  for (const action of actions) {
-    await action.call()
+  // let the cli handle any errors
+  catch (err) {
+    cli.catch(err)
   }
 }
 

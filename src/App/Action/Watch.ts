@@ -103,8 +103,7 @@ export class Watch implements Action {
       case "remove":
         return { kind: "delete", path }
       default:
-        // TODO: recoverable errors
-        // log.e(`unknown FsEvent: ${kind} -> ${path.str}`)
+        this.#evts.add(Event.warning(`unknown FsEvent: ${kind} -> ${path.str}`))
         return null
     }
   }

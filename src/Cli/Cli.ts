@@ -1,5 +1,5 @@
 import { Args, parse } from "https://deno.land/std@0.100.0/flags/mod.ts"
-import { Events, EventStream } from "../App/mod.ts"
+import { Events, EventStream, Fatal } from "../App/mod.ts"
 import { Log, LogLevel, log } from "./Log.ts"
 
 // interface to cli i/o
@@ -56,11 +56,35 @@ export class Cli {
         log.i(`- delete: ${e.file.relative}`); break
       case "save-file":
         log.i(`- update: ${e.file.path.relative}`); break
+      case "warning":
+        log.e(`! warn: ${e.message}`); break
       default: break
       }
 
       return Promise.resolve()
     })
+  }
+
+  catch(err: Error) {
+    // log and exit on fatal
+    if (err instanceof Fatal) {
+      log.e(this.#hdoc(`
+        ✘ err: ${err.message}
+        - run \`www --help\` for more info
+      `))
+
+      Deno.exit(2)
+    }
+    // log and exit on unknown errors
+    else {
+      log.e(this.#hdoc(`
+        ! oops, unhandled error
+        ---
+        ${err.message}
+      `))
+
+      Deno.exit(3)
+    }
   }
 
   // -- queries --

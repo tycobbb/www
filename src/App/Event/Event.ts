@@ -6,6 +6,7 @@ export type Event
   | { kind: "copy-file", file: FileRef }
   | { kind: "delete-file", file: FileRef }
   | { kind: "save-file", file: File }
+  | { kind: "warning", message: string }
 
 // -- factories --
 export const Event = {
@@ -23,5 +24,9 @@ export const Event = {
 
   saveFile(file: File): Event {
     return { kind: "save-file", file }
-  }
+  },
+
+  warning(message: string): Event {
+    return { kind: "warning", message }
+  },
 }

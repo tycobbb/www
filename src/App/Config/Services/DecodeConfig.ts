@@ -1,5 +1,6 @@
 import { Args } from "https://deno.land/std@0.100.0/flags/mod.ts"
 import { Path, lines, run } from "../../../Core/mod.ts"
+import { Fatal } from "../../Error/mod.ts"
 import { Config } from "../Config.ts"
 import { Env } from "../Env.ts"
 import { Paths } from "../Paths.ts"
@@ -37,16 +38,16 @@ export class DecodeConfig {
     // parse root path from cmd line args
     const path = this.#args._[0]
     if (path == null) {
-      throw new Error("must provide a path")
+      throw new Fatal("must provide a src path")
     }
 
     if (typeof path !== "string") {
-      throw new Error("path must be a string")
+      throw new Fatal("src path must be a string")
     }
 
     const root = Path.base(path)
     if (!await root.exists()) {
-      throw new Error("path must exist")
+      throw new Fatal("src path must exist")
     }
 
     // produce paths

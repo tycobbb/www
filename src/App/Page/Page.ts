@@ -44,36 +44,9 @@ export class Page {
     this.#partial = partial
   }
 
-  // parse the page, matching it to a layout. throws if no layout exists.
-  async parse(cfg = Config.get(), files = PageGraph.get()) {
-    // read file to string
-    const text = await this.#path.read()
-
-    // find the layout
-    this.#layout = (() => {
-      let path: Path
-
-      // extract the layout path, if any, from the file
-      const match = text.match(kLayoutPattern) || []
-      if (match != null && match.length == 2) {
-        path = cfg.paths.src.join(match[1])
-      } else {
-        path = cfg.paths.layout
-      }
-
-      // find the layout
-      return files.findLayoutByPath(path)
-    })()
-
-    // parse the partial
-    this.#partial = Partial.parse(text)
-  }
-
   // compile the page, producing a `File`
   compile(vars: Vars = {}): File {
-    if (this.#partial == null || this.#layout == null) {
-      throw new Error("must `parse` page before compiling")
-    }
+    this.#dirty = false
 
     // bind page and compile into layout
     const body = this.#partial.bind(vars)

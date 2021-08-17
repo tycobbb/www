@@ -4,7 +4,6 @@ import { Path } from "../../Core/mod.ts"
 // -- types --
 export type Var = string | BoundPartial
 export type Vars = { [key: string]: Var }
-export type Compile = (vars: Vars) => string
 
 // -- impls --
 // a template that can consume a partial html file, bind variables to it,
@@ -19,17 +18,8 @@ export class Partial {
   }
 
   // -- commands --
-  // bind the partial's variables, producing a bound copy
+  // bind the partial's variables; returns a bound instance that can be compiled
   bind(vars: Vars = {}): BoundPartial {
-    // get document
-    const $doc = this.$doc()
-
-    // get document head
-    const $head = $doc.querySelector("head")
-    if ($head == null) {
-      throw new Error("document was missing <head>")
-    }
-
     // extract vars
     const $vars = this.#doc.getElementsByTagName("v$")
 
@@ -47,32 +37,30 @@ export class Partial {
       }
       // merge bound partials
       else {
-        // get the child doc
-        const $child = val.$doc()
-
         // merge every child of the head into this document's head
-        const $hcs = $child.querySelector("head")?.children || []
-        for (const $hc of $hcs || []) {
+        const $head = this.#doc.head
+        for (const $hc of val.$head.childNodes) {
           $head.appendChild($hc)
         }
 
         // replace the var with the children of the body
-        const $bcs = $child.querySelector("body")?.children || []
-        $var.replaceWith(...$bcs)
+        $var.replaceWith(...val.$body.children)
       }
     }
 
     return new BoundPartial(this.#doc)
   }
 
-  // get the document element
-  $doc(): Element {
-    const $doc = this.#doc.documentElement
-    if ($doc == null) {
-      throw new Error("could not find document element")
+  // -- queries --
+  // get the document's header comment
+  getHeaderComment(): string | null {
+    for (const n of this.#doc.childNodes) {
+      if (n.nodeType === n.COMMENT_NODE) {
+        return n.textContent
+      }
     }
 
-    return $doc
+    return null
   }
 
   // -- factories --
@@ -105,17 +93,22 @@ export class BoundPartial {
   // -- commands --
   // compile the partial to a string
   compile(): string {
-    return this.$doc().outerHTML
-  }
-
-  // -- queries --
-  // get the document element
-  $doc(): Element {
     const $doc = this.#doc.documentElement
     if ($doc == null) {
       throw new Error("could not find document element")
     }
 
-    return $doc
+    return $doc.outerHTML
+  }
+
+  // -- queries --
+  // get the partial's head element
+  get $head(): Element {
+    return this.#doc.head
+  }
+
+  // get the partial's body element
+  get $body(): Element {
+    return this.#doc.body
   }
 }

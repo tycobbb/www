@@ -1,4 +1,4 @@
-import { stubConfig, stubEvents, assertEquals, assertIncludes } from "../../Test/mod.ts"
+import { stubConfig, stubEvents, assertEquals, assertLength } from "../../Test/mod.ts"
 import { PageGraph } from "./PageGraph.ts"
 
 // -- setup --
@@ -12,8 +12,12 @@ const evts = stubEvents()
 const src = cfg.paths.src
 
 // -- tests --
-test("PageGraph ~ it adds files", () => {
+test("PageGraph ~ it links a page and layout", async () => {
   const pages = new PageGraph(cfg, evts)
-  pages.addPathToDir(src.join("./one"))
-  pages.addPathToFile(src.join("./a1.html"))
+  pages.addPathToFile(src.join("./bz.l.html"))
+  pages.addPathToFile(src.join("./b1.p.html"))
+
+  await pages.resolve()
+  assertLength(evts.all, 1)
+  assertEquals(evts.all[0].kind, "save-file")
 })

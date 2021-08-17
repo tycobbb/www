@@ -6,7 +6,7 @@ import { Layout } from "./Layout.ts"
 import { Partial } from "./Partial.ts"
 
 // -- constants --
-const kLayoutPattern = /^\s*<!--\s*layout:\s*(\S+)\s*-->\n/
+const kLayoutPattern = /^\s*layout:\s*(\S+)\s*$/
 
 // -- types --
 type PendingNode = {
@@ -24,14 +24,15 @@ export class PageGraph {
   #evts: Events
 
   // -- props --
-  #pages: Page[] = []
-  #pagesById: {[key: string]: Page} = {}
-  #layouts: {[key: string]: Layout} = {}
-  #layoutsById: {[key: string]: Layout} = {}
   #pending: PendingNode[] = []
+  #pagesById: {[key: string]: Page} = {}
+  #layoutsById: {[key: string]: Layout} = {}
 
   // -- lifetime --
-  constructor(cfg = Config.get(), evts: Events = EventStream.get()) {
+  constructor(
+    cfg = Config.get(),
+    evts: Events = EventStream.get(),
+  ) {
     this.#cfg = cfg
     this.#evts = evts
   }
@@ -48,100 +49,46 @@ export class PageGraph {
   // add a pending path to a file, inferring type from extension
   addPathToFile(path: Path): void {
     this.#pending.push({
-      kind: this.#detectKind(path),
+      kind: this.#detectKindForPath(path),
       path
     })
   }
 
-  // detect pending node kind from path
-  #detectKind(path: Path): PendingNode["kind"] {
-    switch (path.extension()) {
-    case ".p.html":
-      return "page"
-    case ".l.html":
-      return "layout"
-    default:
-      return "file"
-    }
-  }
-
-  // add a page to the repo by path
-  addPage(path: Path) {
-    // this.#pages.push(new Page(path))
-  }
-
-  // add a layout to the repo by path
-  addLayout(path: Path) {
-    // this.#layouts[path.str] = new Layout(path)
-  }
-
   // resolves any pending paths
-  resolve() {
-    // process all the pending nodes, emitting events for basic files and updating
-    // the dirty parts of the graph for everything else
-    for (const n of this.#pending) {
+  async resolve(): Promise<void> {
+    // process all the pending nodes, emitting events for basic files and
+    // updating the graph nodes (pages, layouts)
+    await Promise.all(this.#pending.map(async (n) => {
       switch (n.kind) {
       case "dir":
         this.#evts.add(Event.copyDir(n.path)); break
       case "file":
         this.#evts.add(Event.copyFile(n.path)); break
       case "page":
-        this.#createOrModifyPageAtPath(n.path); break;
+        await this.#createOrModifyPageAtPath(n.path); break;
       case "layout":
-        this.#createOrModifyLayoutAtPath(n.path); break;
+        await this.#createOrModifyLayoutAtPath(n.path); break;
       }
-    }
+    }))
 
     // clear pending nodes
     this.#pending = []
 
-    // mark any pages with a dirty layout as dirty
-    for (const page of Object.values(this.#pagesById)) {
+    // mark any pages whose layout is also dirty
+    const pages = Object.values(this.#pagesById)
+    for (const page of pages) {
       page.inferMarkFromParent()
     }
 
-    // // parse every layout
-    // const layouts = this.#pending.layouts.map((p) => {
-    //   return this.#findOrCreateLayoutByPath(p)
-    // })
-
-    // await Promise.all(layouts.map((l) => l.parse()))
-
-    // this.#pending.layouts = []
-
-    // // parse every page
-    // // parse every layout
-    // const pages = this.#pending.pages.map((p) => {
-    //   return this.#findOrCreatePageByPath(p)
-    // })
-
-    // await Promise.all(pages.map((p) => p.parse()))
-
-    // this.#pending.pages = []
-  }
-
-  // -- c/mutations
-  // -- queries --
-  // find all the pages
-  findPages(): Page[] {
-    return this.#pages
-  }
-
-  // find all the layouts
-  findLayouts(): Layout[] {
-    return Object.values(this.#layouts)
-  }
-
-  // find the layout at the given path; throws an error if no such layout exists
-  findLayoutByPath(path: Path): Layout {
-    const layout = this.#layouts[path.str]
-    if (layout == null) {
-      throw new Error(`could not find layout at ${path}`)
+    // compile every dirty page (do this after marking all the pages as dirty,
+    // since compilation clears the flag)
+    for (const page of pages) {
+      const file = page.compile()
+      this.#evts.add(Event.saveFile(file))
     }
-
-    return layout
   }
 
+  // -- c/helpers
   // create the page at path, or mark the existing page as dirty
   async #createOrModifyPageAtPath(path: Path) {
     const id = path.relative
@@ -149,8 +96,10 @@ export class PageGraph {
     // decode partial
     const partial = await Partial.read(path)
 
-    // locate layout
-    const layout = new Layout(path, partial)
+    // find layout, creating it if necessary
+    const lpath = this.#detectLayoutPathForPage(partial)
+    await this.#createOrModifyLayoutAtPath(lpath)
+    const layout = this.#findLayoutByPath(lpath)
 
     // find or create the page
     let page = this.#pagesById[id]
@@ -187,5 +136,46 @@ export class PageGraph {
     layout.mark()
 
     return layout
+  }
+
+  // -- queries --
+  // find the layout for a path; throws if missing
+  #findLayoutByPath(path: Path): Layout {
+    const id = path.relative
+
+    const layout = this.#layoutsById[id]
+    if (layout == null) {
+      throw new Error(`could not find layout at ${path}`)
+    }
+
+    return layout
+  }
+
+  // detect pending node kind from path
+  #detectKindForPath(path: Path): PendingNode["kind"] {
+    switch (path.extension()) {
+    case ".p.html":
+      return "page"
+    case ".l.html":
+      return "layout"
+    default:
+      return "file"
+    }
+  }
+
+  // detect the layout path given a page's partial
+  #detectLayoutPathForPage(partial: Partial): Path {
+    // extract the layout path
+    let path: Path
+
+    // extract the layout path, if any, from the file
+    const match = partial.getHeaderComment()?.match(kLayoutPattern) || []
+    if (match != null && match.length == 2) {
+      path = this.#cfg.paths.src.join(match[1])
+    } else {
+      path = this.#cfg.paths.layout
+    }
+
+    return path
   }
 }

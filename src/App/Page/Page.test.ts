@@ -1,6 +1,7 @@
 import { stubConfig, assertEquals, assertIncludes } from "../../Test/mod.ts"
 import { Page } from "./Page.ts"
 import { Layout } from "./Layout.ts"
+import { Partial } from "./Partial.ts"
 
 // -- setup --
 const { test } = Deno
@@ -10,24 +11,43 @@ const cfg = stubConfig()
 
 // build paths
 const src = cfg.paths.src
-const paths = {
-  page: src.join("./b1.p.html"),
-  layout: src.join("./bz.l.html"),
-}
 
 // -- tests --
-test("Page ~ it compiles", async () => {
-  // const pages = new PageGraph()
-  // pages.addLayout(paths.layout)
+test("Page ~ it compiles", () => {
+  const layout = new Layout(
+    src.join("./test.l.html"),
+    Partial.parse(`
+      <html>
+      <head>
+        <title>test</title>
+      </head>
+      <body>
+        <div><v$ id="body" /></div>
+      </body>
+      </html>
+    `),
+  )
 
-  // const layout = pages.findLayoutByPath(paths.layout)
-  // await layout.parse()
+  const page = new Page(
+    src.join("./test.p.html"),
+    Partial.parse(`
+      <style>
+        .test { color: papayawhip; }
+      </style>
 
-  // const page = new Page(paths.page)
-  // await page.parse(cfg, pages)
+      <body>
+        <p class="test">hello, test.</p>
+      </body>
 
-  // const file = page.compile()
-  // assertEquals(file.path.relative, "b1.html")
-  // assertIncludes(file.text, "<title>base</title>")
-  // assertIncludes(file.text, "<p class=\"test\">hello, test.</p>")
+      <script>
+        console.log("hello, test")
+      </script>
+    `),
+    layout,
+  )
+
+  const file = page.compile()
+  assertEquals(file.path.relative, "test.html")
+  assertIncludes(file.text, "<title>test</title>")
+  assertIncludes(file.text, "<p class=\"test\">hello, test.</p>")
 })

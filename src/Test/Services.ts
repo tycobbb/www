@@ -15,8 +15,16 @@ export function stubConfig() {
 
 // -- s/events
 class MockEvents implements Events {
-  add(_: Event): void {}
-  on(_: EventListener): void {}
+  // -- props --
+  all: Event[] = []
+
+  // -- Events --
+  add(evt: Event): void {
+    this.all.push(evt)
+  }
+
+  on(_: EventListener): void {
+  }
 }
 
 export function stubEvents() {

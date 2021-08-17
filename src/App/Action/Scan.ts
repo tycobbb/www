@@ -29,7 +29,7 @@ export class Scan implements Action {
   }
 
   // -- commands --
-  async call() {
+  async call(): Promise<void> {
     const { src, dst } = this.#cfg.paths
 
     // build dist dir

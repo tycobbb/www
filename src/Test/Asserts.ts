@@ -1,4 +1,4 @@
-import { assert, assertEquals, assertMatch } from "https://deno.land/std@0.103.0/testing/asserts.ts"
+import { assert, assertEquals, assertMatch } from "https://deno.land/std@0.105.0/testing/asserts.ts"
 
 // -- asserts --
 // asserts that the value is null

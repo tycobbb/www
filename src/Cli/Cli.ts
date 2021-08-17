@@ -1,4 +1,4 @@
-import { Args, parse } from "https://deno.land/std@0.100.0/flags/mod.ts"
+import { Args, parse } from "https://deno.land/std@0.105.0/flags/mod.ts"
 import { Events, EventStream, Fatal } from "../App/mod.ts"
 import { Log, LogLevel, log } from "./Log.ts"
 

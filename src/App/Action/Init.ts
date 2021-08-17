@@ -1,4 +1,4 @@
-import { Args } from "https://deno.land/std@0.100.0/flags/mod.ts"
+import { Args } from "https://deno.land/std@0.105.0/flags/mod.ts"
 import { Config } from "../Config/mod.ts"
 import { SyncFiles } from "../File/mod.ts"
 import { Action } from "./Action.ts"
@@ -17,7 +17,7 @@ export class Init implements Action {
   }
 
   // -- commands --
-  async call() {
+  async call(): Promise<void> {
     // decode config
     await Config.set(this.#args)
 

@@ -15,7 +15,7 @@ export class Build implements Action {
   }
 
   // -- commands --
-  async call() {
+  async call(): Promise<void> {
     await this.#pages.compile()
   }
 }

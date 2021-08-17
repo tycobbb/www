@@ -1,4 +1,4 @@
-import { join, relative } from "https://deno.land/std@0.100.0/path/mod.ts"
+import { join, relative } from "https://deno.land/std@0.105.0/path/mod.ts"
 
 // a file path relative path support and file system methods
 export class Path {

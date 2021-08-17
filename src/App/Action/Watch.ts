@@ -10,6 +10,7 @@ type WatchEvent
   | { kind: "delete", path: Path }
 
 // -- impls --
+// rebuild pages on fs change
 export class Watch implements Action {
   // -- module --
   static get = () => new Watch()
@@ -34,7 +35,7 @@ export class Watch implements Action {
   }
 
   // -- commands --
-  async call() {
+  async call(): Promise<void> {
     const { src, cwd } = this.#cfg.paths
 
     // watch src dir

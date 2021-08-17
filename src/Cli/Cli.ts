@@ -1,6 +1,6 @@
 import { Args, parse } from "https://deno.land/std@0.100.0/flags/mod.ts"
-import { log } from "../Core/mod.ts"
-import { Event, Events, EventStream } from "../App/mod.ts"
+import { Events, EventStream } from "../App/mod.ts"
+import { Log, LogLevel, log } from "./Log.ts"
 
 // interface to cli i/o
 export class Cli {
@@ -17,6 +17,9 @@ export class Cli {
   ) {
     this.#evts = evts
     this.#args = args
+
+    // set log level asap
+    Log.set(this.isVerbose ? LogLevel.Debug : LogLevel.Info)
   }
 
   // -- commands --
@@ -30,9 +33,10 @@ export class Cli {
         src  the path to the src directory
 
       options:
-        -h, --help  prints this message
-        -u, --up    starts the file server
-        -p, --prod  starts in production
+        -h, --help     prints this message
+        -v, --verbose  prints more logs
+        -u, --up       starts the file server
+        -p, --prod     starts in production
 
       environment:
         PROD=1  starts in production
@@ -66,6 +70,11 @@ export class Cli {
   // if the `h/help` flag is set
   get isHelp(): boolean {
     return this.#args.h || this.#args.help
+  }
+
+  // if the `v/verbose` flag is set
+  get isVerbose(): boolean {
+    return this.#args.v || this.args.verbose
   }
 
   // if the `u/up` flag is set

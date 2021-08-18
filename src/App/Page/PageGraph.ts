@@ -102,8 +102,10 @@ export class PageGraph {
     // compile every dirty page (do this after marking all the pages as dirty,
     // since compilation clears the flag)
     for (const page of pages) {
-      const file = page.compile()
-      this.#evts.add(Event.saveFile(file))
+      if (page.isDirty) {
+        const file = page.compile()
+        this.#evts.add(Event.saveFile(file))
+      }
     }
   }
 
@@ -117,8 +119,7 @@ export class PageGraph {
 
     // find layout, creating it if necessary
     const lpath = this.#detectLayoutPathForPage(partial)
-    await this.#createOrModifyLayoutAtPath(lpath)
-    const layout = this.#findLayoutByPath(lpath)
+    const layout = this.#findOrCreateLayoutAtPath(lpath)
 
     // find or create the page
     let page = this.#pagesById[id]
@@ -158,13 +159,15 @@ export class PageGraph {
   }
 
   // -- queries --
-  // find the layout for a path; throws if missing
-  #findLayoutByPath(path: Path): Layout {
+  // find or create the layout at a path; a layout created by this method
+  // is a stub (has no partial).
+  #findOrCreateLayoutAtPath(path: Path): Layout {
     const id = path.relative
 
-    const layout = this.#layoutsById[id]
+    let layout = this.#layoutsById[id]
     if (layout == null) {
-      throw new Error(`could not find layout at ${path}`)
+      layout = new Layout(path, null)
+      this.#layoutsById[id] = layout
     }
 
     return layout

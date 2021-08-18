@@ -50,10 +50,16 @@ export class SyncFiles {
     const src = p.cwd.rebase(file)
     const dst = p.dst.rebase(file)
 
-    // copy the file (or symlink in dev)
+    // copy the file in prod
     if (this.#cfg.isProd) {
       await src.copy(dst)
-    } else {
+    }
+    // but symlink in dev
+    else {
+      if (await dst.exists()) {
+        await dst.rm()
+      }
+
       await src.symlink(dst)
     }
   }

@@ -22,7 +22,9 @@ export class Page {
   // -- commands --
   // mark the page as dirty
   mark() {
-    this.#dirty = true
+    if (!this.#dirty) {
+      this.#dirty = true
+    }
   }
 
   // mark the page if the layout is dirty

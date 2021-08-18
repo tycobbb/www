@@ -1,6 +1,7 @@
 import { posix } from "https://deno.land/std@0.105.0/path/mod.ts"
 import { listenAndServe, ServerRequest, Response } from "https://deno.land/std@0.105.0/http/mod.ts"
 import { serveFile } from "https://deno.land/std@0.105.0/http/file_server.ts"
+import { log } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
 import { Event, Events, EventStream } from "../Event/mod.ts"
 import { Action } from "./Action.ts"
@@ -33,7 +34,7 @@ export class Serve implements Action {
     const addr = `${host}:${port}`
 
     listenAndServe(addr, this.#serve)
-    this.#evts.add(Event.info(`listening on ${addr}`))
+    log.i(`✔ listening on ${addr}`)
 
     return Promise.resolve()
   }
@@ -57,7 +58,7 @@ export class Serve implements Action {
       try {
         res && await req.respond(res)
       } catch (e) {
-        this.#evts.add(Event.warning(e.message))
+        log.e(e.message)
       }
     }
   }

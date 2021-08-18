@@ -1,4 +1,4 @@
-import { Path, switchTo } from "../../Core/mod.ts"
+import { Path, switchTo, log } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
 import { PageGraph } from "../Page/mod.ts"
 import { Event, EventStream } from "../Event/mod.ts"
@@ -104,7 +104,7 @@ export class Watch implements Action {
       case "remove":
         return { kind: "delete", path }
       default:
-        this.#evts.add(Event.warning(`unknown FsEvent: ${kind} -> ${path.str}`))
+        log.e(`! unknown FsEvent: ${kind} -> ${path.str}`)
         return null
     }
   }

@@ -109,8 +109,8 @@ export class Watch implements Action {
     }
   }
 
-  get isSerial(): boolean {
-    return false
+  get isProcess(): boolean {
+    return true
   }
 
   // -- helpers --

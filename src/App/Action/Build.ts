@@ -20,7 +20,7 @@ export class Build implements Action {
   }
 
   // -- queries --
-  get isSerial(): boolean {
-    return true
+  get isProcess(): boolean {
+    return false
   }
 }

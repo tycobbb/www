@@ -37,9 +37,11 @@ async function Main(): Promise<void> {
 
     // run actions sequentially
     for (const action of actions) {
-      const end = action.call()
-      if (action.isSerial) {
-        await end
+      const finished = action.call()
+
+      // wait for anything that's not a process to finish
+      if (!action.isProcess) {
+        await finished
       }
     }
   }

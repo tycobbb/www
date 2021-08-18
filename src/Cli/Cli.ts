@@ -24,7 +24,7 @@ export class Cli {
 
   // -- commands --
   // prints the usage and exits
-  usage() {
+  usage(): void {
     log.i(this.#hdoc(`
       usage:
         www [options] <src>
@@ -46,7 +46,7 @@ export class Cli {
   }
 
   // starts listening for output
-  start() {
+  start(): void {
     this.#evts.on((e) => {
       switch (e.kind) {
       case "info":
@@ -67,7 +67,7 @@ export class Cli {
     })
   }
 
-  catch(err: Error) {
+  catch(err: Error): void {
     // log and exit on fatal
     if (err instanceof Fatal) {
       log.e(this.#hdoc(`
@@ -111,7 +111,7 @@ export class Cli {
   }
 
   // draws a heredoc string; trims whitespace and leading padding
-  #hdoc(str: string) {
+  #hdoc(str: string): string {
     // detect the leading padding
     let ns = 0
     for (const c of str) {

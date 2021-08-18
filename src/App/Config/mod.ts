@@ -1,1 +1,1 @@
-export { Config } from "./Config.ts"
+export * from "./Config.ts"

@@ -23,7 +23,7 @@ export class Clean implements Action {
   }
 
   // -- queries --
-  get isSerial(): boolean {
-    return true
+  get isProcess(): boolean {
+    return false
   }
 }

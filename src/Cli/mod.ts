@@ -1,1 +1,1 @@
-export { Cli } from "./Cli.ts"
+export * from "./Cli.ts"

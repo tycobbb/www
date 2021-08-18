@@ -3,6 +3,6 @@ export interface Action {
   // invokes the command, returning a promise
   call(): Promise<void>
 
-  // if the command should be run serially
-  get isSerial(): boolean
+  // if the action starts a background process
+  get isProcess(): boolean
 }

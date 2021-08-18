@@ -1,2 +1,2 @@
-export { Page } from "./Page.ts"
-export { PageGraph } from "./PageGraph.ts"
+export * from "./Page.ts"
+export * from "./PageGraph.ts"

@@ -132,7 +132,7 @@ export class Serve implements Action {
     return posix.join(this.#cfg.paths.dst.str, normalized)
   }
 
-  get isSerial(): boolean {
-    return false
+  get isProcess(): boolean {
+    return true
   }
 }

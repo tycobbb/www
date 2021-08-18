@@ -87,7 +87,7 @@ export class Scan implements Action {
     }
   }
 
-  get isSerial(): boolean {
-    return true
+  get isProcess(): boolean {
+    return false
   }
 }

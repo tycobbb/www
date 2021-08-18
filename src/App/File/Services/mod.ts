@@ -1,1 +1,1 @@
-export { SyncFiles } from "./SyncFiles.ts"
+export * from "./SyncFiles.ts"

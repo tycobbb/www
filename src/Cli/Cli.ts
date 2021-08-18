@@ -1,7 +1,16 @@
 import { Args, parse } from "https://deno.land/std@0.105.0/flags/mod.ts"
+import { Path } from "../Core/mod.ts"
+import { Log, LogLevel, log } from "../Core/mod.ts"
 import { Events, EventStream, Fatal } from "../App/mod.ts"
-import { Log, LogLevel, log } from "./Log.ts"
 
+// -- types --
+type SaveMsg = {
+  id: string,
+  logId: number | null,
+  count: number
+}
+
+// -- impls --
 // interface to cli i/o
 export class Cli {
   // -- deps --
@@ -9,6 +18,13 @@ export class Cli {
 
   // -- props --
   #args: Args
+
+  // a record of the last saved file msg
+  #saveMsg: SaveMsg = {
+    id: "",
+    logId: null,
+    count: 0
+  }
 
   // -- lifetime --
   constructor(
@@ -56,7 +72,7 @@ export class Cli {
       case "delete-file":
         log.i(`- delete: ${e.file.relative}`); break
       case "save-file":
-        log.i(`- update: ${e.file.path.relative}`); break
+        this.#drawSavedFile(e.file.path); break
       default: break
       }
 
@@ -84,6 +100,30 @@ export class Cli {
 
       Deno.exit(3)
     }
+  }
+
+  // -- c/draw
+  #drawSavedFile(path: Path): void {
+    // the base log message
+    let msg = `- build: ${path.relative}`
+
+    // check log record against this path
+    const rec = this.#saveMsg
+    const id = path.relative
+
+    // if path matches prev line, then clear the prev line and log w/ count
+    if (rec.id === id && rec.logId === log.curr) {
+      rec.count += 1
+      msg = `\u001b[1A\u001b[0K${msg} (${rec.count} times)`
+    }
+    // otherwise, reset the log record
+    else {
+      rec.id = id
+      rec.count = 1
+    }
+
+    // log the message and update the log id
+    rec.logId = log.i(msg)
   }
 
   // -- queries --

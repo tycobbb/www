@@ -9,7 +9,10 @@ import { Partial } from "./Partial.ts"
 const kLayoutPattern = /^\s*layout:\s*(\S+)\s*$/
 
 // -- types --
-type PendingNode = {
+type Table<T>
+  = {[key: string]: T}
+
+type Pending = {
   kind: "dir" | "file" | "layout" | "page"
   path: Path
 }
@@ -24,9 +27,12 @@ export class PageGraph {
   #evts: Events
 
   // -- props --
-  #pending: PendingNode[] = []
-  #pagesById: {[key: string]: Page} = {}
-  #layoutsById: {[key: string]: Layout} = {}
+  #db: {
+    pages: Table<Page>,
+    layouts: Table<Layout>
+  }
+
+  #pending: Pending[] = []
 
   // -- lifetime --
   constructor(
@@ -35,6 +41,10 @@ export class PageGraph {
   ) {
     this.#cfg = cfg
     this.#evts = evts
+    this.#db = {
+      pages: {},
+      layouts: {},
+    }
   }
 
   // -- commands --
@@ -59,17 +69,17 @@ export class PageGraph {
     const id = path.relative
 
     // if this matches a page, delete it
-    const page = this.#pagesById[id]
+    const page = this.#db.pages[id]
     if (page != null) {
-      delete this.#pagesById[id]
+      delete this.#db.pages[id]
       return
     }
 
     // otherwise, if it matches a layout, delete it
     // TODO: what to do with pages depending on this layout (maybe nothing)
-    const layout = this.#layoutsById[id]
+    const layout = this.#db.layouts[id]
     if (layout != null) {
-      delete this.#layoutsById[id]
+      delete this.#db.layouts[id]
     }
   }
 
@@ -94,7 +104,7 @@ export class PageGraph {
     this.#pending = []
 
     // mark any pages whose layout is also dirty
-    const pages = Object.values(this.#pagesById)
+    const pages = Object.values(this.#db.pages)
     for (const page of pages) {
       page.inferMarkFromParent()
     }
@@ -122,12 +132,12 @@ export class PageGraph {
     const layout = this.#findOrCreateLayoutAtPath(lpath)
 
     // find or create the page
-    let page = this.#pagesById[id]
+    let page = this.#db.pages[id]
     if (page != null) {
       page.rebuild(partial, layout)
     } else {
       page = new Page(path, partial, layout)
-      this.#pagesById[id] = page
+      this.#db.pages[id] = page
     }
 
     // mark it as dirty
@@ -144,12 +154,12 @@ export class PageGraph {
     const partial = await Partial.read(path)
 
     // find or create the layout
-    let layout = this.#layoutsById[id]
+    let layout = this.#db.layouts[id]
     if (layout != null) {
       layout.rebuild(partial)
     } else {
       layout = new Layout(path, partial)
-      this.#layoutsById[id] = layout
+      this.#db.layouts[id] = layout
     }
 
     // mark it as dirty
@@ -164,17 +174,17 @@ export class PageGraph {
   #findOrCreateLayoutAtPath(path: Path): Layout {
     const id = path.relative
 
-    let layout = this.#layoutsById[id]
+    let layout = this.#db.layouts[id]
     if (layout == null) {
       layout = new Layout(path, null)
-      this.#layoutsById[id] = layout
+      this.#db.layouts[id] = layout
     }
 
     return layout
   }
 
   // detect pending node kind from path
-  #detectKindForPath(path: Path): PendingNode["kind"] {
+  #detectKindForPath(path: Path): Pending["kind"] {
     switch (path.extension()) {
     case ".p.html":
       return "page"

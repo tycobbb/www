@@ -20,8 +20,11 @@ export class Partial {
   // -- commands --
   // bind the partial's variables; returns a bound instance that can be compiled
   bind(vars: Vars = {}): BoundPartial {
+    // get a copy of this document
+    const doc = this.#copy()
+
     // extract vars
-    const $vars = this.#doc.getElementsByTagName("v$")
+    const $vars = doc.getElementsByTagName("v$")
 
     // substitute all vars
     for (const $var of $vars) {
@@ -38,7 +41,7 @@ export class Partial {
       // merge bound partials
       else {
         // merge every child of the head into this document's head
-        const $head = this.#doc.head
+        const $head = doc.head
         for (const $hc of val.$head.childNodes) {
           $head.appendChild($hc)
         }
@@ -48,10 +51,18 @@ export class Partial {
       }
     }
 
-    return new BoundPartial(this.#doc)
+    return new BoundPartial(doc)
   }
 
   // -- queries --
+  // create a copy of this doc, setting some props we depend on
+  #copy(): HTMLDocument {
+    const d = this.#doc.cloneNode(true)
+    d.head = d.getElementsByTagName("head")[0]
+    d.body = d.getElementsByTagName("body")[0]
+    return d
+  }
+
   // get the document's header comment
   getHeaderComment(): string | null {
     for (const n of this.#doc.childNodes) {

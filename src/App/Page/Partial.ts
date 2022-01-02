@@ -47,7 +47,7 @@ export class Partial {
         }
 
         // replace the var with the children of the body
-        $var.replaceWith(...val.$body.children)
+        $var.replaceWith(...val.$body.childNodes)
       }
     }
 

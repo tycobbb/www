@@ -57,6 +57,28 @@ test("Page ~ it compiles", () => {
   assertIncludes(file.text, "<p class=\"test\">hello, test.</p>")
 })
 
+test("Page ~ it compiles a fragment", () => {
+  const layout = new Layout(
+    src.join("./test.l.html"),
+    Partial.parse(`<v$ id="body" />`),
+  )
+
+  const page = new Page(
+    src.join("./test.p.html"),
+    Partial.parse(`<p>hello, <w-frag name="test"></w-frag></p>`),
+    layout,
+  )
+
+  const frag = new Page(
+    src.join("./test.p.html"),
+    Partial.parse(`<v$ name="name" />`),
+    layout,
+  )
+
+  const file = page.compile()
+  assertIncludes(file.text, "<p>hello, test</p>")
+})
+
 test("Page ~ it compiles with a shared layout", () => {
   const layout = new Layout(
     src.join("./test.l.html"),

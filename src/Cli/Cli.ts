@@ -68,11 +68,11 @@ export class Cli {
       case "copy-dir":
         // falls through
       case "copy-file":
-        log.d(`- copy: ${e.file.relative}`); break
+        this.#drawSavedFile("copy", e.file); break
       case "delete-file":
         log.i(`- delete: ${e.file.relative}`); break
       case "save-file":
-        this.#drawSavedFile(e.file.path); break
+        this.#drawSavedFile("build", e.file.path); break
       default: break
       }
 
@@ -103,9 +103,9 @@ export class Cli {
   }
 
   // -- c/draw
-  #drawSavedFile(path: Path): void {
+  #drawSavedFile(action: string, path: Path): void {
     // the base log message
-    let msg = `- build: ${path.relative}`
+    let msg = `- ${action}: ${path.relative}`
 
     // check log record against this path
     const rec = this.#saveMsg

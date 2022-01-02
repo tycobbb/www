@@ -2,6 +2,7 @@ import { lazy, Path } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
 import { Event, Events, EventStream } from "../Event/mod.ts"
 import { Page } from "./Page.ts"
+import { Fragment } from "./Fragment.ts"
 import { Layout } from "./Layout.ts"
 import { Partial } from "./Partial.ts"
 
@@ -13,7 +14,7 @@ type Table<T>
   = {[key: string]: T}
 
 type Pending = {
-  kind: "dir" | "file" | "layout" | "page"
+  kind: "dir" | "file" | "layout" | "page" | "fragment"
   path: Path
 }
 
@@ -29,6 +30,7 @@ export class PageGraph {
   // -- props --
   #db: {
     pages: Table<Page>,
+    fragments: Table<Fragment>,
     layouts: Table<Layout>
   }
 
@@ -43,6 +45,7 @@ export class PageGraph {
     this.#evts = evts
     this.#db = {
       pages: {},
+      fragments: {},
       layouts: {},
     }
   }
@@ -97,6 +100,8 @@ export class PageGraph {
         await this.#createOrModifyPageAtPath(n.path); break;
       case "layout":
         await this.#createOrModifyLayoutAtPath(n.path); break;
+      case "fragment":
+        await this.#createOrModifyFragmentAtPath(n.path); break;
       }
     }
 
@@ -105,15 +110,15 @@ export class PageGraph {
 
     // mark any pages whose layout is also dirty
     const pages = Object.values(this.#db.pages)
-    for (const page of pages) {
-      page.inferMarkFromParent()
+    for (const p of pages) {
+      p.inferMarkFromParent()
     }
 
     // compile every dirty page (do this after marking all the pages as dirty,
     // since compilation clears the flag)
-    for (const page of pages) {
-      if (page.isDirty) {
-        const file = page.compile()
+    for (const p of pages) {
+      if (p.isDirty) {
+        const file = p.compile()
         this.#evts.add(Event.saveFile(file))
       }
     }
@@ -122,6 +127,32 @@ export class PageGraph {
   // -- c/helpers
   // create the page at path, or mark the existing page as dirty
   async #createOrModifyPageAtPath(path: Path) {
+    const id = path.relative
+
+    // decode partial
+    const partial = await Partial.read(path)
+
+    // find layout, creating it if necessary
+    const lpath = this.#detectLayoutPathForPage(partial)
+    const layout = this.#findOrCreateLayoutAtPath(lpath)
+
+    // find or create the page
+    let page = this.#db.pages[id]
+    if (page != null) {
+      page.rebuild(partial, layout)
+    } else {
+      page = new Page(path, partial, layout)
+      this.#db.pages[id] = page
+    }
+
+    // mark it as dirty
+    page.mark()
+
+    return page
+  }
+
+  // create the fragment at path, or mark the existing fragment as dirty
+  async #createOrModifyFragmentAtPath(path: Path) {
     const id = path.relative
 
     // decode partial
@@ -190,6 +221,8 @@ export class PageGraph {
       return "page"
     case ".l.html":
       return "layout"
+    case ".f.html":
+      return "fragment"
     default:
       return "file"
     }
@@ -197,14 +230,15 @@ export class PageGraph {
 
   // detect the layout path given a page's partial
   #detectLayoutPathForPage(partial: Partial): Path {
-    // extract the layout path
     let path: Path
 
-    // extract the layout path, if any, from the file
+    // extract the layout path, if any, from the file header
     const match = partial.getHeaderComment()?.match(kLayoutPattern) || []
     if (match != null && match.length == 2) {
       path = this.#cfg.paths.src.join(match[1])
-    } else {
+    }
+    // otherwise use the default
+    else {
       path = this.#cfg.paths.layout
     }
 

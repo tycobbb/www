@@ -1,4 +1,5 @@
 import { Path, log } from "../../Core/mod.ts"
+import { Fatal } from "../Error/mod.ts"
 import { Partial, Vars } from "./Partial.ts"
 
 // a layout (.l.html) that specifies the structure for a set of pages
@@ -30,10 +31,9 @@ export class Layout {
 
   // compile the layout, producing an html string
   compile(vars: Vars): string {
-    // if this is a stub, log an error
+    // if this is a stub, crash
     if (this.#partial == null) {
-      log.e(`! missing layout at ${this.#path.relative}`)
-      return ""
+      throw new Fatal(`missing layout at ${this.#path.relative}`)
     }
 
     // otherwise, compile the partial

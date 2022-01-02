@@ -12,21 +12,21 @@ dr-root = ./test/fixtures
 
 # -- tools --
 ts-deno = deno --unstable
-ts-opts = --allow-read --allow-write --allow-run --allow-env --allow-plugin --allow-net
+ts-opts = --allow-read --allow-write --allow-run --allow-env --allow-net
 
 ti-brew = brew
 tb-deno = $(ts-deno)
 tr-deno = $(ts-deno)
 tt-deno = $(ts-deno)
 
-# -- init --
-## [i]init dev env
-init: i
-.PHONY: init
+## -- init (i) --
+$(eval $(call alias, init, i/0))
+$(eval $(call alias, i, i/0))
 
-i: i/pre
+## init dev env
+i/0: i/pre
 	$(ti-brew) bundle -v --no-upgrade
-.PHONY: i
+.PHONY: i/0
 
 ## updates deps
 i/upgr:
@@ -42,40 +42,40 @@ ifeq ("$(shell command -v $(ti-brew))", "")
 endif
 .PHONY: i/pre
 
-# -- build --
-## [b]uild the cli
-build: b
-.PHONY: build
+## -- build (b) --
+$(eval $(call alias, build, b/0))
+$(eval $(call alias, b, b/0))
 
-b:
+## build the cli
+b/0:
 	mkdir -p $(ds-build)
 	$(tb-deno) compile $(ts-opts) -o $(ds-binary) $(ds-root)
-.PHONY: b
+.PHONY: b/0
 
 ## clean the build
 b/clean:
 	rm -rf $(ds-build)
 .PHONY:
 
-# -- run --
-## [r]un the tool
-run: r
-.PHONY: run
+## -- run (r) --
+$(eval $(call alias, run, r/0))
+$(eval $(call alias, r, r/0))
 
-r:
+## run the tool
+r/0:
 	$(tr-deno) run $(ts-opts) $(ds-root) $(dr-root)
-.PHONY: r
+.PHONY: r/0
 
-## run the tool as a server
+## run the tool (server)
 r/up:
 	$(tr-deno) run $(ts-opts) $(ds-root) $(dr-root) --up
 .PHONY: r/up
 
-# -- test --
-## run the [t]ests
-test: t
-.PHONY: test
+## -- test (t) --
+$(eval $(call alias, test, t/0))
+$(eval $(call alias, t, t/0))
 
-t:
+## run the tests
+t/0:
 	$(tt-deno) test $(ts-opts)
-.PHONY: t
+.PHONY: t/0

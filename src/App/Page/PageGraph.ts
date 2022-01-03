@@ -7,7 +7,8 @@ import { Layout } from "./Layout.ts"
 import { Partial } from "./Partial.ts"
 
 // -- constants --
-const kLayoutPattern = /^\s*layout:\s*(\S+)\s*$/
+// matches the layout magic comment
+const kLayoutPattern = /\s*<!--\s*layout:\s*(\S+)\s*-->\s*/
 
 // -- types --
 type Table<T>
@@ -233,7 +234,7 @@ export class PageGraph {
     let path: Path
 
     // extract the layout path, if any, from the file header
-    const match = partial.getHeaderComment()?.match(kLayoutPattern) || []
+    const match = partial.match(kLayoutPattern) || []
     if (match != null && match.length == 2) {
       path = this.#cfg.paths.src.join(match[1])
     }

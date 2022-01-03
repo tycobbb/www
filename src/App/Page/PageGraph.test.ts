@@ -1,4 +1,5 @@
 import { stubConfig, stubEvents, assertEquals, assertLength } from "../../Test/mod.ts"
+import { File } from "../File/mod.ts"
 import { PageGraph } from "./PageGraph.ts"
 
 // -- setup --
@@ -19,5 +20,8 @@ test("PageGraph ~ it links a page and layout", async () => {
 
   await pages.compile()
   assertLength(evts.all, 1)
-  assertEquals(evts.all[0].kind, "save-file")
+
+  const evt = evts.all[0]
+  assertEquals(evt.kind, "save-file")
+  assertEquals((<File>evt.file).path.relative, "b1.html")
 })

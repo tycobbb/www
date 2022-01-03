@@ -2,6 +2,7 @@ import { stubConfig, assertEquals, assertIncludes } from "../../Test/mod.ts"
 import { Page } from "./Page.ts"
 import { Layout } from "./Layout.ts"
 import { Partial } from "./Partial.ts"
+import { Fragment } from "./Fragment.ts"
 
 // -- setup --
 const { test } = Deno
@@ -16,14 +17,14 @@ const src = cfg.paths.src
 test("Page ~ it compiles", () => {
   const layout = new Layout(
     src.join("./test.l.html"),
-    Partial.parse(`
+    new Partial(`
       <html>
       <head>
         <title>test</title>
       </head>
 
       <body>
-        <div><v$ id="body" /></div>
+        <div>{body}</div>
       </body>
       </html>
     `),
@@ -31,7 +32,7 @@ test("Page ~ it compiles", () => {
 
   const page = new Page(
     src.join("./test.p.html"),
-    Partial.parse(`
+    new Partial(`
       <style>
         .test { color: papayawhip; }
       </style>
@@ -60,19 +61,17 @@ test("Page ~ it compiles", () => {
 test("Page ~ it compiles a fragment", () => {
   const layout = new Layout(
     src.join("./test.l.html"),
-    Partial.parse(`<v$ id="body" />`),
+    new Partial(`{body}`),
   )
 
   const page = new Page(
     src.join("./test.p.html"),
-    Partial.parse(`<p>hello, <w-frag name="test"></w-frag></p>`),
+    new Partial(`<p>hello, <w-fragment src="./test.f.html" name="test" /></p>`),
     layout,
   )
 
-  const frag = new Page(
-    src.join("./test.p.html"),
-    Partial.parse(`<v$ name="name" />`),
-    layout,
+  const frag = new Fragment(
+    new Partial(`{name}`),
   )
 
   const file = page.compile()
@@ -82,18 +81,18 @@ test("Page ~ it compiles a fragment", () => {
 test("Page ~ it compiles with a shared layout", () => {
   const layout = new Layout(
     src.join("./test.l.html"),
-    Partial.parse(`<v$ id="body" />`),
+    new Partial(`{body}`),
   )
 
   const page1 = new Page(
     src.join("./test1.p.html"),
-    Partial.parse(`<p>hello, test 1.</p>`),
+    new Partial(`<p>hello, test 1.</p>`),
     layout,
   )
 
   const page2 = new Page(
     src.join("./test2.p.html"),
-    Partial.parse(`<p>hello, test 2.</p>`),
+    new Partial(`<p>hello, test 2.</p>`),
     layout,
   )
 

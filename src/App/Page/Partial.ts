@@ -1,94 +1,78 @@
-import { DOMParser, HTMLDocument, Element } from "https://deno.land/x/deno_dom@v0.1.13-alpha/deno-dom-wasm.ts"
+import { DOMParser, HTMLDocument, Element, Node } from "https://deno.land/x/deno_dom@v0.1.21-alpha/deno-dom-wasm.ts"
 import { Path } from "../../Core/mod.ts"
 
 // -- types --
 export type Var = string | BoundPartial
 export type Vars = { [key: string]: Var }
 
+// -- constants --
+// matches simple params, "{foo}"
+const kParamPattern = /{([\w_-]+)}/g
+
 // -- impls --
 // a template that can consume a partial html file, bind variables to it,
 // and compile the resulting html string
 export class Partial {
   // -- props --
-  #doc: HTMLDocument
+  // the unbound html string
+  #raw: string
 
   // -- lifetime --
-  constructor(doc: HTMLDocument) {
-    this.#doc = doc
-  }
-
-  // -- commands --
-  // bind the partial's variables; returns a bound instance that can be compiled
-  bind(vars: Vars = {}): BoundPartial {
-    // get a copy of this document
-    const doc = this.#copy()
-
-    // extract vars
-    const $vars = doc.getElementsByTagName("v$")
-
-    // substitute all vars
-    for (const $var of $vars) {
-      const val = vars[$var.id]
-
-      // remove missing vars
-      if (val == null) {
-        $var.remove()
-      }
-      // directly substitute strings
-      else if (typeof val === "string") {
-        $var.replaceWith(val)
-      }
-      // merge bound partials
-      else {
-        // merge every child of the head into this document's head
-        const $head = doc.head
-        for (const $hc of val.$head.childNodes) {
-          $head.appendChild($hc)
-        }
-
-        // replace the var with the children of the body
-        $var.replaceWith(...val.$body.childNodes)
-      }
-    }
-
-    return new BoundPartial(doc)
+  constructor(raw: string) {
+    this.#raw = raw
   }
 
   // -- queries --
-  // create a copy of this doc, setting some props we depend on
-  #copy(): HTMLDocument {
-    const d = this.#doc.cloneNode(true)
-    d.head = d.getElementsByTagName("head")[0]
-    d.body = d.getElementsByTagName("body")[0]
-    return d
+  // match a pattern against the partial's raw text
+  match(pattern: RegExp): RegExpMatchArray | null {
+    return this.#raw.match(pattern)
   }
 
-  // get the document's header comment
-  getHeaderComment(): string | null {
-    for (const n of this.#doc.childNodes) {
-      if (n.nodeType === n.COMMENT_NODE) {
-        return n.textContent
+  // bind the partial's variables; returns a bound instance that can be compiled
+  bind(vars: Vars = {}): BoundPartial {
+    // gather new head nodes
+    const $headNodes: Node[] = []
+
+    // replace simple params, "{foo}"
+    const text = this.#raw.replaceAll(kParamPattern, (_, param) => {
+      // get the variable value
+      const val = vars[param]
+
+      // remove missing vars
+      if (val == null) {
+        return ""
       }
+      // directly substitute strings
+      else if (typeof val === "string") {
+        return val
+      }
+      // merge bound partials
+      else {
+        $headNodes.push(...val.$head.childNodes)
+        return val.$body.innerHTML
+      }
+    })
+
+    // parse the document
+    const doc = new DOMParser().parseFromString(text, "text/html")
+    if (doc == null) {
+      throw new Error("could not parse template")
     }
 
-    return null
+    // append and new head elements
+    for (const $node of $headNodes) {
+      doc.head.appendChild($node)
+    }
+
+    // TODO: also replace slots
+    return new BoundPartial(doc)
   }
 
   // -- factories --
   // read a partial from the path
   static async read(path: Path): Promise<Partial> {
     const text = await path.read()
-    return Partial.parse(text)
-  }
-
-  // parse the partial from text
-  static parse(text: string): Partial {
-    const doc = new DOMParser().parseFromString(text, "text/html")
-    if (doc == null) {
-      throw new Error("could not parse template")
-    }
-
-    return new Partial(doc)
+    return new Partial(text)
   }
 }
 

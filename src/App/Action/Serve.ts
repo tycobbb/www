@@ -1,9 +1,10 @@
-import { posix } from "https://deno.land/std@0.105.0/path/mod.ts"
 import { listenAndServe, ServerRequest, Response } from "https://deno.land/std@0.105.0/http/mod.ts"
 import { serveFile } from "https://deno.land/std@0.105.0/http/file_server.ts"
 import { log } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
-import { Event, Events, EventStream } from "../Event/mod.ts"
+import { FileUrl } from "../File/mod.ts"
+import { Events, EventStream } from "../Event/mod.ts"
+import { Fatal } from "../Error/mod.ts"
 import { Action } from "./Action.ts"
 
 // start a static file server
@@ -44,14 +45,36 @@ export class Serve implements Action {
     let res: Response | null = null
 
     try {
-      const normalized = this.#normalizeUrl(req.url)
+      const url = new FileUrl(req.url)
 
-      const stat = await Deno.stat(normalized)
-      if (stat.isDirectory) {
+      // use the first path that exists
+      let path = null
+      for (const p of url.findPaths(this.#cfg.paths.dst.str)) {
+        try {
+          // check to see if the file exists, throws `NotFound` if it doesn't
+          const stat = await Deno.stat(p)
+
+          // this should not happen
+          if (stat.isDirectory) {
+            throw new Fatal("tried to serve a directory")
+          }
+
+          path = p
+        } catch (e) {
+          // if not found, continue, else rethrow
+          if (!(e instanceof Deno.errors.NotFound)) {
+            throw e
+          }
+        }
+      }
+
+      // if we didn't find a path, throw to show fallback
+      if (path == null) {
         throw new Deno.errors.NotFound()
       }
 
-      res = await serveFile(req, normalized)
+      // otherwise serve the file
+      res = await serveFile(req, path)
     } catch (e) {
       res = await this.#serveFallback(req, e)
     } finally {
@@ -83,56 +106,6 @@ export class Serve implements Action {
   }
 
   // -- queries --
-  #normalizeUrl(url: string): string {
-    let normalized = url
-
-    // attempt to decode a uri
-    try {
-      normalized = decodeURI(normalized)
-    } catch (e) {
-      if (!(e instanceof URIError)) {
-        throw e
-      }
-    }
-
-    // and then grab the pathname
-    try {
-      const absolute = new URL(normalized)
-      normalized = absolute.pathname
-    } catch (e) {
-      if (!(e instanceof TypeError)) {
-        throw e
-      }
-    }
-
-    // make sure we have an absolute path
-    if (normalized[0] !== "/") {
-      throw new URIError("The request URI is malformed.")
-    }
-
-    // normalize the path
-    normalized = posix.normalize(normalized)
-
-    // strip the query
-    const query = normalized.indexOf("?")
-    if (query > -1) {
-      normalized = normalized.slice(0, query)
-    }
-
-    // resolve the root to an index page
-    if (normalized === "/") {
-      normalized += "index.html"
-    }
-
-    // try an html extension for anything missing one
-    if (posix.extname(normalized) === "") {
-      normalized += ".html"
-    }
-
-    // and append the path to the dst dir
-    return posix.join(this.#cfg.paths.dst.str, normalized)
-  }
-
   get isProcess(): boolean {
     return true
   }

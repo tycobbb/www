@@ -97,12 +97,12 @@ export class BoundPartial {
   }
 
   // -- queries --
-  // get the partial's head element
+  // get the partial's head el
   get $head(): Element {
     return this.#doc.head
   }
 
-  // get the partial's body element
+  // get the partial's body el
   get $body(): Element {
     return this.#doc.body
   }

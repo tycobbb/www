@@ -1,4 +1,4 @@
-import { Path, log } from "../../Core/mod.ts"
+import { Path } from "../../Core/mod.ts"
 import { Fatal } from "../Error/mod.ts"
 import { Partial, Vars } from "./Partial.ts"
 

@@ -1,22 +1,18 @@
-import { lazy, Path, Templates } from "../../Core/mod.ts"
+import { lazy, Path, Ref, Templates } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
 import { FileRef } from "../File/mod.ts"
 import { Event, Events } from "../Event/mod.ts"
 import { Page } from "./Page.ts"
 import { PageNode } from "./PageNode.ts"
 
-// -- constants --
-// matches the layout magic comment
-const kLayoutPattern = /\s*<!--\s*layout:\s*(\S+)\s*-->\s*/
-
 // -- types --
 type Table<T>
   = {[key: string]: T}
 
   // -- impls -
-export class PageGraph {
+export class Pages {
   // -- module --
-  static readonly get = lazy(() => new PageGraph())
+  static readonly get = lazy(() => new Pages())
 
   // -- deps --
   // the config
@@ -31,7 +27,7 @@ export class PageGraph {
   // -- props --
   // a database of nodes keyed by path
   #db: {
-    nodes: Table<PageNode>,
+    nodes: Table<Ref<PageNode>>,
   }
 
   // -- lifetime --
@@ -65,27 +61,42 @@ export class PageGraph {
     const id = file.path.str
 
     // find or create the node
-    let node = this.#db.nodes[id]
-    if (node == null) {
-      node = new PageNode(file)
-      m.#db.nodes[id] = node
+    let ref = this.#db.nodes[id]
+    if (ref == null) {
+      ref = new Ref(new PageNode(file))
+      m.#db.nodes[id] = ref
     }
 
     // flag it as changed
-    node.mark()
+    const node = ref.deref()
+    if (node != null) {
+      node.flag()
+    }
   }
 
   // remove the page or layout for this path, if one exists
+  // TODO: what to do with nodes depending on a deleted node?
   delete(path: Path): void {
     const m = this
 
     // get the db id
     const id = path.str
 
-    // delete this node & template
-    // TODO: what to do with pages depending on this layout (maybe nothing)
-    delete m.#db.nodes[id]
+    // get the node
+    const ref = m.#db.nodes[id]
+    if (ref == null) {
+      // TODO: already deleted, this should probably warn
+      return
+    }
+
+    // delete the reference so other nodes remove it from their dependents
+    ref.delete()
+
+    // delete the template
     m.#tmpl.delete(id)
+
+    // remove it from the db
+    delete m.#db.nodes[id]
   }
 
   // resolves any pending paths and compiles dirty pages
@@ -97,9 +108,10 @@ export class PageGraph {
 
     // recompile every dirty node
     for (const id in m.#db.nodes) {
-      const node = m.#db.nodes[id]
+      // the node should never be null; this class manages the ref
+      const node = m.#db.nodes[id].deref()!
       if (!node.isDirty) {
-        return
+        continue
       }
 
       // refresh its template
@@ -117,7 +129,7 @@ export class PageGraph {
     // for each page
     for (const id of pageIds) {
       // render the page to string
-      const node = m.#db.nodes[id]
+      const node = m.#db.nodes[id].deref()!
       const text = await m.#tmpl.render(id)
 
       // create the pege

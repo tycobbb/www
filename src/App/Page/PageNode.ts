@@ -1,9 +1,10 @@
+import { Ref } from "../../Core/mod.ts"
 import { FileRef, FilePath, FileKind } from "../File/mod.ts"
 
 // -- types --
-interface PageDependent {
+export interface PageDependent {
   // invalidate the dependent, marking it for update
-  mark(): void
+  flag(): void
 }
 
 // a node in the page tree
@@ -16,7 +17,7 @@ export class PageNode implements PageDependent {
   #file: FileRef
 
   // the list of dependents
-  #dependents: PageDependent[] = []
+  #deps: Ref<PageDependent>[] = []
 
   // -- lifetime --
   // init a new node w/ the file
@@ -26,8 +27,8 @@ export class PageNode implements PageDependent {
 
   // -- commands --
   // add a dependent to this node
-  addDependent(dep: PageDependent) {
-    this.#dependents.push(dep)
+  addDependent(dep: Ref<PageDependent>) {
+    this.#deps.push(dep)
   }
 
   // mark this node as resolved
@@ -36,15 +37,27 @@ export class PageNode implements PageDependent {
   }
 
   // -- c/PageDependent
-  mark() {
+  // flag the node and its dependents as dirty
+  flag() {
     const m = this
 
-    // mark this node as dirty
+    // flag this node as dirty
     m.#isDirty = true
 
-    // and mark any dependents as dirty
-    for (const dep of m.#dependents) {
-      dep.mark()
+    // and flag any dependents
+    let i = 0
+    while (i < m.#deps.length) {
+      const dep = m.#deps[i].deref()
+
+      // if dep was deleted, remove it
+      if (dep == null) {
+        m.#deps.splice(i, 1)
+      }
+      // otherwise, flag it
+      else {
+        dep.flag()
+        i++
+      }
     }
   }
 

@@ -14,6 +14,9 @@ export class Templates {
 
   // -- commands --
   constructor() {
+    // capture ref to outer self for notifications
+    const self = this
+
     // capture base include fn
     const incl = E.config.include
 
@@ -70,6 +73,7 @@ export class Templates {
   }
 
   // -- commands --
+
   // add a template from a raw string
   add(path: string, raw: string) {
     // grab the directory

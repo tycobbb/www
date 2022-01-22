@@ -1,6 +1,7 @@
 export * from "./Log.ts"
 export * from "./Lazy.ts"
 export * from "./Path.ts"
+export * from "./Ref.ts"
 export * from "./Run.ts"
 export * from "./String.ts"
 export * from "./SwitchTo.ts"

@@ -1,70 +1,76 @@
-import { Path } from "../../Core/mod.ts"
-import { File } from "../File/mod.ts"
-import { Layout } from "./Layout.ts"
-import { Partial, Vars } from "./Partial.ts"
+import { DOMParser, Element } from "https://deno.land/x/deno_dom@v0.1.21-alpha/deno-dom-wasm.ts"
+import { File, FilePath } from "../File/mod.ts"
 
-// a page (.p.html) that is compiled and inserted into a layout
+// an html page in the built site
 export class Page {
   // -- props --
-  #path: Path
-  #layout: Layout
-  #dirty: boolean
-  #partial: Partial
+  // the raw file path
+  #path: FilePath
+
+  // the raw html string
+  #text: string
 
   // -- lifetime --
-  constructor(path: Path, partial: Partial, layout: Layout) {
+  constructor(path: FilePath, text: string) {
     this.#path = path
-    this.#layout = layout
-    this.#dirty = true
-    this.#partial = partial
+    this.#text = text
   }
 
   // -- commands --
-  // mark the page as dirty
-  mark() {
-    if (!this.#dirty) {
-      this.#dirty = true
-    }
-  }
-
-  // mark the page if the layout is dirty
-  inferMarkFromParent() {
-    if (this.#layout.isDirty) {
-      this.mark()
-    }
-  }
-
-  // rebuild the page's partial and layout
-  rebuild(partial: Partial, layout: Layout) {
-    this.#layout = layout
-    this.#partial = partial
-  }
-
   // compile the page, producing a `File`
-  compile(vars: Vars = {}): File {
-    this.#dirty = false
+  render(): File {
+    const m = this
 
-    // bind page and compile into layout
-    const body = this.#partial.bind(vars)
-    const text = this.#layout.compile({ body })
-
-    // strip type from extension (e.g. .p.html > .html)
-    const parts = this.#path.components()
-    if (parts == null) {
-      throw new Error("file must have a path and extension")
+    // parse the document
+    const doc = new DOMParser().parseFromString(m.#text, "text/html")
+    if (doc == null) {
+      throw new Error("no doc")
     }
 
-    let [seg, ext] = parts
-    ext = ext.split(".").slice(-1)[0]
-    const path = this.#path.set(`${seg}.${ext}`)
+    const $doc = doc.documentElement
+    if ($doc == null) {
+      throw new Error("no doc el")
+    }
 
-    // produce file
-    return { path, text }
-  }
+    // merge elements into the head
+    const $head = doc.head
 
-  // -- queries --
-  // if the page is dirty
-  get isDirty(): boolean {
-    return this.#dirty
+    // merge nested <w:head> elements
+    const $heads = doc.getElementsByTagName("w:head")
+    for (const $h of $heads) {
+      // merge the contents
+      // TODO: merge based on type? (e.g. 1 title)
+      for (const $hc of Array.from($h.childNodes)) {
+        $head.appendChild($hc)
+      }
+
+      // and remove the wrapper
+      $h.remove()
+    }
+
+    // merge elements with a w:head=<id> attr
+    const $hcs = Array.from(doc.querySelectorAll("body *[w:head]")) as Element[]
+    for (const $hc of $hcs) {
+      // remove the attr
+      // TODO: merge based on id
+      $hc.removeAttribute("w:head")
+
+      // and append it to the head
+      $head.appendChild($hc)
+    }
+
+    // replace <w:template> elements w/ their contents
+    const $tmpls = doc.getElementsByTagName("w:template")
+    for (const $t of $tmpls) {
+      $t.replaceWith(...$t.childNodes)
+    }
+
+    // create the file
+    const file: File = {
+      path: m.#path.setExt("html"),
+      text: $doc.outerHTML,
+    }
+
+    return file
   }
 }

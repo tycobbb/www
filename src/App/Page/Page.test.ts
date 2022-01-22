@@ -1,8 +1,11 @@
-import { stubConfig, assertEquals, assertIncludes } from "../../Test/mod.ts"
+import { stubConfig, assertIncludes, assertNotIncludes } from "../../Test/mod.ts"
 import { Page } from "./Page.ts"
-import { Layout } from "./Layout.ts"
-import { Partial } from "./Partial.ts"
-import { Fragment } from "./Fragment.ts"
+
+// -- todos --
+// TODO: would be nice to be able to match a chunk that wasn't too
+// picky about whitespace
+// TODO: these are clearly imperfect tests, as they don't check the position
+// of elements in the document
 
 // -- setup --
 const { test } = Deno
@@ -14,90 +17,68 @@ const cfg = stubConfig()
 const src = cfg.paths.src
 
 // -- tests --
-test("Page ~ it compiles", () => {
-  const layout = new Layout(
-    src.join("./test.l.html"),
-    new Partial(`
-      <html>
-      <head>
-        <title>test</title>
-      </head>
+test("Page ~ it cleans up nested templates", () => {
+  const path = src.join("./test.p.html")
+  const page = new Page(path, `
+    <html>
+    <body>
+      <w:template>
+        <p class="test">hello, test.</p>
+      </w:template>
+    </body>
+    </html>
+  `)
 
-      <body>
-        <div>{body}</div>
-      </body>
-      </html>
-    `),
-  )
+  const file = page.render()
+  assertIncludes(file.text, "hello, test")
+  assertNotIncludes(file.text, "<w:template>")
+})
 
-  const page = new Page(
-    src.join("./test.p.html"),
-    new Partial(`
-      <style>
-        .test { color: papayawhip; }
-      </style>
+test("Page ~ it merges head elements", () => {
+  const path = src.join("./test.p.html")
+  const page = new Page(path, `
+    <html>
+    <head>
+      <title>root</title>
+    </head>
+
+    <body>
+      <w:head>
+        <title>leaf</title>
+      </w:head>
 
       <body>
         <p class="test">hello, test.</p>
       </body>
+    </body>
+    </html>
+  `)
 
-      <script>
-        console.log("hello, test")
-      </script>
-    `),
-    layout,
-  )
+  const file = page.render()
 
-  const file = page.compile()
-  assertEquals(file.path.relative, "test.html")
-
-  // TODO: would be nice to be able to match a chunk that wasn't too
-  // picky about whitespace
-  assertIncludes(file.text, "<title>test</title>")
-  assertIncludes(file.text, ".test { color: papayawhip; }")
-  assertIncludes(file.text, "<p class=\"test\">hello, test.</p>")
+  assertIncludes(file.text, "<title>leaf</title>")
+  assertNotIncludes(file.text, "<w:head>")
 })
 
-test("Page ~ it compiles a fragment", () => {
-  const layout = new Layout(
-    src.join("./test.l.html"),
-    new Partial(`{body}`),
-  )
+test("Page ~ it merges elements with the head attribute", () => {
+  const path = src.join("./test.p.html")
+  const page = new Page(path, `
+    <html>
+    <head>
+      <title>root</title>
+    </head>
 
-  const page = new Page(
-    src.join("./test.p.html"),
-    new Partial(`<p>hello, <w-fragment src="./test.f.html" name="test" /></p>`),
-    layout,
-  )
+    <body>
+      <title w:head>leaf</title>
 
-  const frag = new Fragment(
-    new Partial(`{name}`),
-  )
+      <body>
+        <p class="test">hello, test.</p>
+      </body>
+    </body>
+    </html>
+  `)
 
-  const file = page.compile()
-  assertIncludes(file.text, "<p>hello, test</p>")
-})
-
-test("Page ~ it compiles with a shared layout", () => {
-  const layout = new Layout(
-    src.join("./test.l.html"),
-    new Partial(`{body}`),
-  )
-
-  const page1 = new Page(
-    src.join("./test1.p.html"),
-    new Partial(`<p>hello, test 1.</p>`),
-    layout,
-  )
-
-  const page2 = new Page(
-    src.join("./test2.p.html"),
-    new Partial(`<p>hello, test 2.</p>`),
-    layout,
-  )
-
-  page1.compile()
-
-  const file = page2.compile()
-  assertIncludes(file.text, "<p>hello, test 2.</p>")
+  const file = page.render()
+  assertIncludes(file.text, "<title>leaf</title>")
+  assertNotIncludes(file.text, "w:head")
 })

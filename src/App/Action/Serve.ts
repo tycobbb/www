@@ -3,7 +3,6 @@ import { serveFile } from "https://deno.land/std@0.105.0/http/file_server.ts"
 import { log } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
 import { FileUrl } from "../File/mod.ts"
-import { Events, EventStream } from "../Event/mod.ts"
 import { Fatal } from "../Error/mod.ts"
 import { Action } from "./Action.ts"
 
@@ -14,7 +13,6 @@ export class Serve implements Action {
 
   // -- deps --
   #cfg: Config
-  #evts: Events
 
   // -- props --
   #encoder = new TextEncoder()
@@ -22,10 +20,8 @@ export class Serve implements Action {
   // -- lifetime --
   constructor(
     cfg = Config.get(),
-    evts: Events = EventStream.get()
   ) {
     this.#cfg = cfg
-    this.#evts = evts
   }
 
   // -- commands --

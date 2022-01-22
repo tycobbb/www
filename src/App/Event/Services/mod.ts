@@ -1,2 +1,1 @@
-export type { Events, EventListener } from "./Events.ts"
-export { EventStream } from "./EventStream.ts"
+export { Events, type EventListener } from "./Events.ts"

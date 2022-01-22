@@ -1,12 +1,16 @@
-<!-- layout: ./bz.l.html -->
+<% layout("./bz.l.html") %>
 
-<style>
+<w:head>
+  <title>b1</title>
+</w:head>
+
+<style w:head>
   .test { color: papayawhip; }
 </style>
 
-<body>
+<w:template>
   <p class="test">hello, test 1.</p>
-</body>
+</w:template>
 
 <script>
   console.log("hello, test 1")

@@ -1,7 +1,7 @@
 import * as E from "https://deno.land/x/eta@v1.12.3/mod.ts"
 import { AstObject } from "https://deno.land/x/eta@v1.12.3/parse.ts"
 import { dirname, join } from "https://deno.land/std@0.105.0/path/mod.ts"
-import { lazy } from "./Lazy.ts"
+import { lazy } from "../Lazy.ts"
 
 // -- constants --
 // matches includes & layouts that may or may not have args
@@ -91,7 +91,7 @@ export class Templates {
 
   // -- queries --
   // render the template; throws an error if it doesn't exist
-  render(path: string, data: Record<string, unknown> = {}): string {
+  async render(path: string, data: Record<string, unknown> = {}): Promise<string> {
     // look up the template
     const tmpl = E.templates.get(path)
     if (tmpl == null) {
@@ -99,6 +99,6 @@ export class Templates {
     }
 
     // render the template w/ the path as context
-    return E.render(tmpl, data) as string
+    return await <Promise<string>>E.renderAsync(tmpl, data)
   }
 }

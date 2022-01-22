@@ -1,11 +1,11 @@
-import { Path } from "../../Core/mod.ts"
+import { FilePath } from "./FilePath.ts"
 
-// a ref to an existing file
-export type FileRef
-  = Path
-
+// -- types --
 // a file with a src path and text
 export type File = {
-  path: Path,
+  // the path to the file
+  path: FilePath,
+
+  // the text of the file
   text: string,
 }

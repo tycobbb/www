@@ -1,3 +1,6 @@
 export * from "./Services/mod.ts"
 export * from "./File.ts"
+export * from "./FileRef.ts"
+export * from "./FilePath.ts"
 export * from "./FileUrl.ts"
+export * from "./FileKind.ts"

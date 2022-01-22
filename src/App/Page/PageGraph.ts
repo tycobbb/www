@@ -1,10 +1,9 @@
-import { lazy, Path } from "../../Core/mod.ts"
+import { lazy, Path, Templates } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
-import { Event, Events, EventStream } from "../Event/mod.ts"
+import { FileRef } from "../File/mod.ts"
+import { Event, Events } from "../Event/mod.ts"
 import { Page } from "./Page.ts"
-import { Fragment } from "./Fragment.ts"
-import { Layout } from "./Layout.ts"
-import { Partial } from "./Partial.ts"
+import { PageNode } from "./PageNode.ts"
 
 // -- constants --
 // matches the layout magic comment
@@ -14,235 +13,130 @@ const kLayoutPattern = /\s*<!--\s*layout:\s*(\S+)\s*-->\s*/
 type Table<T>
   = {[key: string]: T}
 
-type Pending = {
-  kind: "dir" | "file" | "layout" | "page" | "fragment"
-  path: Path
-}
-
-// -- impls -
+  // -- impls -
 export class PageGraph {
   // -- module --
   static readonly get = lazy(() => new PageGraph())
 
   // -- deps --
+  // the config
   #cfg: Config
+
+  // a stream of file events
   #evts: Events
 
-  // -- props --
-  #db: {
-    pages: Table<Page>,
-    fragments: Table<Fragment>,
-    layouts: Table<Layout>
-  }
+  // the template renderer
+  #tmpl: Templates
 
-  #pending: Pending[] = []
+  // -- props --
+  // a database of nodes keyed by path
+  #db: {
+    nodes: Table<PageNode>,
+  }
 
   // -- lifetime --
   constructor(
     cfg = Config.get(),
-    evts: Events = EventStream.get(),
+    evts = Events.get(),
+    tmpl = Templates.get(),
   ) {
+    const m = this
+
+    // set deps
     this.#cfg = cfg
     this.#evts = evts
+    this.#tmpl = tmpl
+
+    // set props
     this.#db = {
-      pages: {},
-      fragments: {},
-      layouts: {},
+      nodes: {},
     }
+
+    // listen to file events
+    m.#evts.on(m.#onEvent)
   }
 
   // -- commands --
-  // add a pending path to a dir
-  addPathToDir(path: Path): void {
-    this.#pending.push({
-      kind: "dir",
-      path
-    })
-  }
-
   // add a pending path to a file, inferring type from extension
-  addPathToFile(path: Path): void {
-    this.#pending.push({
-      kind: this.#detectKindForPath(path),
-      path
-    })
+  change(file: FileRef): void {
+    const m = this
+
+    // get the db id
+    const id = file.path.str
+
+    // find or create the node
+    let node = this.#db.nodes[id]
+    if (node == null) {
+      node = new PageNode(file)
+      m.#db.nodes[id] = node
+    }
+
+    // flag it as changed
+    node.mark()
   }
 
   // remove the page or layout for this path, if one exists
-  deletePath(path: Path): void {
-    const id = path.relative
+  delete(path: Path): void {
+    const m = this
 
-    // if this matches a page, delete it
-    const page = this.#db.pages[id]
-    if (page != null) {
-      delete this.#db.pages[id]
-      return
-    }
+    // get the db id
+    const id = path.str
 
-    // otherwise, if it matches a layout, delete it
+    // delete this node & template
     // TODO: what to do with pages depending on this layout (maybe nothing)
-    const layout = this.#db.layouts[id]
-    if (layout != null) {
-      delete this.#db.layouts[id]
-    }
+    delete m.#db.nodes[id]
+    m.#tmpl.delete(id)
   }
 
   // resolves any pending paths and compiles dirty pages
   async compile(): Promise<void> {
-    // process all the pending nodes, emitting events for basic files and
-    // updating the graph nodes (pages, layouts)
-    for (const n of this.#pending) {
-      switch (n.kind) {
-      case "dir":
-        await this.#evts.add(Event.copyDir(n.path)); break
-      case "file":
-        await this.#evts.add(Event.copyFile(n.path)); break
-      case "page":
-        await this.#createOrModifyPageAtPath(n.path); break;
-      case "layout":
-        await this.#createOrModifyLayoutAtPath(n.path); break;
-      case "fragment":
-        await this.#createOrModifyFragmentAtPath(n.path); break;
+    const m = this
+
+    // collect ids dirty pages for rendering
+    const pageIds: string[] = []
+
+    // recompile every dirty node
+    for (const id in m.#db.nodes) {
+      const node = m.#db.nodes[id]
+      if (!node.isDirty) {
+        return
       }
-    }
 
-    // clear pending nodes
-    this.#pending = []
+      // refresh its template
+      m.#tmpl.add(id, await node.read())
 
-    // mark any pages whose layout is also dirty
-    const pages = Object.values(this.#db.pages)
-    for (const p of pages) {
-      p.inferMarkFromParent()
-    }
-
-    // compile every dirty page (do this after marking all the pages as dirty,
-    // since compilation clears the flag)
-    for (const p of pages) {
-      if (p.isDirty) {
-        const file = p.compile()
-        this.#evts.add(Event.saveFile(file))
+      // if it's a page, add to render list
+      if (node.kind === "page") {
+        pageIds.push(id)
       }
+
+      // clear its flag
+      node.clear()
+    }
+
+    // for each page
+    for (const id of pageIds) {
+      // render the page to string
+      const node = m.#db.nodes[id]
+      const text = await m.#tmpl.render(id)
+
+      // create the pege
+      const page = new Page(node.path, text)
+      const file = page.render()
+
+      // save the file
+      m.#evts.add(Event.saveFile(file))
     }
   }
 
-  // -- c/helpers
-  // create the page at path, or mark the existing page as dirty
-  async #createOrModifyPageAtPath(path: Path) {
-    const id = path.relative
+  // -- events --
+  // listen to file events
+  #onEvent(evt: Event) {
+    const m = this
 
-    // decode partial
-    const partial = await Partial.read(path)
-
-    // find layout, creating it if necessary
-    const lpath = this.#detectLayoutPathForPage(partial)
-    const layout = this.#findOrCreateLayoutAtPath(lpath)
-
-    // find or create the page
-    let page = this.#db.pages[id]
-    if (page != null) {
-      page.rebuild(partial, layout)
-    } else {
-      page = new Page(path, partial, layout)
-      this.#db.pages[id] = page
+    switch (evt.kind) {
+    case "delete-file":
+      m.delete(evt.file); break;
     }
-
-    // mark it as dirty
-    page.mark()
-
-    return page
-  }
-
-  // create the fragment at path, or mark the existing fragment as dirty
-  async #createOrModifyFragmentAtPath(path: Path) {
-    const id = path.relative
-
-    // decode partial
-    const partial = await Partial.read(path)
-
-    // find layout, creating it if necessary
-    const lpath = this.#detectLayoutPathForPage(partial)
-    const layout = this.#findOrCreateLayoutAtPath(lpath)
-
-    // find or create the page
-    let page = this.#db.pages[id]
-    if (page != null) {
-      page.rebuild(partial, layout)
-    } else {
-      page = new Page(path, partial, layout)
-      this.#db.pages[id] = page
-    }
-
-    // mark it as dirty
-    page.mark()
-
-    return page
-  }
-
-  // create the layout at path, or mark the existing layout as dirty
-  async #createOrModifyLayoutAtPath(path: Path) {
-    const id = path.relative
-
-    // reparse partial
-    const partial = await Partial.read(path)
-
-    // find or create the layout
-    let layout = this.#db.layouts[id]
-    if (layout != null) {
-      layout.rebuild(partial)
-    } else {
-      layout = new Layout(path, partial)
-      this.#db.layouts[id] = layout
-    }
-
-    // mark it as dirty
-    layout.mark()
-
-    return layout
-  }
-
-  // -- queries --
-  // find or create the layout at a path; a layout created by this method
-  // is a stub (has no partial).
-  #findOrCreateLayoutAtPath(path: Path): Layout {
-    const id = path.relative
-
-    let layout = this.#db.layouts[id]
-    if (layout == null) {
-      layout = new Layout(path, null)
-      this.#db.layouts[id] = layout
-    }
-
-    return layout
-  }
-
-  // detect pending node kind from path
-  #detectKindForPath(path: Path): Pending["kind"] {
-    switch (path.extension()) {
-    case ".p.html":
-      return "page"
-    case ".l.html":
-      return "layout"
-    case ".f.html":
-      return "fragment"
-    default:
-      return "file"
-    }
-  }
-
-  // detect the layout path given a page's partial
-  #detectLayoutPathForPage(partial: Partial): Path {
-    let path: Path
-
-    // extract the layout path, if any, from the file header
-    const match = partial.match(kLayoutPattern) || []
-    if (match != null && match.length == 2) {
-      path = this.#cfg.paths.src.join(match[1])
-    }
-    // otherwise use the default
-    else {
-      path = this.#cfg.paths.layout
-    }
-
-    return path
   }
 }

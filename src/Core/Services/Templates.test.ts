@@ -1,21 +1,20 @@
-import { assertEquals } from "../Test/mod.ts"
+import { assertEquals, clean } from "../../Test/mod.ts"
 import { Templates } from "./Templates.ts"
-import { clean } from "../Test/mod.ts"
 
 // -- setup --
 const { test } = Deno
 
 // -- tests --
-test("Templates ~ it renders templates", () => {
+test("Templates ~ it renders templates", async () => {
   const tmpls = Templates.get()
   tmpls.reset()
   tmpls.add("post", `<%= it.body %>`)
 
-  const res = tmpls.render("post", { body: "hi" })
+  const res = await tmpls.render("post", { body: "hi" })
   assertEquals(res, "hi")
 })
 
-test("Templates ~ it resolves layout paths", () => {
+test("Templates ~ it resolves layout paths", async () => {
   const tmpls = Templates.get()
   tmpls.reset()
   tmpls.add("core/layout", `
@@ -27,11 +26,11 @@ test("Templates ~ it resolves layout paths", () => {
     1
   `)
 
-  const res = tmpls.render("test/page")
+  const res = await tmpls.render("test/page")
   assertEquals(clean(res), "012")
 })
 
-test("Templates ~ it resolves include paths", () => {
+test("Templates ~ it resolves include paths", async () => {
   const tmpls = Templates.get()
   tmpls.reset()
   tmpls.add("core/post", `<%= it.i %>`)
@@ -41,6 +40,6 @@ test("Templates ~ it resolves include paths", () => {
     <% } %>
   `)
 
-  const res = tmpls.render("test/posts")
+  const res = await tmpls.render("test/posts")
   assertEquals(clean(res), "012")
 })

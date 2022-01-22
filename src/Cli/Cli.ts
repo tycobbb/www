@@ -1,7 +1,7 @@
 import { Args, parse } from "https://deno.land/std@0.105.0/flags/mod.ts"
 import { Path } from "../Core/mod.ts"
 import { Log, LogLevel, log } from "../Core/mod.ts"
-import { Events, EventStream, Fatal } from "../App/mod.ts"
+import { Events, Fatal } from "../App/mod.ts"
 
 // -- types --
 type SaveMsg = {
@@ -29,7 +29,7 @@ export class Cli {
   // -- lifetime --
   constructor(
     args: Args,
-    evts: Events = EventStream.get(),
+    evts = Events.get(),
   ) {
     this.#evts = evts
     this.#args = args
@@ -68,7 +68,7 @@ export class Cli {
       case "copy-dir":
         // falls through
       case "copy-file":
-        this.#drawSavedFile("copy ", e.file); break
+        this.#drawSavedFile("copy ", e.file.path); break
       case "delete-file":
         log.i(`- delete: ${e.file.relative}`); break
       case "save-file":

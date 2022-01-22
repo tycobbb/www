@@ -1,5 +1,10 @@
 import { join, relative } from "https://deno.land/std@0.105.0/path/mod.ts"
 
+// -- constants --
+// matches paths with compound extensions (e.g. *.p.html)
+const kComponentsPattern = /([^\.]*)(\..*)/
+
+// -- impls --
 // a file path relative path support and file system methods
 export class Path {
   // -- props --
@@ -36,7 +41,7 @@ export class Path {
   // the [path, extension] of the relative path, if possible
   components(): [string, string] | null {
     // if relative part has a path and extension
-    const match = this.#path.match(/([^\.]*)(\..*)/)
+    const match = this.#path.match(kComponentsPattern)
     if (match == null || match.length !== 3) {
       return null
     }
@@ -49,6 +54,20 @@ export class Path {
   // sets the relative part of the path
   set(path: string): Path {
     return new Path(path, this.#base)
+  }
+
+  // sets the path extension
+  setExt(next: string): Path {
+    const m = this
+
+    // get path segment and ext
+    const parts = m.components()
+    if (parts == null) {
+      throw new Error("must have a path and extension")
+    }
+
+    // replace the extension
+    return m.set(`${parts[0]}.${next}`)
   }
 
   // add components to the relative path
@@ -65,6 +84,7 @@ export class Path {
   resolve(path: string) {
     return new Path(relative(this.str, path), this.str)
   }
+
 
   // -- factories --
   // init a new base path; useful for building relative paths w/ `join`.

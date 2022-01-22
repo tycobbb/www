@@ -1,12 +1,13 @@
 import { Path, switchTo, log } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
+import { FileRef } from "../File/mod.ts"
 import { PageGraph } from "../Page/mod.ts"
-import { Event, EventStream } from "../Event/mod.ts"
+import { Event, Events } from "../Event/mod.ts"
 import { Action } from "./Action.ts"
 
 // -- types --
 type WatchEvent
-  = { kind: "add", path: Path, isDirectory: boolean }
+  = { kind: "add", file: FileRef }
   | { kind: "delete", path: Path }
 
 // -- impls --
@@ -17,7 +18,7 @@ export class Watch implements Action {
 
   // -- deps --
   #cfg: Config
-  #evts: EventStream
+  #evts: Events
   #pages: PageGraph
 
   // -- props --
@@ -26,7 +27,7 @@ export class Watch implements Action {
   // -- lifetime --
   constructor(
     cfg = Config.get(),
-    evts = EventStream.get(),
+    evts = Events.get(),
     pages = PageGraph.get(),
   ) {
     this.#cfg = cfg
@@ -54,7 +55,7 @@ export class Watch implements Action {
         // debounce events for this path
         this.#debounce(path, async () => {
           // get the watch event
-          const evt = await this.#mapWatchEvent(fsKind, path)
+          const evt = await this.#initWatchEvent(fsKind, path)
           if (evt == null) {
             return
           }
@@ -63,16 +64,21 @@ export class Watch implements Action {
           if (evt.kind === "delete") {
             this.#pages.deletePath(evt.path)
             this.#evts.add(Event.deleteFile(evt.path))
+            return
           }
-          // otherwise, add it to the graph and recompile
-          else {
-            if (evt.isDirectory) {
-              this.#pages.addPathToDir(evt.path)
-            } else {
-              this.#pages.addPathToFile(evt.path)
-            }
 
+          switch (evt.file.kind) {
+          // if it's a dir, copy it
+          case "dir":
+            this.#evts.add(Event.copyDir(evt.file)); break;
+          // if it's not a file managed by the graph, copy it
+          case "file":
+            this.#evts.add(Event.copyFile(evt.file)); break;
+          // otherwise, add it to the graph
+          default:
+            this.#pages.addPathToFile(evt.file.path)
             await this.#pages.compile()
+            break
           }
         })
       }
@@ -82,7 +88,7 @@ export class Watch implements Action {
 
   // -- queries --
   // transform an fs event into a watch event
-  async #mapWatchEvent(
+  async #initWatchEvent(
     kind: Deno.FsEvent["kind"],
     path: Path
   ): Promise<WatchEvent | null> {
@@ -96,9 +102,13 @@ export class Watch implements Action {
         if (stat == null) {
           return { kind: "delete", path }
         }
-        // otherwise, add the file based on its type
+        // if this is a directory, add that
+        else if (stat.isDirectory) {
+          return { kind: "add", file: new FileRef(path, "dir") }
+        }
+        // otherwise, add the file
         else {
-          return { kind: "add", path, isDirectory: stat.isDirectory }
+          return { kind: "add", file: new FileRef(path) }
         }
       }
       case "remove":

@@ -13,7 +13,11 @@ export function stubConfig() {
   )
 }
 
-// -- s/events
+export function stubEvents() {
+  return new MockEvents()
+}
+
+// -- mocks --
 class MockEvents implements Events {
   // -- props --
   all: Event[] = []
@@ -26,8 +30,4 @@ class MockEvents implements Events {
 
   on(_: EventListener): void {
   }
-}
-
-export function stubEvents() {
-  return new MockEvents()
 }

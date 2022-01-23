@@ -1,7 +1,8 @@
+import { transient } from "../../Core/Scope.ts"
 import { Path, switchTo, log } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
 import { FileRef } from "../File/mod.ts"
-import { PageGraph } from "../Page/mod.ts"
+import { Pages } from "../Page/mod.ts"
 import { Event, Events } from "../Event/mod.ts"
 import { Action } from "./Action.ts"
 
@@ -14,12 +15,12 @@ type WatchEvent
 // rebuild pages on fs change
 export class Watch implements Action {
   // -- module --
-  static get = () => new Watch()
+  static readonly get = transient(() => new Watch())
 
   // -- deps --
   #cfg: Config
   #evts: Events
-  #pages: PageGraph
+  #pages: Pages
 
   // -- props --
   #fsEvts: {[key:string]: ReturnType<typeof switchTo>} = {}
@@ -28,7 +29,7 @@ export class Watch implements Action {
   constructor(
     cfg = Config.get(),
     evts = Events.get(),
-    pages = PageGraph.get(),
+    pages = Pages.get(),
   ) {
     this.#cfg = cfg
     this.#evts = evts
@@ -62,21 +63,20 @@ export class Watch implements Action {
 
           // if it's a delete, remove it from the graph and fs
           if (evt.kind === "delete") {
-            this.#pages.deletePath(evt.path)
-            this.#evts.add(Event.deleteFile(evt.path))
+            this.#evts.send(Event.deleteFile(evt.path))
             return
           }
 
           switch (evt.file.kind) {
           // if it's a dir, copy it
           case "dir":
-            this.#evts.add(Event.copyDir(evt.file)); break;
+            this.#evts.send(Event.copyDir(evt.file)); break;
           // if it's not a file managed by the graph, copy it
           case "file":
-            this.#evts.add(Event.copyFile(evt.file)); break;
+            this.#evts.send(Event.copyFile(evt.file)); break;
           // otherwise, add it to the graph
           default:
-            this.#pages.addPathToFile(evt.file.path)
+            this.#pages.change(evt.file)
             await this.#pages.compile()
             break
           }
@@ -104,11 +104,11 @@ export class Watch implements Action {
         }
         // if this is a directory, add that
         else if (stat.isDirectory) {
-          return { kind: "add", file: new FileRef(path, "dir") }
+          return { kind: "add", file: FileRef.init(path, "dir") }
         }
         // otherwise, add the file
         else {
-          return { kind: "add", file: new FileRef(path) }
+          return { kind: "add", file: FileRef.init(path) }
         }
       }
       case "remove":

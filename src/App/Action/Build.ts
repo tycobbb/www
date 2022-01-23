@@ -1,16 +1,17 @@
+import { transient } from "../../Core/Scope.ts"
 import { Action } from "./Action.ts"
-import { PageGraph } from "../Page/mod.ts"
+import { Pages } from "../Page/mod.ts"
 
 // compile every page (.p.html) and write them to disk
 export class Build implements Action {
   // -- module --
-  static get = () => new Build()
+  static readonly get = transient(() => new Build())
 
   // -- deps --
-  #pages: PageGraph
+  #pages: Pages
 
   // -- lifetime --
-  constructor(pages = PageGraph.get()) {
+  constructor(pages = Pages.get()) {
     this.#pages = pages
   }
 

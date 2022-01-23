@@ -1,4 +1,3 @@
-// -- queries --
 // runs a command and return the output
 export async function run(...cmd: string[]): Promise<string> {
   // run child proc

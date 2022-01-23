@@ -1,4 +1,5 @@
 import { Args } from "https://deno.land/std@0.105.0/flags/mod.ts"
+import { transient } from "../../Core/Scope.ts"
 import { Path } from "../../Core/mod.ts"
 import { Env } from "./Env.ts"
 import { Paths } from "./Paths.ts"
@@ -7,7 +8,7 @@ import { DecodeConfig } from "./Services/mod.ts"
 // -- impls --
 export class Config {
   // -- module --
-  static get = () => this.shared
+  static readonly get = transient(() => this.shared)
 
   // -- props --
   // the execution environment
@@ -20,7 +21,11 @@ export class Config {
   readonly ignored: Set<string>
 
   // -- lifecycle --
-  constructor(env: Env, paths: Paths, ignored: Set<string>) {
+  constructor(
+    env: Env,
+    paths: Paths,
+    ignored: Set<string>
+  ) {
     this.env = env
     this.paths = paths
     this.ignored = ignored

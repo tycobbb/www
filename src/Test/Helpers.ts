@@ -1,4 +1,4 @@
-// -- constnats --
+// -- constants --
 // matches all whitespace
 const kWhitespacePattern = /\s*/g
 

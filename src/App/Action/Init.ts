@@ -1,4 +1,5 @@
 import { Args } from "https://deno.land/std@0.105.0/flags/mod.ts"
+import { transient } from "../../Core/Scope.ts"
 import { Config } from "../Config/mod.ts"
 import { SyncFiles } from "../File/mod.ts"
 import { Action } from "./Action.ts"
@@ -6,7 +7,7 @@ import { Action } from "./Action.ts"
 // initializes the app state and boostraps long-running processes
 export class Init implements Action {
   // -- module --
-  static get = (args: Args) => new Init(args)
+  static readonly get = transient((args: Args) => new Init(args))
 
   // -- props --
   #args: Args

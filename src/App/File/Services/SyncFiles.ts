@@ -1,3 +1,4 @@
+import { transient } from "../../../Core/Scope.ts"
 import { Path } from "../../../Core/mod.ts"
 import { Config } from "../../Config/mod.ts"
 import { Events } from "../../Event/mod.ts"
@@ -6,7 +7,7 @@ import { File } from "../../File/mod.ts"
 // an stream of application events
 export class SyncFiles {
   // -- module --
-  static get = () => new SyncFiles()
+  static readonly get = transient(() => new SyncFiles())
 
   // -- deps --
   #cfg: Config

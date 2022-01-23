@@ -1,10 +1,11 @@
+import { transient } from "../../Core/Scope.ts"
 import { Config } from "../Config/mod.ts"
 import { Action } from "./Action.ts"
 
 // clean the dst directory
 export class Clean implements Action {
   // -- module --
-  static get = () => new Clean()
+  static readonly get = transient(() => new Clean())
 
   // -- deps --
   #cfg: Config

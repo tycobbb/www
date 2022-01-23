@@ -1,5 +1,6 @@
 import { listenAndServe, ServerRequest, Response } from "https://deno.land/std@0.105.0/http/mod.ts"
 import { serveFile } from "https://deno.land/std@0.105.0/http/file_server.ts"
+import { transient } from "../../Core/Scope.ts"
 import { log } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
 import { FileUrl } from "../File/mod.ts"
@@ -9,7 +10,7 @@ import { Action } from "./Action.ts"
 // start a static file server
 export class Serve implements Action {
   // -- module --
-  static get = () => new Serve()
+  static readonly get = transient(() => new Serve())
 
   // -- deps --
   #cfg: Config

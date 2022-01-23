@@ -1,8 +1,9 @@
+import { transient } from "../../Core/Scope.ts"
 import { Path } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
 import { Event, Events } from "../Event/mod.ts"
 import { FileRef } from "../File/mod.ts"
-import { PageGraph } from "../Page/mod.ts"
+import { Pages } from "../Page/mod.ts"
 import { Action } from "./Action.ts"
 
 // -- types --
@@ -15,18 +16,18 @@ type NewFile = {
 // traverse the file tree and add pages to graph
 export class Scan implements Action {
   // -- module --
-  static get = () => new Scan()
+  static readonly get = transient(() => new Scan())
 
   // -- deps --
   #cfg: Config
   #evts: Events
-  #pages: PageGraph
+  #pages: Pages
 
   // -- lifetime --
   constructor(
     cfg = Config.get(),
     evts = Events.get(),
-    pages = PageGraph.get(),
+    pages = Pages.get(),
   ) {
     this.#cfg = cfg
     this.#evts = evts

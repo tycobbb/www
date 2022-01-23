@@ -1,3 +1,5 @@
+import { transient } from "./Scope.ts"
+
 // -- types --
 export enum LogLevel {
   Error = 0,
@@ -8,7 +10,7 @@ export enum LogLevel {
 // -- impls --
 export class Log {
   // -- module --
-  static get = () => this.shared
+  static readonly get = transient(() => this.shared)
 
   // -- props --
   #level: LogLevel

@@ -17,7 +17,7 @@ export class PageNode implements PageDependent {
   #file: FileRef
 
   // the list of dependents
-  #deps: Ref<PageDependent>[] = []
+  #deps: Set<Ref<PageDependent>> = new Set()
 
   // -- lifetime --
   // init a new node w/ the file
@@ -28,7 +28,7 @@ export class PageNode implements PageDependent {
   // -- commands --
   // add a dependent to this node
   addDependent(dep: Ref<PageDependent>) {
-    this.#deps.push(dep)
+    this.#deps.add(dep)
   }
 
   // mark this node as resolved
@@ -45,19 +45,16 @@ export class PageNode implements PageDependent {
     m.#isDirty = true
 
     // and flag any dependents
-    let i = 0
-    while (i < m.#deps.length) {
-      const dep = m.#deps[i].deref()
-
+    for (const ref of m.#deps) {
       // if dep was deleted, remove it
+      const dep = ref.deref()
       if (dep == null) {
-        m.#deps.splice(i, 1)
+        m.#deps.delete(ref)
+        continue
       }
+
       // otherwise, flag it
-      else {
-        dep.flag()
-        i++
-      }
+      dep.flag()
     }
   }
 

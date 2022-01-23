@@ -1,4 +1,5 @@
-import { lazy, Path, Ref, Templates } from "../../Core/mod.ts"
+import { single } from "../../Core/Scope.ts"
+import { Path, Ref, Templates, IncludeEvent } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
 import { FileRef } from "../File/mod.ts"
 import { Event, Events } from "../Event/mod.ts"
@@ -12,7 +13,7 @@ type Table<T>
   // -- impls -
 export class Pages {
   // -- module --
-  static readonly get = lazy(() => new Pages())
+  static readonly get = single(() => new Pages())
 
   // -- deps --
   // the config
@@ -49,7 +50,8 @@ export class Pages {
     }
 
     // listen to file events
-    m.#evts.on(m.#onEvent)
+    m.#evts.on(m.#onEvent.bind(m))
+    m.#tmpl.on(m.#onInclude.bind(m))
   }
 
   // -- commands --
@@ -137,12 +139,29 @@ export class Pages {
       const file = page.render()
 
       // save the file
-      m.#evts.add(Event.saveFile(file))
+      m.#evts.send(Event.saveFile(file))
     }
   }
 
+  // add a dependency between two nodes
+  #addDep(child: string, parent: string) {
+    const m = this
+
+    // get page nodes
+    const nc = m.#db.nodes[child]
+    const np = m.#db.nodes[parent]
+
+    // fail if either is missing
+    if (nc == null || np == null) {
+      throw new Error(`failed to add dep between ${child}=${nc} and ${parent}=${np}`)
+    }
+
+    // add parent as a dependent
+    nc.deref()!.addDependent(np)
+  }
+
   // -- events --
-  // listen to file events
+  // when an app event happens
   #onEvent(evt: Event) {
     const m = this
 
@@ -150,5 +169,10 @@ export class Pages {
     case "delete-file":
       m.delete(evt.file); break;
     }
+  }
+
+  // when an include event happens
+  #onInclude(evt: IncludeEvent) {
+    this.#addDep(evt.child, evt.parent)
   }
 }

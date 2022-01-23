@@ -153,7 +153,7 @@ export class Pages {
 
     // fail if either is missing
     if (nc == null || np == null) {
-      throw new Error(`failed to add dep between ${child}=${nc} and ${parent}=${np}`)
+      throw new Error(`failed to add dep ${child}=${nc} => ${parent}=${np}`)
     }
 
     // add parent as a dependent

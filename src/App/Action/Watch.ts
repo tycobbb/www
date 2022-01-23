@@ -38,7 +38,7 @@ export class Watch implements Action {
 
   // -- commands --
   async call(): Promise<void> {
-    const { src, cwd } = this.#cfg.paths
+    const { src } = this.#cfg.paths
 
     // watch src dir
     const watch = Deno.watchFs(src.str)
@@ -48,7 +48,7 @@ export class Watch implements Action {
     for await (const {kind: fsKind, paths: fsPaths} of watch) {
       for (const fsPath of fsPaths) {
         // skip ignored paths
-        const path = cwd.resolve(fsPath)
+        const path = src.resolve(fsPath)
         if (this.#cfg.isIgnored(path)) {
           continue
         }
@@ -84,7 +84,6 @@ export class Watch implements Action {
       }
     }
   }
-
 
   // -- queries --
   // transform an fs event into a watch event

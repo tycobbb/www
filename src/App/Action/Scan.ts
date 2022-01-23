@@ -47,13 +47,13 @@ export class Scan implements Action {
         switch (f.kind) {
         // if this is a directory, copy it
         case "dir":
-          this.#evts.add(Event.copyDir(f)); break
+          this.#evts.send(Event.copyDir(f)); break
         // if this is a flat file, copy it
         case "file":
-          this.#evts.add(Event.copyFile(f)); break
+          this.#evts.send(Event.copyFile(f)); break
         // otherwise, add it to the graph
         default:
-          this.#pages.addPathToFile(f.path); break;
+          this.#pages.change(f); break;
         }
       }
     }
@@ -77,9 +77,9 @@ export class Scan implements Action {
 
         // partition files and directories
         if (child.isDirectory) {
-          nodes.push(new FileRef(path, "dir"))
+          nodes.push(FileRef.init(path, "dir"))
         } else {
-          files.push(new FileRef(path))
+          files.push(FileRef.init(path))
         }
       }
     }

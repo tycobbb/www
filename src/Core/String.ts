@@ -1,4 +1,4 @@
-import { detect } from "https://deno.land/std@0.105.0/fs/mod.ts"
+import { detect } from "https://deno.land/std@0.122.0/fs/mod.ts"
 
 // -- queries --
 // splits content into lines

@@ -1,4 +1,4 @@
-import { assertEquals, assertIncludes } from "../../Test/mod.ts"
+import { assertEquals } from "../../Test/mod.ts"
 import { FileUrl } from "./FileUrl.ts"
 
 // -- setup --

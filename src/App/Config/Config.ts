@@ -1,4 +1,4 @@
-import { Args } from "https://deno.land/std@0.105.0/flags/mod.ts"
+import { Args } from "https://deno.land/std@0.122.0/flags/mod.ts"
 import { transient } from "../../Core/Scope.ts"
 import { Path } from "../../Core/mod.ts"
 import { Env } from "./Env.ts"

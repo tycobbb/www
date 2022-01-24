@@ -1,5 +1,5 @@
-import { listenAndServe, ServerRequest, Response } from "https://deno.land/std@0.105.0/http/mod.ts"
-import { serveFile } from "https://deno.land/std@0.105.0/http/file_server.ts"
+import { serve, Status, STATUS_TEXT } from "https://deno.land/std@0.122.0/http/mod.ts"
+import { serveFile } from "https://deno.land/std@0.122.0/http/file_server.ts"
 import { transient } from "../../Core/Scope.ts"
 import { log } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
@@ -7,18 +7,26 @@ import { FileUrl } from "../File/mod.ts"
 import { Fatal } from "../Error/mod.ts"
 import { Action } from "./Action.ts"
 
+// -- constants --
+// text to display if status text is missing (should not happen)
+const kUnknownStatus = "No Description"
+
+// -- impls --
 // start a static file server
 export class Serve implements Action {
   // -- module --
   static readonly get = transient(() => new Serve())
 
   // -- deps --
+  // the config
   #cfg: Config
 
   // -- props --
+  // a text encoder for error repsonses
   #encoder = new TextEncoder()
 
   // -- lifetime --
+  // creata a new serve action
   constructor(
     cfg = Config.get(),
   ) {
@@ -27,82 +35,114 @@ export class Serve implements Action {
 
   // -- commands --
   call(): Promise<void> {
-    const port = 8888
+    const m = this
+
+    // start the server
     const host = "0.0.0.0"
-    const addr = `${host}:${port}`
+    const port = 8888
+    const proc = serve(m.#serveFile.bind(m), {
+      hostname: host,
+      port,
+      onError: m.#serveError.bind(m)
+    })
 
-    listenAndServe(addr, this.#serve)
-    log.i(`✔ listening on ${addr}`)
+    // show cli output
+    log.i(`✔ listening on ${host === "0.0.0.0" ? "localhost" : host}:${port}`)
 
-    return Promise.resolve()
+    return proc
   }
 
   // -- events --
-  #serve = async (req: ServerRequest) => {
-    let res: Response | null = null
+  // serve a single file
+  async #serveFile(req: Request) {
+    // get site directory
+    const dst = this.#cfg.paths.dst
 
-    try {
-      const url = new FileUrl(req.url)
+    // get a file url from the request
+    const url = new FileUrl(req.url)
 
-      // use the first path that exists
-      let path = null
-      for (const p of url.findPaths(this.#cfg.paths.dst.str)) {
-        try {
-          // check to see if the file exists, throws `NotFound` if it doesn't
-          const stat = await Deno.stat(p)
+    // get possible paths from the url
+    const paths = url.findPaths(dst.str)
 
-          // this should not happen
-          if (stat.isDirectory) {
-            throw new Fatal("tried to serve a directory")
-          }
+    // find the first path that exists
+    let path = null
+    for (const p of paths) {
+      try {
+        // check to see if the file exists, throws `NotFound` if it doesn't
+        const stat = await Deno.stat(p)
 
-          path = p
-        } catch (e) {
-          // if not found, continue, else rethrow
-          if (!(e instanceof Deno.errors.NotFound)) {
-            throw e
-          }
+        // this should not happen
+        if (stat.isDirectory) {
+          throw new Fatal("tried to serve a directory")
+        }
+
+        path = p
+      } catch (e) {
+        // if not found, continue, else rethrow
+        if (!(e instanceof Deno.errors.NotFound)) {
+          throw e
         }
       }
-
-      // if we didn't find a path, throw to show fallback
-      if (path == null) {
-        throw new Deno.errors.NotFound()
-      }
-
-      // otherwise serve the file
-      res = await serveFile(req, path)
-    } catch (e) {
-      res = await this.#serveFallback(req, e)
-    } finally {
-      try {
-        res && await req.respond(res)
-      } catch (e) {
-        log.e(e.message)
-      }
     }
+
+    // if we didn't find a path, throw a not found error
+    if (path == null) {
+      throw new Deno.errors.NotFound()
+    }
+
+    // otherwise serve the file
+    const res = await serveFile(req, path)
+
+    return res
   }
 
-  #serveFallback(_req: ServerRequest, e: Error): Promise<Response> {
-    if (e instanceof URIError) {
-      return Promise.resolve({
-        status: 400,
-        body: this.#encoder.encode("Bad Request"),
-      });
-    } else if (e instanceof Deno.errors.NotFound) {
-      return Promise.resolve({
-        status: 404,
-        body: this.#encoder.encode("Not Found"),
-      });
-    } else {
-      return Promise.resolve({
-        status: 500,
-        body: this.#encoder.encode("Internal server error"),
-      });
+  // serve the fallback response in case of an error
+  async #serveError(e: unknown): Promise<Response> {
+    const m = this
+
+    // find the status code for this error
+    const code = m.#findStatusForError(e)
+    const info = {
+      status: code,
+      statusText: STATUS_TEXT.get(code) || kUnknownStatus
+    }
+
+    // try to serve a file for this status code
+    try {
+      // find the file w/ a dummy request
+      const file = `${info.status}.html`
+      const req = new Request(`http://0.0.0.0:8888/${file}`)
+      const path = m.#cfg.paths.dst.join(file)
+      const res = await serveFile(req, path.str)
+
+      // force the request to have the correct status
+      return new Response(res.body, {
+        ...info,
+        headers: res.headers
+      })
+    }
+    // otherwise, serve the status text directly
+    catch (e: unknown) {
+      return new Response(
+        m.#encoder.encode(info.statusText),
+        info
+      )
     }
   }
 
   // -- queries --
+  // find the status code for an error
+  #findStatusForError(e: unknown): Status {
+    if (e instanceof URIError) {
+      return Status.BadRequest
+    } else if (e instanceof Deno.errors.NotFound) {
+      return Status.NotFound
+    } else {
+      return Status.InternalServerError
+    }
+  }
+
+  // -- q/Action
   get isProcess(): boolean {
     return true
   }

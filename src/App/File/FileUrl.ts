@@ -1,4 +1,4 @@
-import { posix } from "https://deno.land/std@0.105.0/path/mod.ts"
+import { posix } from "https://deno.land/std@0.122.0/path/mod.ts"
 
 // a file request url
 export class FileUrl {
@@ -28,7 +28,7 @@ export class FileUrl {
     if (posix.extname(path) === "") {
       return [
         posix.join(dir, path + ".html"),
-        posix.join(dir, path, "index.html")
+        posix.join(dir, path, "index.html"),
       ]
     }
 

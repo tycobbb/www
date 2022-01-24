@@ -1,4 +1,4 @@
-import { Args } from "https://deno.land/std@0.105.0/flags/mod.ts"
+import { Args } from "https://deno.land/std@0.122.0/flags/mod.ts"
 import { Path, lines, run } from "../../../Core/mod.ts"
 import { Fatal } from "../../Error/mod.ts"
 import { Config } from "../Config.ts"

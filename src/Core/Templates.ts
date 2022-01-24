@@ -1,6 +1,6 @@
 import * as E from "https://deno.land/x/eta@v1.12.3/mod.ts"
 import { AstObject } from "https://deno.land/x/eta@v1.12.3/parse.ts"
-import { dirname, join } from "https://deno.land/std@0.105.0/path/mod.ts"
+import { dirname, join } from "https://deno.land/std@0.122.0/path/mod.ts"
 import { single } from "./Scope.ts"
 import { EventStream, EventBus, EventListener } from "./Events.ts"
 

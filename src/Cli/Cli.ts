@@ -1,4 +1,4 @@
-import { Args, parse } from "https://deno.land/std@0.105.0/flags/mod.ts"
+import { Args, parse } from "https://deno.land/std@0.122.0/flags/mod.ts"
 import { Path } from "../Core/mod.ts"
 import { Log, LogLevel, log } from "../Core/mod.ts"
 import { Events, Fatal } from "../App/mod.ts"

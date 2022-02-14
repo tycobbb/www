@@ -41,7 +41,7 @@ export class Page {
       // merge the contents
       // TODO: merge based on type? (e.g. 1 title)
       for (const $hc of Array.from($h.childNodes)) {
-        $head.appendChild($hc)
+        $head.insertBefore($hc, $head.firstChild)
       }
 
       // and remove the wrapper
@@ -53,10 +53,10 @@ export class Page {
     for (const $hc of $hcs) {
       // remove the attr
       // TODO: merge based on id
-      $hc.removeAttribute("w:head")
+      $hc.removeAttribute("w:head"ut)
 
-      // and append it to the head
-      $head.appendChild($hc)
+      // and add it to the head
+      $head.insertBefore($hc, $head.firstChild)
     }
 
     // replace <w:template> elements w/ their contents

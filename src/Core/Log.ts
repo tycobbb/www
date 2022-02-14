@@ -24,17 +24,25 @@ export class Log {
 
   // -- commands --
   // logs a message and returns the id of this log
-  add(level: LogLevel, msg: string): number | null {
+  add(level: LogLevel, msgs: string[]): number | null {
     // ignore message below the log level
     if (level > this.#level) {
       return null
     }
 
-    // print the message
-    console.log(msg)
+    // select the correct print fn
+    let print = console.log
+    if (level <= LogLevel.Error) {
+      print = console.error
+    }
+
+    // print each message
+    for (const msg of msgs) {
+      print(msg)
+    }
 
     // return the next id
-    this.#count += 1
+    this.#count += msgs.length
     return this.#count
   }
 
@@ -58,18 +66,18 @@ export class Log {
 export const log = {
   // -- commands --
   // logs an error message
-  e(msg: string): number | null {
-    return Log.get().add(LogLevel.Error, msg)
+  e(...msgs: string[]): number | null {
+    return Log.get().add(LogLevel.Error, msgs)
   },
 
   // logs an info message
-  i(msg: string): number | null {
-    return Log.get().add(LogLevel.Info, msg)
+  i(...msgs: string[]): number | null {
+    return Log.get().add(LogLevel.Info, msgs)
   },
 
   // logs an debug message
-  d(msg: string): number | null {
-    return Log.get().add(LogLevel.Debug, msg)
+  d(...msgs: string[]): number | null {
+    return Log.get().add(LogLevel.Debug, msgs)
   },
 
   // -- queries --

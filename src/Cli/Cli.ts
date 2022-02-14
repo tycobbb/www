@@ -92,11 +92,13 @@ export class Cli {
     }
     // log and exit on unknown errors
     else {
-      log.e(this.#hdoc(`
-        ! oops, unhandled error
-        ---
-        ${err.message}
-      `))
+      log.e(
+        this.#hdoc(`
+          ! oops, unhandled error
+          ---
+        `),
+        err.stack || err.message
+      )
 
       Deno.exit(3)
     }

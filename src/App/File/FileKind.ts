@@ -13,7 +13,7 @@ export type FileKind
 export const FileKind = {
   // detects the kind from the path; can't detect directories
   fromPath(path: Path): FileKind {
-    switch (path.extension()) {
+    switch (path.ext()) {
     case ".p.html":
       return "page"
     case ".l.html":

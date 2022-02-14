@@ -33,12 +33,17 @@ export class Path {
     return this.str.length
   }
 
+  // the path fragment with no extension
+  fragment(): string | null {
+    return this.components()?.[0] || null
+  }
+
   // the file extension, if one exists
-  extension(): string | null {
+  ext(): string | null {
     return this.components()?.[1] || null
   }
 
-  // the [path, extension] of the relative path, if possible
+  // the [fragment, extension] of the relative path, if possible
   components(): [string, string] | null {
     // if relative part has a path and extension
     const match = this.#path.match(kComponentsPattern)
@@ -84,7 +89,6 @@ export class Path {
   resolve(path: string) {
     return new Path(relative(this.str, path), this.str)
   }
-
 
   // -- factories --
   // init a new base path; useful for building relative paths w/ `join`.

@@ -122,7 +122,7 @@ export class Serve implements Action {
       })
     }
     // otherwise, serve the status text directly
-    catch (e: unknown) {
+    catch (_: unknown) {
       return new Response(
         m.#encoder.encode(info.statusText),
         info

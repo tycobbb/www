@@ -60,12 +60,12 @@ export class Pages {
     const m = this
 
     // get the db id
-    const id = file.path.str
+    const id = this.getId(file.path)
 
     // find or create the node
     let ref = this.#db.nodes[id]
     if (ref == null) {
-      ref = new Ref(new PageNode(file))
+      ref = new Ref(new PageNode(id, file))
       m.#db.nodes[id] = ref
     }
 
@@ -82,7 +82,7 @@ export class Pages {
     const m = this
 
     // get the db id
-    const id = path.str
+    const id = this.getId(path)
 
     // get the node
     const ref = m.#db.nodes[id]
@@ -134,7 +134,7 @@ export class Pages {
       const node = m.#db.nodes[id].deref()!
       const text = await m.#tmpl.render(id)
 
-      // create the pege
+      // create the page
       const page = new Page(node.path, text)
       const file = page.render()
 
@@ -158,6 +158,17 @@ export class Pages {
 
     // add parent as a dependent
     nc.deref()!.addDependent(np)
+  }
+
+  // -- queries --
+  /// get the node id from a file path
+  getId(path: Path): string {
+    const id = path.fragment()
+    if (id == null) {
+      throw new Error(`path had no fragment: ${path.str}`)
+    }
+
+    return id
   }
 
   // -- events --

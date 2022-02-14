@@ -1,4 +1,4 @@
-import { Ref } from "../../Core/mod.ts"
+import { log, Ref } from "../../Core/mod.ts"
 import { FileRef, FilePath, FileKind } from "../File/mod.ts"
 
 // -- types --
@@ -10,6 +10,9 @@ export interface PageDependent {
 // a node in the page tree
 export class PageNode implements PageDependent {
   // -- props --
+  // the node's id
+  #id: string
+
   // if this node is dirty
   #isDirty = true
 
@@ -21,7 +24,8 @@ export class PageNode implements PageDependent {
 
   // -- lifetime --
   // init a new node w/ the file
-  constructor(file: FileRef) {
+  constructor(id: string, file: FileRef) {
+    this.#id = id
     this.#file = file
   }
 
@@ -59,6 +63,11 @@ export class PageNode implements PageDependent {
   }
 
   // -- queries --
+  // the node's id
+  get id(): string {
+    return this.#id
+  }
+
   // the path to the corresponding file
   get path(): FilePath {
     return this.#file.path

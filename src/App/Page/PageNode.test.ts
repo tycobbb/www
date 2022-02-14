@@ -8,7 +8,7 @@ const { test } = Deno
 
 // -- tests --
 test("PageNode ~ it purges deleted dependents", () => {
-  const node = new PageNode(FileRef.init(new Path("test.p.html")))
+  const node = new PageNode("test", FileRef.init(new Path("")))
   const deps = [new MockDependent(), new MockDependent()]
   const refs = deps.map((dep) => new Ref(dep))
 

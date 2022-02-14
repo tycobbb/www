@@ -53,7 +53,7 @@ export class Page {
     for (const $hc of $hcs) {
       // remove the attr
       // TODO: merge based on id
-      $hc.removeAttribute("w:head"ut)
+      $hc.removeAttribute("w:head")
 
       // and add it to the head
       $head.insertBefore($hc, $head.firstChild)

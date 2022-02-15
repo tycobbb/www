@@ -76,9 +76,11 @@ test("Page ~ it merges elements with the head attribute", () => {
       </body>
     </body>
     </html>
+    </html>
   `)
 
   const file = page.render()
   assertIncludes(file.text, "<title>leaf</title>")
+  assertNotIncludes(file.text, "<title>root</title>")
   assertNotIncludes(file.text, "w:head")
 })

@@ -52,10 +52,13 @@ export class DecodeConfig {
       throw new Fatal("src path must exist")
     }
 
+    // parse dist path from cmd line args
+    const dist = Path.base(m.#args["d"] || m.#args["dir"] || "dist")
+
     // produce paths
     return new Paths(
       root,
-      root.join(m.#args["d"] || m.#args["dir"] || "dist")
+      dist
     )
   }
 

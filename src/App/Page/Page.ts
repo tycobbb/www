@@ -39,9 +39,8 @@ export class Page {
     const $heads = doc.getElementsByTagName("w:head")
     for (const $h of $heads) {
       // merge the contents
-      // TODO: merge based on type? (e.g. 1 title)
-      for (const $hc of Array.from($h.childNodes)) {
-        $head.insertBefore($hc, $head.firstChild)
+      for (const $hc of Array.from($h.children)) {
+        m.#mergeHead($head, $hc)
       }
 
       // and remove the wrapper
@@ -52,11 +51,10 @@ export class Page {
     const $hcs = Array.from(doc.querySelectorAll("body *[w:head]")) as Element[]
     for (const $hc of $hcs) {
       // remove the attr
-      // TODO: merge based on id
       $hc.removeAttribute("w:head")
 
-      // and add it to the head
-      $head.insertBefore($hc, $head.firstChild)
+      // merge the element
+      m.#mergeHead($head, $hc)
     }
 
     // replace <w:template> elements w/ their contents
@@ -72,5 +70,23 @@ export class Page {
     }
 
     return file
+  }
+
+  // merge an element into the head
+  #mergeHead($head: Element, $el: Element) {
+    // find the matching element
+    let $src = null as Element | null
+    if ($el.tagName === "TITLE") {
+      $src = $head.querySelector("title")
+    } else if ($el.id !== "") {
+      $src = $head.getElementById($el.id)
+    }
+
+    // replace the match, or append it if none
+    if ($src != null) {
+      $src.replaceWith($el)
+    } else {
+      $head.appendChild($el)
+    }
   }
 }

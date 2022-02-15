@@ -35,8 +35,10 @@ export class DecodeConfig {
   }
 
   async #decodePaths(): Promise<Paths> {
+    const m = this
+
     // parse root path from cmd line args
-    const path = this.#args._[0]
+    const path = m.#args._[0]
     if (path == null) {
       throw new Fatal("must provide a src path")
     }
@@ -51,7 +53,10 @@ export class DecodeConfig {
     }
 
     // produce paths
-    return new Paths(root)
+    return new Paths(
+      root,
+      root.join(m.#args["d"] || m.#args["dir"] || "dist")
+    )
   }
 
   async #decodeIgnores(paths: Paths): Promise<Set<string>> {

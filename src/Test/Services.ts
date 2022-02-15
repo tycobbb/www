@@ -6,9 +6,14 @@ import { Event } from '../App/Event/mod.ts'
 
 // -- stubs --
 export function stubConfig() {
+  const root = Path.base("./test/fixtures")
+
   return new Config(
     Env.Dev,
-    new Paths(Path.base("./test/fixtures")),
+    new Paths(
+      root,
+      root.join("dist")
+    ),
     new Set()
   )
 }

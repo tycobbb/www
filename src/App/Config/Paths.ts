@@ -2,11 +2,20 @@ import { Path } from "../../Core/mod.ts"
 
 export class Paths {
   // -- props --
-  #root: Path
+  // the root path
+  readonly #root: Path
+
+  // the dist (build) path
+  readonly #dist: Path
 
   // -- lifetime --
-  constructor(root: Path) {
+  // create the path struct
+  constructor(
+    root: Path,
+    dist: Path,
+  ) {
     this.#root = root
+    this.#dist = dist
   }
 
   // -- queries --
@@ -15,14 +24,10 @@ export class Paths {
   }
 
   get dst(): Path {
-    return this.#root.join("../dist")
+    return this.#dist
   }
 
   get cwd(): Path {
     return new Path(this.#root.str, Deno.cwd())
-  }
-
-  get layout(): Path {
-    return this.#root.join("main.l.html")
   }
 }

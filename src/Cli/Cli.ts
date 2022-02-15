@@ -49,10 +49,11 @@ export class Cli {
         src  the path to the src directory
 
       options:
-        -h, --help     prints this message
+        -u, --up       runs as a dev server
+        -p, --prod     runs production mode
+        -d, --dir <p>  sets the output paths
         -v, --verbose  prints more logs
-        -u, --up       starts the file server
-        -p, --prod     starts in production
+        -h, --help     prints this message
 
       environment:
         PROD=1  starts in production

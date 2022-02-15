@@ -2,9 +2,9 @@ import { Cli } from "./Cli/mod.ts"
 import { Action, Init, Clean, Scan, Build, Watch, Serve } from "./App/mod.ts"
 
 // -- main --
-async function Main(): Promise<void> {
+async function Main(args: string[]): Promise<void> {
   // build cli
-  const cli = Cli.parse(Deno.args)
+  const cli = Cli.parse(args)
 
   // show usage if flagged
   if (cli.isHelp) {
@@ -52,4 +52,4 @@ async function Main(): Promise<void> {
 }
 
 // -- bootstrap --
-Main()
+Main(Deno.args)

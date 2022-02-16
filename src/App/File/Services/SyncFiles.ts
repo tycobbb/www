@@ -51,7 +51,6 @@ export class SyncFiles {
     const p = this.#cfg.paths
     const src = file.setBase(p.cwd)
     const dst = file.setBase(p.dst)
-    console.log(`${src.str} ${dst.str}`)
 
     // copy the file in prod
     if (this.#cfg.isProd) {

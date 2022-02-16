@@ -60,7 +60,7 @@ export class Pages {
     const m = this
 
     // get the db id
-    const id = file.path.frag
+    const id = file.path.rel
 
     // find or create the node
     let ref = this.#db.nodes[id]
@@ -82,7 +82,7 @@ export class Pages {
     const m = this
 
     // get the db id
-    const id = path.frag
+    const id = path.rel
 
     // get the node
     const ref = m.#db.nodes[id]

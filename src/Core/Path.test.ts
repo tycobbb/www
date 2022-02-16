@@ -5,7 +5,14 @@ import { Path } from "./Path.ts"
 const { test } = Deno
 
 // -- tests --
-test("Path ~ it parses components", () => {
+test("Path ~ it parses extensions", () => {
   const path = new Path("some/file.t.html")
-  assertEquals(path.components(), ["some/file", ".t.html"])
+  assertEquals(path.frag, "some/file")
+  assertEquals(path.ext, ".t.html")
+})
+
+test("Path ~ it sets extensions", () => {
+  const src = new Path("some/file.t.html", "base")
+  const dst = src.setExt("html")
+  assertEquals(dst.str, "base/some/file.html")
 })

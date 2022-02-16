@@ -60,7 +60,7 @@ export class Pages {
     const m = this
 
     // get the db id
-    const id = this.getId(file.path)
+    const id = file.path.frag
 
     // find or create the node
     let ref = this.#db.nodes[id]
@@ -82,7 +82,7 @@ export class Pages {
     const m = this
 
     // get the db id
-    const id = this.getId(path)
+    const id = path.frag
 
     // get the node
     const ref = m.#db.nodes[id]
@@ -158,17 +158,6 @@ export class Pages {
 
     // add parent as a dependent
     nc.deref()!.addDependent(np)
-  }
-
-  // -- queries --
-  /// get the node id from a file path
-  getId(path: Path): string {
-    const id = path.fragment()
-    if (id == null) {
-      throw new Error(`path had no fragment: ${path.str}`)
-    }
-
-    return id
   }
 
   // -- events --

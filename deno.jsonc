@@ -2,7 +2,8 @@
   "lint": {
     "rules": {
       "exclude": [
-        "no-this-alias"
+        "no-this-alias",
+        "no-inferrable-types"
       ]
     }
   }

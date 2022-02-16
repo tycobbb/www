@@ -4,7 +4,7 @@ import { Config } from "../../Config/mod.ts"
 import { Events } from "../../Event/mod.ts"
 import { File } from "../../File/mod.ts"
 
-// an stream of application events
+// resolves file events against the filesystem
 export class SyncFiles {
   // -- module --
   static readonly get = transient(() => new SyncFiles())
@@ -41,7 +41,7 @@ export class SyncFiles {
 
   // copy a dir to its dst path
   async #copyDir(file: Path) {
-    const dst = this.#cfg.paths.dst.rebase(file)
+    const dst = this.#cfg.paths.dst.setBase(file)
     await dst.mkdir()
   }
 
@@ -49,8 +49,9 @@ export class SyncFiles {
   async #copyFile(file: Path) {
     // use absolute ref for symlinks
     const p = this.#cfg.paths
-    const src = p.cwd.rebase(file)
-    const dst = p.dst.rebase(file)
+    const src = file.setBase(p.cwd)
+    const dst = file.setBase(p.dst)
+    console.log(`${src.str} ${dst.str}`)
 
     // copy the file in prod
     if (this.#cfg.isProd) {
@@ -68,13 +69,13 @@ export class SyncFiles {
 
   // delete a file from its dst path
   async #deleteFile(file: Path) {
-    const dst = this.#cfg.paths.dst.rebase(file)
+    const dst = file.setBase(this.#cfg.paths.dst)
     await dst.rm()
   }
 
   // save a new file at its dst path
   async #saveFile(file: File) {
-    const dst = this.#cfg.paths.dst.rebase(file.path)
+    const dst = file.path.setBase(this.#cfg.paths.dst)
     await dst.write(file.text)
   }
 }

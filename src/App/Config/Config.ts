@@ -37,7 +37,7 @@ export class Config {
   }
 
   isIgnored(path: Path): boolean {
-    return this.ignored.has(path.relative)
+    return this.ignored.has(path.rel)
   }
 
   // -- shared --

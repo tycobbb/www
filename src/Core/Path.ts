@@ -1,31 +1,55 @@
 import { join, relative } from "https://deno.land/std@0.122.0/path/mod.ts"
 
-// -- constants --
-// matches paths with compound extensions (e.g. *.p.html)
-const kComponentsPattern = /([^\.]*)(\..*)/
-
 // -- impls --
-// a file path relative path support and file system methods
+/// a file path relative path support and file system methods
 export class Path {
   // -- props --
-  #path: string
+  /// the relative path w/o extension
+  #frag: string
+
+  /// the base path, if any
   #base: string
 
+  /// the extension, if any
+  #ext: string
+
   // -- lifetime --
-  constructor(path: string, base: string = "") {
-    this.#path = path
+  constructor(path: string, base: string = "", ext: string = "") {
+    // set props
     this.#base = base
+    this.#frag = path
+    this.#ext = ext
+
+    // separate path and extension if present
+    if (ext === "") {
+      const i = path.indexOf(".")
+
+      if (i >= 0) {
+        this.#frag = path.slice(0, i)
+        this.#ext = path.slice(i)
+      }
+    }
   }
 
   // -- queries --
   // the entire path
   get str(): string {
-    return join(this.#base, this.#path)
+    return join(this.#base, this.rel)
   }
 
-  // the relative part of the path
-  get relative(): string {
-    return this.#path
+  /// the relative path w/ extension
+  get rel(): string {
+    return this.#frag + this.#ext
+  }
+
+  /// the relative path w/o extension
+  get frag(): string {
+    return this.#frag
+  }
+
+  /// the extension, if any
+  get ext(): string {
+    return this.#ext
   }
 
   // the length of the entire path
@@ -33,67 +57,37 @@ export class Path {
     return this.str.length
   }
 
-  // the path fragment with no extension
-  fragment(): string | null {
-    return this.components()?.[0] || null
-  }
-
-  // the file extension, if one exists
-  ext(): string | null {
-    return this.components()?.[1] || null
-  }
-
-  // the [fragment, extension] of the relative path, if possible
-  components(): [string, string] | null {
-    // if relative part has a path and extension
-    const match = this.#path.match(kComponentsPattern)
-    if (match == null || match.length !== 3) {
-      return null
-    }
-
-    // return them as a tuple
-    return [match[1], match[2]]
-  }
-
   // -- operators --
   // sets the relative part of the path
-  set(path: string): Path {
-    return new Path(path, this.#base)
+  set(path: string, ext: string = ""): Path {
+    return new Path(path, this.#base, ext)
   }
 
   // sets the path extension
   setExt(next: string): Path {
-    const m = this
+    return this.set(this.#frag, "." + next)
+  }
 
-    // get path segment and ext
-    const parts = m.components()
-    if (parts == null) {
-      throw new Error("must have a path and extension")
-    }
-
-    // replace the extension
-    return m.set(`${parts[0]}.${next}`)
+  // set the base path for this path
+  setBase(base: Path): Path {
+    return new Path(this.#frag, base.str, this.#ext)
   }
 
   // add components to the relative path
   join(...components: string[]): Path {
-    return this.set(join(this.#path, ...components))
-  }
-
-  // rebase relative path against this path
-  rebase(path: Path): Path {
-    return new Path(path.#path, this.str)
-  }
-
-  // resolves the string as a path relative to this path
-  resolve(path: string) {
-    return new Path(relative(this.str, path), this.str)
+    return new Path(join(this.#frag, ...components), this.#base)
   }
 
   // -- factories --
   // init a new base path; useful for building relative paths w/ `join`.
   static base(str: string): Path {
     return new Path("", str)
+  }
+
+  // resolves the string as a path relative to this path
+  static resolve(path: string, base: Path) {
+    const root = base.str
+    return new Path(relative(root, path), root)
   }
 
   // -- debugging --

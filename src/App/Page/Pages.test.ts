@@ -23,5 +23,5 @@ test("Pages ~ it links a page and layout", async () => {
 
   const evt = evts.all[0]
   assertEquals(evt.kind, "save-file")
-  assertEquals((<File>evt.file).path.relative, "b1.html")
+  assertEquals((<File>evt.file).path.rel, "b1.html")
 })

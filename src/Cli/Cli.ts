@@ -71,7 +71,7 @@ export class Cli {
       case "copy-file":
         this.#drawSavedFile("copy ", e.file.path); break
       case "delete-file":
-        log.i(`- delete: ${e.file.relative}`); break
+        log.i(`- delete: ${e.file.rel}`); break
       case "save-file":
         this.#drawSavedFile("build", e.file.path); break
       default: break
@@ -108,11 +108,11 @@ export class Cli {
   // -- c/draw
   #drawSavedFile(action: string, path: Path): void {
     // the base log message
-    let msg = `* ${action} - ${path.relative}`
+    let msg = `* ${action} - ${path.rel}`
 
     // check log record against this path
     const rec = this.#saveMsg
-    const id = path.relative
+    const id = path.rel
 
     // if path matches prev line, then clear the prev line and log w/ count
     if (rec.id === id && rec.logId === log.curr) {

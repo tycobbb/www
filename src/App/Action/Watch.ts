@@ -48,7 +48,7 @@ export class Watch implements Action {
     for await (const {kind: fsKind, paths: fsPaths} of watch) {
       for (const fsPath of fsPaths) {
         // skip ignored paths
-        const path = src.resolve(fsPath)
+        const path = Path.resolve(fsPath, src)
         if (this.#cfg.isIgnored(path)) {
           continue
         }
@@ -125,7 +125,7 @@ export class Watch implements Action {
   // -- helpers --
   // debounce the action for the given path; should maybe be moved into core
   #debounce(path: Path, action: () => void) {
-    const key = path.relative
+    const key = path.rel
 
     // grab the switch for this path
     const onEvent = this.#fsEvts[key] ||= switchTo(50)

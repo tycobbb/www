@@ -41,7 +41,7 @@ export class SyncFiles {
 
   // copy a dir to its dst path
   async #copyDir(file: Path) {
-    const dst = this.#cfg.paths.dst.setBase(file)
+    const dst = file.setBase(this.#cfg.paths.dst)
     await dst.mkdir()
   }
 

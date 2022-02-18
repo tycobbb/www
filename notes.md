@@ -1,10 +1,21 @@
+# notes
+
+## libs
+
+this might be useful if to bridge into deno if deno-dom proves to be slow:
 https://gitlab.com/xmpp-rs/xmpp-rs/-/tree/main/minidom
 
-maybe preprocess custom elements into eta includes so we can do something like slots:
+## includes
+
+create a build-time include element w/ something like slots. eta's include syntax falls
+down on complex partials imo, pretty cumbersome. preprocess:
 
 ```html
-<w:include path="window.f.html" name="nav" top=5>
-  <w:include w:slot="body" name="nav" />
+<w:include path="window" name="nav" top=5>
+  <w:include
+    w:slot="body"
+    path="nav"
+  />
 
   <div w:slot="footer">
     footer
@@ -25,7 +36,19 @@ into
           <li><a href="/">home</a></li>
         </ul>
       </nav>
+    `,
+    footer: `
+      <div w:slot="footer">
+        footer
+      </div>
     `
   `})
 %>
 ```
+
+can punt on nested includes if it's too much work. eta can't seem to handle nested
+includes, so we'd have to precompile all of them.
+
+## html-escaping
+
+auto-escape html in code blocks? as a config option?

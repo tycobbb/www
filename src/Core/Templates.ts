@@ -6,7 +6,7 @@ import { EventStream, EventBus, EventListener } from "./Events.ts"
 
 // -- constants --
 // matches includes & layouts that may or may not have args
-const kIncludePattern = /(include|layout)\(([^,]*)(,\s*\{(.*)\})?\)/
+const kIncludePattern = /(include|layout)\(([^,]*)(,\s*\{(.*)\})?\)/s
 
 // -- types --
 // an event when a template is included
@@ -90,17 +90,26 @@ export class Templates {
 
       // redefine include to resolve base path
       include: function include(path: string, args: Record<string, unknown>) {
-        // resolve path against parent
-        const { path: parent, ...rest } = args
-        if (parent != null && typeof parent == "string") {
-          path = join(dirname(parent), path)
+        let res = path
 
-          // send include event to listeners
-          m.#evts.send({ child: path, parent })
+        // if parent, resolve the path
+        const { path: parent, ...rest } = args
+        if (parent != null && typeof parent === "string") {
+          // if this is an aboslute path
+          if (path.startsWith("/")) {
+            res = path.slice(1)
+          }
+          // else, resolve againt parent
+          else {
+            res = join(dirname(parent), path)
+          }
+
+          // send include event
+          m.#evts.send({ child: res, parent })
         }
 
-        // call base impl
-        return incl!.call(this, path, rest)
+        // run include w/ resolved path
+        return incl!.call(this, res, rest)
       },
 
       // add plugin to pass base path from env to include calls

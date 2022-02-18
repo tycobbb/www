@@ -39,12 +39,28 @@ test("Templates ~ it resolves include paths", async () => {
   tmpl.add("core/post", `<%= it.i %>`)
   tmpl.add("test/posts", `
     <% for (let i = 0; i < 3; i++) { %>
-      <%~ include("../core/post", { i }) %>
+      <%~
+        include("../core/post", {
+          i
+        })
+      %>
     <% } %>
   `)
 
   const res = await tmpl.render("test/posts")
   assertEquals(clean(res), "012")
+})
+
+test("Templates ~ it resolves absolute include paths", async () => {
+  const tmpl = new Templates(evts)
+  tmpl.reset()
+  tmpl.add("base", `hello`)
+  tmpl.add("test/child", `
+    <%~ include("/base") %>
+  `)
+
+  const res = await tmpl.render("test/child")
+  assertEquals(clean(res), "hello")
 })
 
 test("Templates ~ it emits include events", async () => {

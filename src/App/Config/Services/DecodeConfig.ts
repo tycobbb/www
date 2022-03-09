@@ -27,7 +27,8 @@ export class DecodeConfig {
 
   // -- c/helpers
   #decodeEnv(): Env {
-    if (this.#args.prod || Deno.env.get("PROD") != null) {
+    const m = this
+    if (m.#args["p"] || m.#args["prod"] || Deno.env.get("PROD") != null) {
       return Env.Prod
     } else {
       return Env.Dev

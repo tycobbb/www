@@ -51,7 +51,7 @@ export class Cli {
       options:
         -u, --up       runs as a dev server
         -p, --prod     runs production mode
-        -d, --dir <p>  sets the output paths
+        -d, --dir <p>  sets the output path
         -v, --verbose  prints more logs
         -h, --help     prints this message
 

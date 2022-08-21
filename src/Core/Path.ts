@@ -1,25 +1,25 @@
 import { join, relative } from "https://deno.land/std@0.122.0/path/mod.ts"
 
 // -- impls --
-/// a file path relative path support and file system methods
+// a file path relative path support and file system methods
 export class Path {
   // -- props --
-  /// the relative path w/o extension
+  // the relative path w/o extension
   #frag: string
 
-  /// the base path, if any
+  // the base path, if any
   #base: string
 
-  /// the extension components, if any
+  // the extension components, if any
   #ext: string[] | null
 
   // -- lifetime --
+  // creates a new path
   constructor(
     frag: string,
     base: string,
     ext: string[] | null = null
   ) {
-    // set props
     this.#frag = frag
     this.#base = base
     this.#ext = ext
@@ -31,7 +31,7 @@ export class Path {
     return join(this.#base, this.rel)
   }
 
-  /// the relative path w/ extension
+  // the relative path w/ extension
   get rel(): string {
     if (this.#ext === null) {
       return this.#frag
@@ -40,12 +40,12 @@ export class Path {
     }
   }
 
-  /// the relative path w/o extension
+  // the relative path w/o extension
   get frag(): string {
     return this.#frag
   }
 
-  /// the extension, if any
+  // the extension, if any
   get ext(): string[] | null {
     return this.#ext
   }

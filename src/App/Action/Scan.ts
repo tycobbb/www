@@ -2,7 +2,7 @@ import { transient } from "../../Core/Scope.ts"
 import { Path } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
 import { Event, Events } from "../Event/mod.ts"
-import { FileRef } from "../File/mod.ts"
+import { FileRef, FileKind } from "../File/mod.ts"
 import { Pages } from "../Page/mod.ts"
 import { Action } from "./Action.ts"
 
@@ -44,7 +44,7 @@ export class Scan implements Action {
     // traverse proj dir and scan every file
     for await (const files of this.#walk([src])) {
       for (const f of files) {
-        switch (f.kind) {
+        switch (f.kind.type) {
         // if this is a directory, copy it
         case "dir":
           this.#evts.send(Event.copyDir(f)); break
@@ -77,7 +77,7 @@ export class Scan implements Action {
 
         // partition files and directories
         if (child.isDirectory) {
-          nodes.push(FileRef.init(path, "dir"))
+          nodes.push(FileRef.init(path, new FileKind("dir", "")))
         } else {
           files.push(FileRef.init(path))
         }

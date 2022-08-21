@@ -120,7 +120,7 @@ export class Pages {
       m.#tmpl.add(id, await node.read())
 
       // if it's a page, add to render list
-      if (node.kind === "page") {
+      if (node.kind.type === "page") {
         pageIds.push(id)
       }
 

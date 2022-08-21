@@ -17,7 +17,7 @@ const cfg = stubConfig()
 const src = cfg.paths.src
 
 // -- tests --
-test("Page ~ it cleans up nested templates", () => {
+test("it cleans up nested templates", () => {
   const path = src.join("./test.p.html")
   const page = new Page(path, `
     <html>
@@ -34,7 +34,7 @@ test("Page ~ it cleans up nested templates", () => {
   assertNotIncludes(file.text, "<w:template>")
 })
 
-test("Page ~ it merges head elements", () => {
+test("it merges head elements", () => {
   const path = src.join("./test.p.html")
   const page = new Page(path, `
     <html>
@@ -60,7 +60,7 @@ test("Page ~ it merges head elements", () => {
   assertNotIncludes(file.text, "<w:head>")
 })
 
-test("Page ~ it merges elements with the head attribute", () => {
+test("it merges elements with the head attribute", () => {
   const path = src.join("./test.p.html")
   const page = new Page(path, `
     <html>

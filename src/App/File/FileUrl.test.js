@@ -5,7 +5,7 @@ import { FileUrl } from "./FileUrl.ts"
 const { test } = Deno
 
 // -- tests --
-test("FileUrl ~ it finds paths for the root", () => {
+test("it finds paths for the root", () => {
   const url = new FileUrl("/?p1=a")
 
   const paths = url.findPaths("./test")
@@ -14,7 +14,7 @@ test("FileUrl ~ it finds paths for the root", () => {
   ])
 })
 
-test("FileUrl ~ it finds paths for a page", () => {
+test("it finds paths for a page", () => {
   const url = new FileUrl("/page?p1=a")
 
   const paths = url.findPaths("./test")
@@ -24,7 +24,7 @@ test("FileUrl ~ it finds paths for a page", () => {
   ])
 })
 
-test("FileUrl ~ it finds paths for assets", () => {
+test("it finds paths for assets", () => {
   const url = new FileUrl("/page.css?p1=a")
 
   const paths = url.findPaths("./test")

@@ -8,7 +8,7 @@ const { test } = Deno
 const evts = stubEvents<IncludeEvent>()
 
 // -- tests --
-test("Templates ~ it renders templates", async () => {
+test("it renders templates", async () => {
   const tmpl = new Templates(evts)
   tmpl.reset()
   tmpl.add("post", `<%= it.body %>`)
@@ -17,7 +17,7 @@ test("Templates ~ it renders templates", async () => {
   assertEquals(res, "hi")
 })
 
-test("Templates ~ it resolves layout paths", async () => {
+test("it resolves layout paths", async () => {
   const tmpl = new Templates(evts)
   tmpl.reset()
   tmpl.add("core/layout", `
@@ -33,7 +33,7 @@ test("Templates ~ it resolves layout paths", async () => {
   assertEquals(clean(res), "012")
 })
 
-test("Templates ~ it resolves include paths", async () => {
+test("it resolves include paths", async () => {
   const tmpl = new Templates(evts)
   tmpl.reset()
   tmpl.add("core/post", `<%= it.i %>`)
@@ -51,7 +51,7 @@ test("Templates ~ it resolves include paths", async () => {
   assertEquals(clean(res), "012")
 })
 
-test("Templates ~ it resolves absolute include paths", async () => {
+test("it resolves absolute include paths", async () => {
   const tmpl = new Templates(evts)
   tmpl.reset()
   tmpl.add("base", `hello`)
@@ -63,7 +63,7 @@ test("Templates ~ it resolves absolute include paths", async () => {
   assertEquals(clean(res), "hello")
 })
 
-test("Templates ~ it emits include events", async () => {
+test("it emits include events", async () => {
   const tmpl = new Templates(evts)
   evts.reset()
   tmpl.reset()

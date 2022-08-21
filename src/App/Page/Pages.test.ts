@@ -13,7 +13,7 @@ const evts = stubEvents()
 const src = cfg.paths.src
 
 // -- tests --
-test("Pages ~ it links a page and layout", async () => {
+test("it links a page and layout", async () => {
   const pages = new Pages(cfg, evts)
   pages.change(FileRef.init(src.join("./bz.l.html")))
   pages.change(FileRef.init(src.join("./b1.p.html")))

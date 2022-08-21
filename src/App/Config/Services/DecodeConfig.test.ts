@@ -5,14 +5,14 @@ import { assertEquals } from "../../../Test/mod.ts"
 const { test } = Deno
 
 // -- tests --
-test("it outputs a custom directory", async () => {
-  const decode = new DecodeConfig({ _: ["."], d: "test" })
+test("it builds to a custom dir with the long arg", async () => {
+  const decode = new DecodeConfig({ _: ["."], dir: "test" })
   const cfg = await decode.call()
   assertEquals(cfg.paths.dst.str, "test")
 })
 
-test("it outputs a custom directory", async () => {
-  const decode = new DecodeConfig({ _: ["."], dir: "test" })
+test("it builds to a custom dir with the short arg", async () => {
+  const decode = new DecodeConfig({ _: ["."], d: "test" })
   const cfg = await decode.call()
   assertEquals(cfg.paths.dst.str, "test")
 })

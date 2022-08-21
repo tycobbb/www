@@ -10,25 +10,19 @@ export class Path {
   /// the base path, if any
   #base: string
 
-  /// the extension, if any
-  #ext: string
+  /// the extension components, if any
+  #ext: string[] | null
 
   // -- lifetime --
-  constructor(path: string, base: string = "", ext: string = "") {
+  constructor(
+    frag: string,
+    base: string,
+    ext: string[] | null = null
+  ) {
     // set props
+    this.#frag = frag
     this.#base = base
-    this.#frag = path
     this.#ext = ext
-
-    // separate path and extension if present
-    if (ext === "") {
-      const i = path.indexOf(".")
-
-      if (i >= 0) {
-        this.#frag = path.slice(0, i)
-        this.#ext = path.slice(i)
-      }
-    }
   }
 
   // -- queries --
@@ -39,7 +33,11 @@ export class Path {
 
   /// the relative path w/ extension
   get rel(): string {
-    return this.#frag + this.#ext
+    if (this.#ext === null) {
+      return this.#frag
+    } else {
+      return [this.#frag, ...this.#ext].join(".")
+    }
   }
 
   /// the relative path w/o extension
@@ -48,7 +46,7 @@ export class Path {
   }
 
   /// the extension, if any
-  get ext(): string {
+  get ext(): string[] | null {
     return this.#ext
   }
 
@@ -58,14 +56,9 @@ export class Path {
   }
 
   // -- operators --
-  // sets the relative part of the path
-  set(path: string, ext: string = ""): Path {
-    return new Path(path, this.#base, ext)
-  }
-
   // sets the path extension
-  setExt(next: string): Path {
-    return this.set(this.#frag, "." + next)
+  setExt(ext: string): Path {
+    return new Path(this.#frag, this.#base, [ext])
   }
 
   // set the base path for this path
@@ -75,19 +68,57 @@ export class Path {
 
   // add components to the relative path
   join(...components: string[]): Path {
-    return new Path(join(this.#frag, ...components), this.#base)
+    if (this.#ext != null) {
+      throw new Error("tried to join to a path with an extension")
+    }
+
+    return Path.raw(
+      join(this.#frag, ...components),
+      this.#base
+    )
   }
 
   // -- factories --
-  // init a new base path; useful for building relative paths w/ `join`.
-  static base(str: string): Path {
-    return new Path("", str)
+  // create a new base path; useful for building relative paths w/ `join`.
+  static base(base: string): Path {
+    return new Path("", base, null)
   }
 
-  // resolves the string as a path relative to this path
+  // resolves the string as a raw path relative to the base
   static resolve(path: string, base: Path) {
     const root = base.str
-    return new Path(relative(root, path), root)
+    return Path.raw(
+      relative(root, path),
+      root
+    )
+  }
+
+  // creates a path from a raw string and base path; parses its extension
+  static raw(path: string, base: string = "") {
+    let i = 0
+    let isExt = false
+
+    while (i >= 0 && !isExt) {
+      i = path.indexOf(".", i)
+      isExt = i !== 0 && path[i - 1] !== "/"
+
+      // if this is a hidden file (leading ".", try again from the next character)
+      if (!isExt) {
+        i = i + 1
+      }
+    }
+
+    // if no extension, the raw path is a fragment
+    if (!isExt) {
+      return new Path(path, base, null)
+    }
+
+    // parse fragment and extension
+    const frag = path.slice(0, i)
+    const ext = path.slice(i + 1).split(".")
+
+    // and produce the path
+    return new Path(frag, base, ext)
   }
 
   // -- debugging --

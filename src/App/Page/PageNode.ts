@@ -1,4 +1,4 @@
-import { log, Ref } from "../../Core/mod.ts"
+import { Ref } from "../../Core/mod.ts"
 import { FileRef, FilePath, FileKind } from "../File/mod.ts"
 
 // -- types --

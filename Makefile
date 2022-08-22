@@ -15,6 +15,7 @@ ts-deno = deno --unstable
 ts-opts = --allow-read --allow-write --allow-run --allow-env --allow-net
 
 ti-brew = brew
+ti-asdf = asdf
 tb-deno = $(ts-deno)
 tr-deno = $(ts-deno)
 tt-deno = $(ts-deno)
@@ -24,14 +25,23 @@ $(eval $(call alias, init, i/0))
 $(eval $(call alias, i, i/0))
 
 ## init dev env
-i/0: i/pre
-	$(ti-brew) bundle -v --no-upgrade
+i/0: i/pre i/brew i/deno
 .PHONY: i/0
+
+## install initial brew deps
+i/brew:
+	$(ti-brew) bundle -v --no-upgrade
+.PHONY: i/brew
 
 ## updates deps
 i/upgr:
 	$(ti-brew) bundle -v
-.PHONY: i/upadte
+.PHONY: i/upgr
+
+## install deno
+i/deno:
+	$(ti-asdf) install
+.PHONY: i/deno
 
 # -- i/helpers
 i/pre:

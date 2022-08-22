@@ -1,5 +1,5 @@
 import { single } from "../../Core/Scope.ts"
-import { Path, Ref, Templates, IncludeEvent } from "../../Core/mod.ts"
+import { Path, Ref, Templates, TemplateEvent } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
 import { FileRef } from "../File/mod.ts"
 import { Event, Events } from "../Event/mod.ts"
@@ -51,7 +51,7 @@ export class Pages {
 
     // listen to file events
     m.#evts.on(m.#onEvent.bind(m))
-    m.#tmpl.on(m.#onInclude.bind(m))
+    m.#tmpl.on(m.#onTemplateEvent.bind(m))
   }
 
   // -- commands --
@@ -106,6 +106,9 @@ export class Pages {
     const m = this
 
     // collect ids dirty pages for rendering
+    // TODO: compiling pages as a second step is a limited approach. this should
+    // instead iteratively process the list of nodes until nothing is dirty, skipping
+    // nodes whose dependencies haven't been compiled yet
     const pageIds: string[] = []
 
     // recompile every dirty node
@@ -171,8 +174,10 @@ export class Pages {
     }
   }
 
-  // when an include event happens
-  #onInclude(evt: IncludeEvent) {
-    this.#addDep(evt.child, evt.parent)
+  // when a template event happens
+  #onTemplateEvent(evt: TemplateEvent) {
+    if (evt.kind === "include") {
+      this.#addDep(evt.child, evt.parent)
+    }
   }
 }

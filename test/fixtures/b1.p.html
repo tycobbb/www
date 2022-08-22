@@ -9,7 +9,14 @@
 </style>
 
 <w:template>
-  <p class="test">hello, test 1.</p>
+  <p class="test">
+    hello, test 1.
+  </p>
+
+  <%- a1 = data("links").a1 %>
+  <a href="<%= a1.url %>">
+    <%= a1.text %>
+  </a>
 </w:template>
 
 <script>

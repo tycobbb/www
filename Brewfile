@@ -1,2 +1,2 @@
-# js runtime
-brew "deno"
+# deno version management
+brew "asdf"

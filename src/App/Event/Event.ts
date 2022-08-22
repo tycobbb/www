@@ -2,11 +2,13 @@ import { Path } from "../../Core/mod.ts"
 import { File, FileRef } from "../File/mod.ts"
 
 // -- types --
+// an application event
 export type Event
   = { kind: "copy-dir", file: FileRef }
   | { kind: "copy-file", file: FileRef }
   | { kind: "delete-file", file: Path }
   | { kind: "save-file", file: File }
+  | { kind: "change-file", file: File }
 
 // -- factories --
 export const Event = {

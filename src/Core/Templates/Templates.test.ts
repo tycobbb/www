@@ -69,7 +69,7 @@ test("it applies layouts", async () => {
 
 test("it uses data", async () => {
   reset()
-  tmpl.bind("page/strings", {
+  tmpl.addData("page/strings", {
     test: "test data"
   })
   tmpl.add("page/test", `
@@ -84,7 +84,7 @@ test("it emits include events", async () => {
   reset()
   tmpl.add("posts/post0", `1`)
   tmpl.add("posts/post1", `2`)
-  tmpl.bind("strings", {
+  tmpl.addData("strings", {
     test: "test data"
   })
   tmpl.add("posts/test", `

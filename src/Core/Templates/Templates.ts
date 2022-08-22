@@ -1,15 +1,11 @@
 import * as E from "https://deno.land/x/eta@v1.12.3/mod.ts"
-import { AstObject } from "https://deno.land/x/eta@v1.12.3/parse.ts"
-import { dirname, join } from "https://deno.land/std@0.122.0/path/mod.ts"
 import { single } from "../Scope.ts"
 import { EventStream, EventBus, EventListener } from "../Events.ts"
 import { TemplateEvent } from "./TemplateEvent.ts"
+import { TemplateFrag } from "./TemplateFrag.ts"
 import { TemplateData } from "./TemplateData.ts"
-import { EtaConfig } from "https://deno.land/x/eta@v1.12.3/config.ts"
-
-// -- constants --
-// matches includes & layouts that may or may not have args
-const kHelperPattern = /(layout|include|data)\(([^,]*)(,\s*\{(.*)\})?\)(.*)/s
+import { TemplateHelpers } from "./TemplateHelpers.ts"
+import { TemplateParent } from "./TemplateParent.ts"
 
 // -- impls --
 // eta templates that support relative pathing
@@ -31,34 +27,39 @@ export class Templates {
   ) {
     // set props
     this.#evts = evts
-    this.#data = {}
+    this.#data = {id: Math.random()}
 
     // configure eta
     this.#configure()
   }
 
   // -- commands --
-  // add a template from a raw string
+  // add a template by path from a raw string
   add(path: string, raw: string) {
     // register the compiled path
     E.templates.define(path, E.compile(raw, { path }))
   }
 
-  // bind data to the given path
-  bind(path: string, data: unknown) {
+  // add template data by path
+  addData(path: string, data: unknown) {
     this.#data[path] = data
   }
 
-  // remove the template
+  // delete a template by path
   delete(path: string) {
     E.templates.remove(path)
   }
 
   // -- c/debug
-  // reset state (only use this in debugging)
+  // reset state (only use this in testing)
   reset() {
-    this.#data = {}
     E.templates.reset()
+
+    // clear data (don't create a new obj; config captures it by reference)
+    const m = this
+    for (const key in m.#data) {
+      delete m.#data[key]
+    }
   }
 
   // -- events --
@@ -85,101 +86,31 @@ export class Templates {
     // capture ref to outer this to call listeners
     const m = this
 
-    // capture base include fn
-    const incl = E.config.include
-
-    function resolvePath(path: string, parent: string) {
-        // if this is a relative path, resolve against parent dir
-        if (path.startsWith(".")) {
-          return join(dirname(parent), path)
-        }
-        // else, this is absolute
-        else {
-          return path
-        }
-    }
+    // create a frag helper to use a few times
+    const frag = TemplateFrag.helper(m.#evts)
 
     // configure eta
     // TODO: break this stuff up into multiple files...
     E.configure({
-      ready: true,
-
       // get rid of includeFile so layouts use include
       includeFile: undefined,
 
-      // redefine include to resolve base path
-      include: function include(path: string, args: { parent: string, [key: string]: unknown }) {
-        // extract parent from args
-        const { parent, ...rest } = args
+      // redefine include to use frag helper
+      include: frag,
 
-        // resolve path against parent
-        const child = resolvePath(path, parent)
+      // define frag helper
+      frag,
 
-        // send include event
-        m.#evts.send(TemplateEvent.include(child, parent))
+      // define data helper
+      data: TemplateData.helper(m.#data, m.#evts),
 
-        // run original include w/ resolved path
-        return incl!.call(this, child, rest)
-      },
-
-      // fetch a path from the data store
-      data(path: string, args: { parent: string }): unknown {
-        // get parent
-        const parent = args.parent
-
-        // resolve path against parent
-        const child = resolvePath(path, parent)
-
-        // get data
-        const val = m.#data[child]
-        if (val == null) {
-          throw new Error(`templates missing data for "${child}"`)
-        }
-
-        // send include event
-        m.#evts.send(TemplateEvent.include(child, parent))
-
-        return val
-      },
-
-      // add plugin to add parent path to helper calls
-      plugins: [{
-        // add globals
-        processFnString(fnStr: string, _: EtaConfig) {
-          return "var data=E.data.bind(E);" + fnStr
-        },
-        // shim parent path into calls
-        processAST(buffer: AstObject[], env: EtaConfig): AstObject[] {
-          // make sure we have a path to add
-          const base = env.path
-          if (base == null || typeof base != "string") {
-            return buffer
-          }
-
-          // add the parent path to each call
-          for (const token of buffer) {
-            // if this is not interpolated, skip
-            if (typeof token === "string") {
-              continue;
-            }
-
-            // match the token
-            const match = token.val.match(kHelperPattern)
-            if (match == null) {
-              continue;
-            }
-
-            // update token with parent path arg
-            const name = match[1]
-            const path = match[2]
-            const args = match[4]
-            const rest = match[5]
-            token.val = `${name}(${path}, { parent: "${base}", ${args || ""} })${rest}`
-          }
-
-          return buffer
-        },
-      }]
+      // add plugins
+      plugins: [
+        // expost helpers as globals
+        new TemplateHelpers(),
+        // pass parent path to helpers,
+        new TemplateParent(),
+      ]
     })
   }
 }

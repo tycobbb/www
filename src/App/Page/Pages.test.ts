@@ -1,4 +1,5 @@
 import { stubConfig, stubEvents, assertEquals, assertLength } from "../../Test/mod.ts"
+import { Events } from "../Event/Events.ts"
 import { File, FileRef } from "../File/mod.ts"
 import { Pages } from "./Pages.ts"
 
@@ -15,6 +16,7 @@ const src = cfg.paths.src
 // -- tests --
 test("it links a page and layout", async () => {
   const pages = new Pages(cfg, evts)
+  evts.reset()
   pages.change(FileRef.init(src.join("./bz.l.html")))
   pages.change(FileRef.init(src.join("./b1.p.html")))
 

@@ -1,24 +1,41 @@
 import { EventStream } from "../Events.ts"
 import { TemplateEvent } from "./TemplateEvent.ts"
+import { TemplatePath } from "./TemplatePath.ts"
 
 // -- types --
 // data available to templates
 export type TemplateData =
   { [key: string | symbol]: unknown }
 
-// // -- impls --
-// export const TemplateData = {
-//   // create tempalte data that emits events on access
-//   create(
-//     path: string,
-//     data: TemplateData,
-//     evts: EventStream<TemplateEvent>
-//   ) {
-//     return new Proxy(data, {
-//       get(target, p) {
-//         evts.send(TemplateEvent.include(path, parent))
-//         return target[p]
-//       }
-//     })
-//   }
-// }
+// a template data helper fn
+type TemplateDataHelper
+  = (path: string, args: { parent: string }) => unknown
+
+// a factory for constructing a helper with its dependencies
+type TemplateDataHelperFactory = {
+  helper: (
+    data: TemplateData,
+    evts: EventStream<TemplateEvent>
+  ) => TemplateDataHelper
+}
+
+// -- impls --
+export const TemplateData: TemplateDataHelperFactory = {
+  helper: (data, evts) => (path, args) => {
+    // resolve path against parent
+    const parent = args.parent
+    const child = TemplatePath.resolve(path, parent)
+
+    // get data
+    const val = data[child]
+    if (val == null) {
+      console.log("get", data)
+      throw new Error(`templates missing data for "${child}"`)
+    }
+
+    // send include event
+    evts.send(TemplateEvent.include(child, parent))
+
+    return val
+  },
+}

@@ -12,7 +12,7 @@ const kInclude: (path: string, cfg: EtaConfig) => unknown
 // -- types --
 // a template data helper fn
 type TemplateFragHelper
-  = (path: string, args: { parent: string } & EtaConfig) => unknown
+  = (path: string, parent: string, cfg: EtaConfig) => unknown
 
 // a factory for constructing a helper with its dependencies
 type TemplateFragHelperFactory = {
@@ -25,15 +25,14 @@ type TemplateFragHelperFactory = {
 // factory for template frag helpers
 export const TemplateFrag: TemplateFragHelperFactory = {
   // create the helper from its deps
-  helper: (evts) => (path, args) => {
+  helper: (evts) => (path, parent, cfg) => {
     // resolve path against parent
-    const { parent, ...rest } = args
     const child = TemplatePath.resolve(path, parent)
 
     // send include event
     evts.send(TemplateEvent.include(child, parent))
 
     // run original include w/ resolved path
-    return kInclude(child, rest)
+    return kInclude(child, cfg)
   }
 }

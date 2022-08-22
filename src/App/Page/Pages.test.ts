@@ -1,5 +1,4 @@
 import { stubConfig, stubEvents, assertEquals, assertLength } from "../../Test/mod.ts"
-import { Events } from "../Event/Events.ts"
 import { File, FileRef } from "../File/mod.ts"
 import { Pages } from "./Pages.ts"
 

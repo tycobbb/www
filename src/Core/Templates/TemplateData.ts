@@ -9,7 +9,7 @@ export type TemplateData =
 
 // a template data helper fn
 type TemplateDataHelper
-  = (path: string, args: { parent: string }) => unknown
+  = (path: string, parent: string) => unknown
 
 // a factory for constructing a helper with its dependencies
 type TemplateDataHelperFactory = {
@@ -21,15 +21,13 @@ type TemplateDataHelperFactory = {
 
 // -- impls --
 export const TemplateData: TemplateDataHelperFactory = {
-  helper: (data, evts) => (path, args) => {
+  helper: (data, evts) => (path, parent) => {
     // resolve path against parent
-    const parent = args.parent
     const child = TemplatePath.resolve(path, parent)
 
     // get data
     const val = data[child]
     if (val == null) {
-      console.log("get", data)
       throw new Error(`templates missing data for "${child}"`)
     }
 

@@ -13,10 +13,7 @@
     hello, test 1.
   </p>
 
-  <%- a1 = data("links").a1 %>
-  <a href="<%= a1.url %>">
-    <%= a1.text %>
-  </a>
+  <%= include("./link.f.html", data("links").a1) %>
 </w:template>
 
 <script>

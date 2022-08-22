@@ -2,7 +2,7 @@ import { Cli } from "./Cli/mod.ts"
 import { Action, Init, Clean, Scan, Build, Watch, Serve } from "./App/mod.ts"
 
 // -- main --
-async function Main(args: string[]): Promise<void> {
+export async function main(args: string[]): Promise<void> {
   // build cli
   const cli = Cli.parse(args)
 
@@ -50,6 +50,3 @@ async function Main(args: string[]): Promise<void> {
     cli.catch(err)
   }
 }
-
-// -- bootstrap --
-Main(Deno.args)

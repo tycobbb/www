@@ -1,4 +1,4 @@
-import { transient } from "../../Core/Scope.ts"
+import { transient, log } from "../../Core/mod.ts"
 import { Path } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
 import { Event, Events } from "../Event/mod.ts"
@@ -36,6 +36,9 @@ export class Scan implements Action {
 
   // -- commands --
   async call(): Promise<void> {
+    log.d("d [scan] start")
+
+    // get paths
     const { src, dst } = this.#cfg.paths
 
     // build dist dir
@@ -44,6 +47,8 @@ export class Scan implements Action {
     // traverse proj dir and scan every file
     for await (const files of this.#walk([src])) {
       for (const f of files) {
+        log.d(`d [scan] add: ${f.path.str}`)
+
         switch (f.kind.type) {
         // if this is a directory, copy it
         case "dir":
@@ -53,7 +58,7 @@ export class Scan implements Action {
           this.#evts.send(Event.copyFile(f)); break
         // otherwise, add it to the graph
         default:
-          this.#pages.change(f); break;
+          await this.#pages.change(f); break
         }
       }
     }
@@ -69,6 +74,8 @@ export class Scan implements Action {
     for (const dir of level) {
       // for each dir child
       for await (const child of dir.children()) {
+        log.d(`d [scan] chk: ${dir} ~ ${child.name}`)
+
         // if not ignored
         const path = dir.join(child.name)
         if (this.#cfg.isIgnored(path)) {
@@ -77,7 +84,7 @@ export class Scan implements Action {
 
         // partition files and directories
         if (child.isDirectory) {
-          nodes.push(FileRef.init(path, new FileKind("dir", "")))
+          nodes.push(FileRef.init(path, FileKind.flat("dir")))
         } else {
           files.push(FileRef.init(path))
         }

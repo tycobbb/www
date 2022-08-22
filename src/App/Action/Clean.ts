@@ -1,4 +1,4 @@
-import { transient } from "../../Core/Scope.ts"
+import { transient, log } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
 import { Action } from "./Action.ts"
 
@@ -17,6 +17,8 @@ export class Clean implements Action {
 
   // -- commands --
   async call(): Promise<void> {
+    log.d("d [clen] start")
+
     const dst = this.#cfg.paths.dst
     if (await dst.exists()) {
       await dst.rm()

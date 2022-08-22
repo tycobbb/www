@@ -16,10 +16,12 @@ const src = cfg.paths.src
 test("it links a page and layout", async () => {
   const pages = new Pages(cfg, evts)
   evts.reset()
-  pages.change(FileRef.init(src.join("./bz.l.html")))
-  pages.change(FileRef.init(src.join("./b1.p.html")))
+  await pages.change(FileRef.init(src.join("./bz.l.html")))
+  await pages.change(FileRef.init(src.join("./link.f.html")))
+  await pages.change(FileRef.init(src.join("./links.d.json")))
+  await pages.change(FileRef.init(src.join("./b1.p.html")))
 
-  await pages.compile()
+  await pages.render()
   assertLength(evts.all, 1)
 
   const evt = evts.all[0]

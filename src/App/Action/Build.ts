@@ -1,6 +1,6 @@
-import { transient } from "../../Core/Scope.ts"
-import { Action } from "./Action.ts"
+import { transient, log } from "../../Core/mod.ts"
 import { Pages } from "../Page/mod.ts"
+import { Action } from "./Action.ts"
 
 // compile every page (.p.html) and write them to disk
 export class Build implements Action {
@@ -17,7 +17,8 @@ export class Build implements Action {
 
   // -- commands --
   async call(): Promise<void> {
-    await this.#pages.compile()
+    log.d("d [build] start")
+    await this.#pages.render()
   }
 
   // -- queries --

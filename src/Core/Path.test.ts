@@ -16,3 +16,15 @@ test("it sets extensions", () => {
   const dst = src.setExt("html")
   assertEquals(dst.str, "base/some/file.html")
 })
+
+test("it parses paths to files", () => {
+  const path = Path.raw("foo.p.test", "some/dir")
+  assertEquals(path.str, "some/dir/foo.p.test")
+  assertEquals(path.ext, ["p", "test"])
+})
+
+test("it parses paths to hidden files", () => {
+  const path = Path.raw(".test", "some/dir")
+  assertEquals(path.str, "some/dir/.test")
+  assertEquals(path.ext, null)
+})

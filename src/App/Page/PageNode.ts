@@ -3,24 +3,32 @@ import { FileRef, FilePath, FileKind } from "../File/mod.ts"
 
 // -- types --
 export interface PageDependent {
-  // invalidate the dependent, marking it for update
+  // mark the dependent as dirty
   flag(): void
 }
 
+export interface PageDependency {
+  // if the dependency is dirty
+  get isDirty(): boolean
+}
+
 // a node in the page tree
-export class PageNode implements PageDependent {
+export class PageNode implements PageDependent, PageDependency {
   // -- props --
   // the node's id
   #id: string
 
   // if this node is dirty
-  #isDirty = true
+  #isDirty = false
 
   // the path to the corresponding file
   #file: FileRef
 
-  // the list of dependents
-  #deps: Set<Ref<PageDependent>> = new Set()
+  // the set of dependents
+  #dependents: Set<Ref<PageDependent>> = new Set()
+
+  // the set of dependenices
+  #dependencies: Set<Ref<PageDependency>> = new Set()
 
   // -- lifetime --
   // init a new node w/ the file
@@ -32,7 +40,12 @@ export class PageNode implements PageDependent {
   // -- commands --
   // add a dependent to this node
   addDependent(dep: Ref<PageDependent>) {
-    this.#deps.add(dep)
+    this.#dependents.add(dep)
+  }
+
+  // add a dependency to this node
+  addDependency(dep: Ref<PageDependency>) {
+    this.#dependencies.add(dep)
   }
 
   // mark this node as resolved
@@ -49,11 +62,11 @@ export class PageNode implements PageDependent {
     m.#isDirty = true
 
     // and flag any dependents
-    for (const ref of m.#deps) {
+    for (const ref of m.#dependents) {
       // if dep was deleted, remove it
       const dep = ref.deref()
       if (dep == null) {
-        m.#deps.delete(ref)
+        m.#dependents.delete(ref)
         continue
       }
 
@@ -83,6 +96,28 @@ export class PageNode implements PageDependent {
     return await this.#file.path.read()
   }
 
+  // if this node is ready to be compiled
+  isReady(): boolean {
+    const m = this
+
+    // and flag any dependents
+    for (const ref of m.#dependencies) {
+      // if dep was deleted, remove it
+      const dep = ref.deref()
+      if (dep == null) {
+        m.#dependencies.delete(ref)
+        continue
+      }
+
+      if (dep.isDirty) {
+        return false
+      }
+    }
+
+    return true
+  }
+
+  // -- q/PageDependent
   // if the node is dirty
   get isDirty(): boolean {
     return this.#isDirty

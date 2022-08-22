@@ -56,23 +56,45 @@ export class Pages {
 
   // -- commands --
   // add a pending path to a file, inferring type from extension
-  change(file: FileRef): void {
+  async change(file: FileRef): Promise<void> {
     const m = this
 
-    // get the db id
+    // find the node
     const id = file.path.rel
+    const ref = this.#db.nodes[id]
 
-    // find or create the node
-    let ref = this.#db.nodes[id]
+    // if missing, create the node
     if (ref == null) {
-      ref = new Ref(new PageNode(id, file))
-      m.#db.nodes[id] = ref
+      await m.#create(id, file)
     }
+    // otherwise, flag it as changed
+    else {
+      ref.deref()!.flag()
+    }
+  }
 
-    // flag it as changed
-    const node = ref.deref()
-    if (node != null) {
+  // create a new node with an id and file
+  async #create(id: string, file: FileRef): Promise<void> {
+    const m = this
+
+    // add it to the databse
+    const node = new PageNode(id, file)
+    m.#db.nodes[id] = new Ref(node)
+
+    // do extra work based on kind
+    const type = file.kind.type
+
+    if (type === "page") {
       node.flag()
+    }
+    // otherwise, add it to the templates
+    else {
+      m.#tmpl.add(id, await node.read())
+
+      // if it's data, also render it so that it's available on first compile
+      if (type === "data") {
+        await m.#renderData(node)
+      }
     }
   }
 
@@ -101,49 +123,76 @@ export class Pages {
     delete m.#db.nodes[id]
   }
 
-  // resolves any pending paths and compiles dirty pages
-  async compile(): Promise<void> {
+  // renders any dirty pages
+  async render(): Promise<void> {
     const m = this
 
-    // collect ids dirty pages for rendering
-    // TODO: compiling pages as a second step is a limited approach. this should
-    // instead iteratively process the list of nodes until nothing is dirty, skipping
-    // nodes whose dependencies haven't been compiled yet
-    const pageIds: string[] = []
+    // get initial list of dirty nodes
+    const initial = Object.values(m.#db.nodes)
+      .map((r) => r.deref()!)
+      .filter((n) => n.isDirty)
 
-    // recompile every dirty node
-    for (const id in m.#db.nodes) {
-      // the node should never be null; this class manages the ref
-      const node = m.#db.nodes[id].deref()!
-      if (!node.isDirty) {
-        continue
+    // process iteratively until all nodes are finished
+    const dirty = new Set(initial)
+    while (dirty.size !== 0) {
+      // for all remaining dirty nodes
+      for (const node of Array.from(dirty)) {
+        // if waiting on dependencies, skip
+        if (!node.isReady) {
+          continue
+        }
+
+        // get id
+        const id = node.id
+
+        // refresh its template
+        m.#tmpl.add(id, await node.read())
+
+        // do extra work based on kind
+        switch (node.kind.type) {
+        case "data":
+          await m.#renderData(node); break
+        case "page":
+          await m.#renderPage(node); break
+        }
+
+        // clear its flag
+        node.clear()
+
+        // and finish processing this node
+        dirty.delete(node)
       }
-
-      // refresh its template
-      m.#tmpl.add(id, await node.read())
-
-      // if it's a page, add to render list
-      if (node.kind.type === "page") {
-        pageIds.push(id)
-      }
-
-      // clear its flag
-      node.clear()
     }
+  }
 
-    // for each page
-    for (const id of pageIds) {
-      // render the page to string
-      const node = m.#db.nodes[id].deref()!
-      const text = await m.#tmpl.render(id)
+  // render data and add it to the template repo
+  async #renderData(node: PageNode): Promise<void> {
+    const m = this
 
-      // create the page
-      const page = new Page(node.path, text)
-      const file = page.render()
+    // grab id
+    const id = node.id
 
-      // save the file
-      m.#evts.send(Event.saveFile(file))
-    }
+    // render the data into json
+    const text = await m.#tmpl.render(id)
+    const json = JSON.parse(text)
+
+    // add it as template data
+    m.#tmpl.addData(id, json)
+  }
+
+  // render the page and emit it as a file
+  async #renderPage(node: PageNode): Promise<void> {
+    const m = this
+
+    // render the page to string
+    const text = await m.#tmpl.render(node.id)
+
+    // create the page
+    const page = new Page(node.path, text)
+    const file = page.render()
+
+    // save the file
+    m.#evts.send(Event.saveFile(file))
   }
 
   // add a dependency between two nodes
@@ -151,16 +200,17 @@ export class Pages {
     const m = this
 
     // get page nodes
-    const nc = m.#db.nodes[child]
-    const np = m.#db.nodes[parent]
+    const cn = m.#db.nodes[child]
+    const pn = m.#db.nodes[parent]
 
     // fail if either is missing
-    if (nc == null || np == null) {
-      throw new Error(`failed to add dep ${child}=${nc} => ${parent}=${np}`)
+    if (cn == null || pn == null) {
+      throw new Error(`failed to add dep ${child}=${cn} <=> ${parent}=${pn}`)
     }
 
-    // add parent as a dependent
-    nc.deref()!.addDependent(np)
+    // add dependency between nodes
+    cn.deref()!.addDependent(pn)
+    pn.deref()!.addDependency(cn)
   }
 
   // -- events --

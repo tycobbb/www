@@ -27,11 +27,16 @@ export class FileKind {
   }
 
   // -- factories --
+  // a file kind for a flat file type (dir, file)
+  static flat(type: FileType): FileKind {
+    return new FileKind(type, "")
+  }
+
   // detects the kind from the path; can't detect directories
   static fromPath(path: Path): FileKind {
     const ext = path.ext
     if (ext == null || ext.length === 0) {
-      return new FileKind("file", "")
+      return FileKind.flat("file")
     }
 
     // detect type

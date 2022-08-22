@@ -1,5 +1,5 @@
 import { Args } from "https://deno.land/std@0.122.0/flags/mod.ts"
-import { transient } from "../../Core/Scope.ts"
+import { transient, log } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
 import { SyncFiles } from "../File/mod.ts"
 import { Action } from "./Action.ts"
@@ -19,6 +19,8 @@ export class Init implements Action {
 
   // -- commands --
   async call(): Promise<void> {
+    log.d("d [init] start")
+
     // decode config
     await Config.set(this.#args)
 

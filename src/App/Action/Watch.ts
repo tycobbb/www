@@ -1,7 +1,7 @@
 import { transient } from "../../Core/Scope.ts"
 import { Path, switchTo, log } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
-import { FileRef } from "../File/mod.ts"
+import { FileRef, FileKind } from "../File/mod.ts"
 import { Pages } from "../Page/mod.ts"
 import { Event, Events } from "../Event/mod.ts"
 import { Action } from "./Action.ts"
@@ -67,7 +67,7 @@ export class Watch implements Action {
             return
           }
 
-          switch (evt.file.kind) {
+          switch (evt.file.kind.type) {
           // if it's a dir, copy it
           case "dir":
             this.#evts.send(Event.copyDir(evt.file)); break;
@@ -77,7 +77,7 @@ export class Watch implements Action {
           // otherwise, add it to the graph
           default:
             this.#pages.change(evt.file)
-            await this.#pages.compile()
+            await this.#pages.render()
             break
           }
         })
@@ -103,7 +103,7 @@ export class Watch implements Action {
         }
         // if this is a directory, add that
         else if (stat.isDirectory) {
-          return { kind: "add", file: FileRef.init(path, "dir") }
+          return { kind: "add", file: FileRef.init(path, FileKind.flat("dir")) }
         }
         // otherwise, add the file
         else {

@@ -95,21 +95,25 @@ export class Path {
 
   // creates a path from a raw string and base path; parses its extension
   static raw(path: string, base: string = "") {
+    // find the index of the extension
     let i = 0
-    let isExt = false
 
-    while (i >= 0 && !isExt) {
+    while (true) {
+      // find the next dot
       i = path.indexOf(".", i)
-      isExt = i !== 0 && path[i - 1] !== "/"
 
       // if this is a hidden file (leading ".", try again from the next character)
-      if (!isExt) {
+      if (i === 0 || i > 0 && path[i - 1] === "/") {
         i = i + 1
+      }
+      // otherwise, we found something (or nothing)
+      else {
+        break
       }
     }
 
     // if no extension, the raw path is a fragment
-    if (!isExt) {
+    if (i < 0) {
       return new Path(path, base, null)
     }
 

@@ -5,23 +5,29 @@ with minimal tooling and mostly just html.
 
 it can build your site. it has a dev server that rebuilds as you make changes (though you still have to reload). it has templating (if you want it). it has build-time data (if you want it). it can change the directory it builds your site to!
 
-## installation
+## install
 
-first, install [deno](https://deno.land/#installation). you accomplish that many ways. personally,
-i use [asdf](https://github.com/asdf-vm/asdf) to manage the install, and you can too using
-these [instructions](https://github.com/denoland/deno_install#install-and-manage-multiple-versions).
+install [deno](#install-deno), if you haven't already.
 
-install the tool:
+install the tool (this is a long one):
 
 ```sh
-$ deno install https://deno.land/x/wvvw@0.0.2/www.ts
+$ deno install --allow-env --allow-run --allow-read --allow-write --allow-net https://deno.land/x/wvvw@0.0.2/www.ts
 ```
+
+### deno
+
+you can install [deno](https://deno.land/#installation) many ways. personally, i use [asdf](https://github.com/asdf-vm/asdf) to manage language/runtime installs, and you can too using these [instructions](https://github.com/denoland/deno_install#install-and-manage-multiple-versions).
+
+you also need to add deno's bin directory to your path. for most installs, that will be `~/.deno/bin`. if you use [asdf](https://github.com/asdf-vm/asdf), it's going to be `$(asdf where deno)/.deno/bin`.
+
+### future
 
 deno can build "standalone binaries". they bundle most of deno along with it and are kind of big. but
 at some point soon, i'll figure out a nice way to package that up to make it easier to install if you don't otherwise
 care about deno.
 
-## usage
+## use
 
 to run the dev server:
 
@@ -41,7 +47,7 @@ to build your site for production:
 $ www . --prod
 ```
 
-## organization
+## structure
 
 organize your directory however you want. the structure of your site will mirror your directory structure. if you just want to look at examples, check out the [test site](./test/fixtures/) or [my webiste](https://github.com/tycobbb/website).
 
@@ -57,6 +63,7 @@ maybe! i like it a lot. if you really just want to write html and want to repeat
 
 - [ ] init command
 - [ ] cli options should be able to come after positional args
+- [ ] package a binary
 - [ ] ???
 - [ ] you [tell me](https://github.com/tycobbb/www/issues)
 - [ ] or better yet, [implement it](https://github.com/tycobbb/www/compare)

@@ -28,7 +28,7 @@ export class DecodeConfig {
   // -- c/helpers
   #decodeEnv(): Env {
     const m = this
-    if (m.#args["p"] || m.#args["prod"] || Deno.env.get("PROD") != null) {
+    if (m.#args.prod || Deno.env.get("PROD") != null) {
       return Env.Prod
     } else {
       return Env.Dev
@@ -54,7 +54,7 @@ export class DecodeConfig {
     }
 
     // parse dist path from cmd line args
-    const dist = Path.base(m.#args["d"] || m.#args["dir"] || "dist")
+    const dist = Path.base(m.#args.out || "dist")
 
     // produce paths
     return new Paths(

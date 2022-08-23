@@ -11,16 +11,16 @@ create a build-time include element w/ something like slots. eta's include synta
 down on complex partials imo, pretty cumbersome. preprocess:
 
 ```html
-<w:include path="window" name="nav" top=5>
-  <w:include
-    w:slot="body"
+<w:frag path="window" name="nav" top=5>
+  <w:frag
     path="nav"
+    w:slot="body"
   />
 
   <div w:slot="footer">
     footer
   </div>
-</w:include>
+</w:frag>
 ```
 
 into

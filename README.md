@@ -1,9 +1,10 @@
 # www
 
 a "zero-config" static site builder mostly for me. write html to build sites out of html
-with minimal tooling and mostly just html.
+with minimal tooling and mostly just html. a companion to [www-os](https://github.com/tycobbb/www-os).
 
 it can build your site. it has a dev server that rebuilds as you make changes (though you still have to reload). it has templating (if you want it). it has build-time data (if you want it). it can change the directory it builds your site to!
+
 
 ## install
 
@@ -12,7 +13,7 @@ install [deno](#install-deno), if you haven't already.
 install the tool (this is a long one):
 
 ```sh
-$ deno install --allow-env --allow-run --allow-read --allow-write --allow-net https://deno.land/x/wvvw@0.0.4/www.ts
+$ deno install --allow-env --allow-run --allow-read --allow-write --allow-net https://deno.land/x/wvvw@0.0.5/www.ts
 ```
 
 ### deno
@@ -32,7 +33,7 @@ care about deno.
 to run the dev server:
 
 ```sh
-$ www . --up
+$ www --up .
 ```
 
 to build your site
@@ -44,7 +45,13 @@ $ www .
 to build your site for production:
 
 ```sh
-$ www . --prod
+$ www --prod .
+```
+
+to see help:
+
+```sh
+$ www --help
 ```
 
 ## structure
@@ -61,8 +68,9 @@ maybe! i like it a lot. if you really just want to write html and want to repeat
 
 ## todos
 
+- [ ] add `w-frag` (see [notes](./notes.md))
+- [ ] add `w-slot` (see [notes](./notes.md))
 - [ ] init command
-- [ ] cli options should be able to come after positional args
 - [ ] package a binary
 - [ ] ???
 - [ ] you [tell me](https://github.com/tycobbb/www/issues)

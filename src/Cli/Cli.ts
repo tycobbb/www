@@ -51,7 +51,7 @@ export class Cli {
       options:
         -u, --up       runs as a dev server
         -p, --prod     runs production mode
-        -d, --dir <p>  sets the output path
+        -o, --out <p>  sets the output path
         -v, --verbose  prints more logs
         -h, --help     prints this message
 
@@ -137,17 +137,17 @@ export class Cli {
 
   // if the `h/help` flag is set
   get isHelp(): boolean {
-    return this.#args.h || this.#args.help
+    return this.#args.help
   }
 
   // if the `v/verbose` flag is set
   get isVerbose(): boolean {
-    return this.#args.v || this.args.verbose
+    return this.#args.verbose
   }
 
   // if the `u/up` flag is set
   get isServerUp(): boolean {
-    return this.#args.u || this.#args.up
+    return this.#args.up
   }
 
   // draws a heredoc string; trims whitespace and leading padding
@@ -178,6 +178,20 @@ export class Cli {
   // -- factories --
   // build the cli from raw cmd line args
   static parse(args: string[]) {
-    return new Cli(parse(args))
+    return new Cli(parse(args, {
+      alias: {
+        "h": "help",
+        "o": "out",
+        "p": "prod",
+        "u": "up",
+        "v": "verbose",
+      },
+      boolean: [
+        "help",
+        "prod",
+        "up",
+        "verbose",
+      ],
+    }))
   }
 }

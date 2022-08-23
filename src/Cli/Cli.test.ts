@@ -6,7 +6,7 @@ const { test } = Deno
 
 // -- tests --
 test("it parses options", () => {
-  const strs = ["-d", "output", "--verbose", "input", "-h"]
+  const strs = ["-o", "output", "--verbose", "input", "-h"]
   const args = Cli.parse(strs).args
 
   assertEquals(args._, [

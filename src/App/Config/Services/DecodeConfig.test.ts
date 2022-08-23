@@ -6,7 +6,7 @@ const { test } = Deno
 
 // -- tests --
 test("it builds to a custom dir", async () => {
-  const decode = new DecodeConfig({ _: ["."], dir: "test" })
+  const decode = new DecodeConfig({ _: ["."], out: "test" })
   const cfg = await decode.call()
   assertEquals(cfg.paths.dst.str, "test")
 })

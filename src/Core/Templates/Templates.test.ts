@@ -52,6 +52,20 @@ test("it includes an absolutely-pathed fragment", async () => {
   assertEquals(clean(res), "hello")
 })
 
+test("it includes a fragment element", async () => {
+  reset()
+  tmpl.add("posts/post", `<%= it.i %>`)
+  tmpl.add("posts/test", `
+    <w-frag
+      path="./post"
+      i=5
+    />
+  `)
+
+  const res = await tmpl.render("posts/test")
+  assertEquals(clean(res), "5")
+})
+
 test("it applies layouts", async () => {
   reset()
   tmpl.add("page/layout", `

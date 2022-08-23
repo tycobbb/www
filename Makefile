@@ -5,7 +5,7 @@ help-colw = 7
 
 # -- data --
 ds-src = ./src
-ds-root = $(ds-src)/Main.ts
+ds-root = www.ts
 ds-build = ./build
 ds-binary = $(ds-build)/www
 dr-root = ./test/fixtures

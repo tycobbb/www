@@ -30,7 +30,7 @@ test("it includes a fragment", async () => {
   tmpl.add("posts/test", `
     <% for (let i = 0; i < 3; i++) { %>
       <%~
-        include("./post", {
+        frag("./post", {
           i
         })
       %>
@@ -45,7 +45,7 @@ test("it includes an absolutely-pathed fragment", async () => {
   reset()
   tmpl.add("base", `hello`)
   tmpl.add("posts/test", `
-    <%~ include("base") %>
+    <%~ frag("base") %>
   `)
 
   const res = await tmpl.render("posts/test")
@@ -90,7 +90,7 @@ test("it emits include events", async () => {
   tmpl.add("posts/test", `
     <%= data("strings").test %>
     <% for (let i = 0; i < 2; i++) { %>
-      <%~ include("./post" + i) %>
+      <%~ frag("./post" + i) %>
     <% } %>
   `)
 

@@ -12,7 +12,7 @@ install [deno](#install-deno), if you haven't already.
 install the tool (this is a long one):
 
 ```sh
-$ deno install --allow-env --allow-run --allow-read --allow-write --allow-net https://deno.land/x/wvvw@0.0.2/www.ts
+$ deno install --allow-env --allow-run --allow-read --allow-write --allow-net https://deno.land/x/wvvw@0.0.4/www.ts
 ```
 
 ### deno

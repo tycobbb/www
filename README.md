@@ -56,7 +56,7 @@ $ www --help
 
 ## structure
 
-organize your directory however you want. the structure of your site will mirror your directory structure. if you just want to look at examples, check out the [test site](./test/fixtures/) or [my webiste](https://github.com/tycobbb/website).
+organize your directory however you want. the structure of your site will mirror your directory structure. if you just want to look at examples, check out the [test site](./test/fixtures/) or [my website](https://github.com/tycobbb/website).
 
 your directory structure and any files you create will be copied into your built site as they are. if you want want to write plain html, you can write plain html!
 

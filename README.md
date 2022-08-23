@@ -1,4 +1,4 @@
-# www-os
+# www
 
 a "zero-config" static site builder mostly for me. write html to build sites out of html
 with minimal tooling and mostly just html.

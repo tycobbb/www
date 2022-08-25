@@ -189,13 +189,13 @@ export function pair<A, B>(
     // try the first parser
     const r1 = p1(input)
     if (r1.stat === PS.failure) {
-      return r1
+      return ParserResult.error(input, `[parser] pair - p1 did not pass`)
     }
 
     // try the second parser on the remainder
     const r2 = p2(r1.slice)
     if (r2.stat === PS.failure) {
-      return r2
+      return ParserResult.error(input, `[parser] pair - p2 did not pass`)
     }
 
     // combine the values

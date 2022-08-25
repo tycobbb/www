@@ -15,7 +15,7 @@ import PS = ParserStatus
 // the result of any parser
 export type ParserResult<V>
   = { stat: PS.success, slice: Slice, value: V }
-  | { stat: PS.failure, slice: Slice }
+  | { stat: PS.failure, slice: Slice, error: string }
 
 // a parser that may parse a slice
 export type Parser<V>
@@ -31,22 +31,26 @@ export const ParserResult = {
   empty(slice: Slice): ParserResult<null> {
     return { stat: PS.success, slice, value: null }
   },
-  // a failure result
-  error<V>(slice: Slice): ParserResult<V> {
-    return { stat: PS.failure, slice }
-  }
+  // a failure result an error
+  error<V>(slice: Slice, error: string): ParserResult<V> {
+    return { stat: PS.failure, slice, error }
+  },
+  // a failure result with no error
+  fault<V>(slice: Slice): ParserResult<V> {
+    return { stat: PS.failure, slice, error: "" }
+  },
 }
 
 // -- i/parsers
 // a parser for a literal string
 export function literal(expected: string): Parser<null> {
-  return (str) => {
+  return (input) => {
     const len = expected.length
 
-    if (str.startsWith(expected)) {
-      return ParserResult.empty(str.slice(len))
+    if (input.startsWith(expected)) {
+      return ParserResult.empty(input.slice(len))
     } else {
-      return ParserResult.error(str)
+      return ParserResult.error(input, `[parser] literal - ${input.slice(0, 10)}... != ${expected}`)
     }
   }
 }
@@ -54,29 +58,39 @@ export function literal(expected: string): Parser<null> {
 // a parser for any character
 export function any(input: Slice): ParserResult<string> {
   if (input.length === 0) {
-    return ParserResult.error(input)
+    return ParserResult.error(input, `any - input was empty`)
   } else {
     return ParserResult.value(input[0], input.slice(1))
   }
 }
 
-// a parser that matches a whitespace character
-export function whitespace(): Parser<string> {
-  return regex(any, /\s/)
-}
-
 // -- i/combinators
-// a parser with a mapped value
+// a parser with a value transformed by a functiom
 export function map<I, O>(
   p1: Parser<I>,
   transform: (i: I) => O
 ): Parser<O> {
   return (input) => {
     const r1 = p1(input)
-
     switch (r1.stat) {
     case PS.success:
       return ParserResult.value(transform(r1.value), r1.slice)
+    case PS.failure:
+      return r1
+    }
+  }
+}
+
+// a parser followed by another pareser
+export function flatMap<A, B>(
+  p1: Parser<A>,
+  transform: (i: A) => Parser<B>
+): Parser<B> {
+  return (input) => {
+    const r1 = p1(input)
+    switch (r1.stat) {
+    case PS.success:
+      return transform(r1.value)(r1.slice)
     case PS.failure:
       return r1
     }
@@ -93,7 +107,7 @@ export function pred<V>(
 
     // if the value fails the test, error
     if (r1.stat === PS.success && !predicate(r1.value)) {
-      return ParserResult.error(input)
+      return ParserResult.error(input, `[parser] pred - ${r1.value} did not pass`)
     }
 
     // otherwise, return the result
@@ -101,12 +115,33 @@ export function pred<V>(
   }
 }
 
-// a parser that whose value matches the regex
-export function regex(
-  p1: Parser<string>,
-  regex: RegExp
+// a parser that matches a pattern
+export function pattern(
+  pattern: RegExp
 ): Parser<string> {
-  return pred(p1, (c) => c.match(regex) != null)
+  return (input) => {
+    // try the pattern
+    const match = input.match(pattern)
+
+    // if no match, fail
+    if (match == null) {
+      return ParserResult.error(input, `[parser] pattern - ${input.slice(0, 10)}... did not match`)
+    }
+
+    // if this matched after the first index, an exception
+    if (match.index !== 0) {
+      throw new Error(`[parser] pattern ${pattern} may only match at beginning of string, '^'`)
+    }
+
+    // otherwise, match the slice
+    const val = match[0]
+    const res = ParserResult.value(
+      val,
+      input.slice(val.length)
+    )
+
+    return res
+  }
 }
 
 // a parser that repeats the input zero or more times
@@ -134,8 +169,9 @@ export function repeat<V>(p1: Parser<V>, min = 0): Parser<V[]> {
     }
 
     // if not enough values, error
-    if (values.length < min) {
-      return ParserResult.error(input)
+    const n = values.length
+    if (n < min) {
+      return ParserResult.error(input, `[parser] repeat - ${input.slice(0, 10)}... matced ${n} < ${min}`)
     }
 
     // otherwise, return value
@@ -143,23 +179,23 @@ export function repeat<V>(p1: Parser<V>, min = 0): Parser<V[]> {
   }
 }
 
-// -- i/c/pairs
+// -- i/c/groups
 // a parser of two sequential parsers
-export function pair<L, R>(
-  p1: Parser<L>,
-  p2: Parser<R>
-): Parser<[L, R]> {
+export function pair<A, B>(
+  p1: Parser<A>,
+  p2: Parser<B>
+): Parser<[A, B]> {
   return (input) => {
     // try the first parser
     const r1 = p1(input)
     if (r1.stat === PS.failure) {
-      return ParserResult.error(input)
+      return r1
     }
 
     // try the second parser on the remainder
     const r2 = p2(r1.slice)
     if (r2.stat === PS.failure) {
-      return ParserResult.error(input)
+      return r2
     }
 
     // combine the values
@@ -172,10 +208,112 @@ export function pair<L, R>(
   }
 }
 
-export function either<L, R>(
-  p1: Parser<L>,
-  p2: Parser<R>
-): Parser<L | R> {
+/// a parser of three sequential parsers
+export function trio<A, B, C>(
+  p1: Parser<A>,
+  p2: Parser<B>,
+  p3: Parser<C>
+): Parser<[A, B, C]> {
+  return map(
+    pair(pair(p1, p2), p3),
+    ([[a, b], c]) => [a, b, c]
+  )
+}
+
+// a parser that selects the left value from a pair
+export function left<A, B>(
+  p1: Parser<A>,
+  p2: Parser<B>
+): Parser<A> {
+  return map(pair(p1, p2), ([l, _]) => l)
+}
+
+// a parser that selects the right value from a pair
+export function right<A, B>(
+  p1: Parser<A>,
+  p2: Parser<B>
+): Parser<B> {
+  return map(pair(p1, p2), ([_, r]) => r)
+}
+
+/// a parser of a trio that returns the outer values
+export function outer<A, B, C>(
+  p1: Parser<A>,
+  p2: Parser<B>,
+  p3: Parser<C>
+): Parser<[A, C]> {
+  return map(
+    pair(pair(p1, p2), p3),
+    ([[a, _], c]) => [a, c]
+  )
+}
+
+/// a parser of a trio that returns the inner value
+export function inner<A, B, C>(
+  p1: Parser<A>,
+  p2: Parser<B>,
+  p3: Parser<C>
+): Parser<B> {
+  return map(
+    pair(pair(p1, p2), p3),
+    ([[_a, b], _]) => b
+  )
+}
+
+// a parser that surrounds the second parser with the first
+export function surround<A, B>(
+  p1: Parser<A>,
+  p2: Parser<B>
+): Parser<A> {
+  return map(trio(p2, p1, p2), (t) => t[1])
+}
+
+// a parser that is delimited by another parser
+export function delimited<A, B>(
+  p1: Parser<A>,
+  p2: Parser<B>
+): Parser<A[]> {
+  return (input) => {
+    const values = []
+
+    // starting from the input
+    let rest = input
+
+    // also keep track of the slice from the last parsed entry (p1)
+    let restEntry = rest
+
+    while (true) {
+      const r1 = p1(rest)
+
+      // if failure, finish and restore rest from the prev entry
+      if (r1.stat === PS.failure) {
+        rest = restEntry
+        break
+      }
+
+      // otherwise, aggregate value
+      values.push(r1.value)
+      restEntry = r1.slice
+
+      // and try and parse a delimiter
+      const r2 = p2(r1.slice)
+      if (r2.stat === PS.failure) {
+        break
+      }
+
+      rest = r2.slice
+    }
+
+    // otherwise, return value
+    return ParserResult.value(values, rest)
+  }
+}
+
+// a parser that matches either of two parsers
+export function either<A, B>(
+  p1: Parser<A>,
+  p2: Parser<B>
+): Parser<A | B> {
   return (input) => {
     // try the first parser
     const r1 = p1(input)
@@ -190,26 +328,15 @@ export function either<L, R>(
     }
 
     // if neither pass, this fails
-    return ParserResult.error(input)
+    return ParserResult.error(input, `[parser] either - both failed`)
   }
-}
-
-// a parser that selects the left value from a pair
-export function left<L, R>(
-  p1: Parser<[L, R]>
-): Parser<L> {
-  return map(p1, ([l, _]) => l)
-}
-
-// a parser that selects the right value from a pair
-export function right<L, R>(
-  p1: Parser<[L, R]>
-): Parser<R> {
-  return map(p1, ([_, r]) => r)
 }
 
 // -- i/data
 // create a tuple
-export function tuple<L, R>(l: L, r: R): [L, R] {
-  return [l, r]
+export function tuple<A, B>(
+  i1: A,
+  i2: B
+): [A, B] {
+  return [i1, i2]
 }

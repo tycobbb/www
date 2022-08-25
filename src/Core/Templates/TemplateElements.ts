@@ -1,6 +1,6 @@
 import { EtaConfig } from "https://deno.land/x/eta@v1.12.3/config.ts"
-import { Slice, Parser, ParserResult } from "../Parser/mod.ts"
-import { any, literal, whitespace, pair, repeat } from "../Parser/mod.ts"
+import { Parser } from "../Parser/mod.ts"
+import { map, repeat, any, pred, literal, pattern, trio, right, outer, surround, delimited } from "../Parser/mod.ts"
 
 // input:
 // <w-frag
@@ -17,10 +17,20 @@ import { any, literal, whitespace, pair, repeat } from "../Parser/mod.ts"
 
 // -- constants --
 const k = {
-  identifier: {
-    any: /[a-zA-Z:\-]/,
-    edge: /[a-zA-Z]/,
-  },
+  identifier: /^[a-zA-Z]([\w:-]*\w)?/,
+  whitespace: /^\s*/,
+}
+
+// -- types --
+// an element
+type Element = {
+  name: string,
+  attrs: ElementAttrs
+}
+
+// an element's attributes
+type ElementAttrs = {
+  [key: string]: string
 }
 
 // -- impls --
@@ -33,66 +43,71 @@ export class TemplateElements {
 }
 
 // -- i/parsers
-// a parser for an identifier
-function identifier(input: Slice): ParserResult<string> {
-  // if empty, error
-  if (input.length === 0) {
-    return ParserResult.error(input)
-  }
-
-  // if start is not an edge char, error
-  if (!input[0].match(k.identifier.edge)) {
-    return ParserResult.error(input)
-  }
-
-  // continue until a non-identifier character
-  let i = 1
-  for (/* none */; i < input.length; i++) {
-    if (!input[i].match(k.identifier.any)) {
-      break
-    }
-  }
-
-  // if end is not an edge char, error
-  if (!input[i - 1].match(k.identifier.edge)) {
-    return ParserResult.error(input)
-  }
-
-  // return identifier
-  const res = ParserResult.value(
-    input.slice(0, i),
-    input.slice(i),
+export function element(): Parser<Element> {
+  return map(
+    trio(
+      right(
+        literal("<"),
+        identifier(),
+      ),
+      surround(
+        attrs(),
+        whitespace(),
+      ),
+      literal("/>")
+    ),
+    (vs) => ({
+      name: vs[0],
+      attrs: vs[1]
+    })
   )
-
-  return res
 }
 
-function attr(): Parser<string> {
-  pair(
-    identifier,
-    pair(
-      repeat(whitespace()),
-      pair(
-        literal("="),
-        repeat(whitespace())
-      )
-    )
+function attrs(): Parser<ElementAttrs> {
+  return map(
+    delimited(
+      attr(),
+      whitespace(),
+    ),
+    (as) => (as.reduce((memo: ElementAttrs, [k, v]) => {
+      memo[k] = v
+      return memo
+    }, {}))
   )
-  return (input) => {
-    return ParserResult.error(input)
-  }
+}
+
+function attr(): Parser<[string, string]> {
+  return outer(
+    attrName(),
+    surround(
+      literal("="),
+      whitespace(),
+    ),
+    attrValue()
+  )
+}
+
+function attrName(): Parser<string> {
+  return identifier()
 }
 
 function attrValue(): Parser<string> {
-  pair(
-    literal("\""),
-    pair(
-      repeat(any),
-      literal("\""),
-    )
+  return surround(
+    map(
+      repeat(pred(any, (c) => c !== "\"")),
+      (cs) => cs.join("")
+    ),
+    literal("\"")
   )
+}
 
-  return (input) => {
-    return ParserResult.error(input)
-  }
+// -- i/p/shared
+// a parser for an identifier
+function identifier(): Parser<string> {
+  return pattern(k.identifier)
+}
+
+// a parser for repeated whitespace
+function whitespace(): Parser<string> {
+  return pattern(k.whitespace)
 }

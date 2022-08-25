@@ -12,10 +12,18 @@ export enum ParserStatus {
 // alias for status
 import PS = ParserStatus
 
+// a success result
+export type ParserSuccess<V>
+  = { stat: PS.success, slice: Slice, value: V }
+
+// a failure result
+export type ParserFailure
+  = { stat: PS.failure, slice: Slice, error: string }
+
 // the result of any parser
 export type ParserResult<V>
-  = { stat: PS.success, slice: Slice, value: V }
-  | { stat: PS.failure, slice: Slice, error: string }
+  = ParserSuccess<V>
+  | ParserFailure
 
 // a parser that may parse a slice
 export type Parser<V>
@@ -115,6 +123,21 @@ export function pred<V>(
   }
 }
 
+/// a parser the validates the value of another parser
+export function validate<V>(
+  p1: Parser<V>,
+  validate: (input: Slice, res: ParserSuccess<V>) => ParserResult<V>,
+): Parser<V> {
+  return (input) => {
+    const r1 = p1(input)
+    if (r1.stat === PS.success) {
+      return validate(input, r1)
+    }
+
+    return r1
+  }
+}
+
 // a parser that matches a pattern
 export function pattern(
   pattern: RegExp
@@ -144,12 +167,35 @@ export function pattern(
   }
 }
 
-// a parser that repeats the input zero or more times
-// TODO: might need a reducer here to avoid large arrays of single characters?
-// that or special-purpose parsers that can slice chunks of string
-export function repeat<V>(p1: Parser<V>, min = 0): Parser<V[]> {
+// a parser that repeats the zero or more times
+export function sequence<V>(
+  p1: Parser<V>,
+  min = 0
+): Parser<V[]> {
+  return validate(
+    repeat(p1, () => new Array<V>(), (vs, v) => {
+      vs.push(v)
+      return vs
+    }),
+    (input, res) => {
+      const n = res.value.length
+      if (n < min) {
+        return ParserResult.error(input, `[parser] repeat - ${input.slice(0, 10)}... matced ${n} < ${min}`)
+      }
+
+      return res
+    }
+  )
+}
+
+// a parser that repeats the zero or more times
+export function repeat<V, M>(
+  p1: Parser<V>,
+  initial: () => M,
+  reduce: (memo: M, val: V) => M,
+): Parser<M> {
   return (input) => {
-    const values = []
+    let memo = initial()
 
     // starting from the input
     let rest = input
@@ -164,18 +210,12 @@ export function repeat<V>(p1: Parser<V>, min = 0): Parser<V[]> {
       // otherwise, add value and repeat on rest
       else {
         rest = r1.slice
-        values.push(r1.value)
+        memo = reduce(memo, r1.value)
       }
     }
 
-    // if not enough values, error
-    const n = values.length
-    if (n < min) {
-      return ParserResult.error(input, `[parser] repeat - ${input.slice(0, 10)}... matced ${n} < ${min}`)
-    }
-
     // otherwise, return value
-    return ParserResult.value(values, rest)
+    return ParserResult.value(memo, rest)
   }
 }
 
@@ -265,7 +305,7 @@ export function surround<A, B>(
   p1: Parser<A>,
   p2: Parser<B>
 ): Parser<A> {
-  return map(trio(p2, p1, p2), (t) => t[1])
+  return inner(p2, p1, p2)
 }
 
 // a parser that is delimited by another parser

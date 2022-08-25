@@ -10,7 +10,7 @@ import {
   outer,
   pattern,
   pred,
-  repeat,
+  sequence,
   right,
   surround,
   trio,
@@ -165,7 +165,7 @@ function attrName(): Parser<string> {
 function attrValue(): Parser<string> {
   return surround(
     map(
-      repeat(pred(any, (c) => c !== "\"")),
+      sequence(pred(any, (c) => c !== "\"")),
       (cs) => cs.join("")
     ),
     literal("\"")

@@ -1,6 +1,6 @@
 import { assertParser } from "../../Test/mod.ts"
-import { ParserResult, ParserStatus as PS } from "./Parser.ts"
-import { literal, any, map, pred, repeat, either, pair } from "./Parser.ts"
+import { ParserResult } from "./Parser.ts"
+import { literal, any, map, pred, sequence, either, pair } from "./Parser.ts"
 
 // -- setup --
 const { test } = Deno
@@ -22,7 +22,7 @@ test("it maps a value", () => {
 })
 
 test("it repeats anything", () => {
-  const match = repeat(literal("<"))
+  const match = sequence(literal("<"))
   assertParser(match("test"), ParserResult.value([], "test"))
   assertParser(match("<<< <<<"), ParserResult.value([null, null, null], " <<<"))
 })

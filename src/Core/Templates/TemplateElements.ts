@@ -14,7 +14,6 @@ import {
   pred,
   repeat,
   right,
-  sequence,
   surround,
   then,
   trio,
@@ -23,8 +22,18 @@ import {
 
 // -- constants --
 const k = {
-  identifier: /^[a-zA-Z]([\w:-]*\w)?/,
-  whitespace: /^\s*/,
+  // identifier patterns
+  identifier: {
+    name: /^[a-zA-Z]([\w:-]*\w)?/,
+  },
+  // attribute patterns
+  attr: {
+    value: /[^\"]*/,
+  },
+  // utility patterns
+  core: {
+    whitespace: /^\s*/,
+  },
 }
 
 // -- types --
@@ -102,8 +111,9 @@ export function nodes(close: Parser<unknown> | null = null): Parser<TemplateNode
           (_, input) => TemplateNode.slice(input, 1)
         ),
       ),
+      // init list
       () => [],
-      // merge slices
+      // build list, merging consecutive slices
       (nodes: TemplateNode[], n) => {
         const p = nodes[nodes.length - 1]
 
@@ -146,6 +156,7 @@ function element(): Parser<TemplateElement> {
         (id) => id === "w:frag"
       ),
     ),
+    // the rest, closed by the same name
     (name) => map(
       pair(
         // attributes
@@ -165,7 +176,12 @@ function element(): Parser<TemplateElement> {
           ),
         ),
       ),
-      ([attrs, children]) => ({ name, attrs, children })
+      // convert into element
+      ([attrs, children]) => ({
+        name,
+        attrs,
+        children
+      })
     )
   )
 }
@@ -177,6 +193,7 @@ function attrs(): Parser<TemplateElementAttrs> {
       attr(),
       whitespace(),
     ),
+    // convert list of kv-tuples into a map
     (as) => (as.reduce((memo: TemplateElementAttrs, [k, v]) => {
       memo[k] = v
       return memo
@@ -204,11 +221,8 @@ function attrName(): Parser<string> {
 // a parser for the value of an attr
 function attrValue(): Parser<string> {
   return surround(
-    map(
-      sequence(pred(any, (c) => c !== "\"")),
-      (cs) => cs.join("")
-    ),
-    literal("\"")
+    pattern(k.attr.value),
+    literal("\""),
   )
 }
 
@@ -232,10 +246,10 @@ function children(name: string) {
 // -- i/p/shared
 // a parser for an identifier
 function identifier(): Parser<string> {
-  return pattern(k.identifier)
+  return pattern(k.identifier.name)
 }
 
 // a parser for repeated whitespace
 function whitespace(): Parser<string> {
-  return pattern(k.whitespace)
+  return pattern(k.core.whitespace)
 }

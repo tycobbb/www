@@ -2,10 +2,8 @@ import { EtaConfig } from "https://deno.land/x/eta@v1.12.3/config.ts"
 import { Parser } from "../Parser/mod.ts"
 import {
   any,
-  debug,
   delimited,
   either,
-  then,
   inner,
   literal,
   map,
@@ -18,22 +16,10 @@ import {
   right,
   sequence,
   surround,
+  then,
   trio,
   unless,
 } from "../Parser/mod.ts"
-
-// input:
-// <w-frag
-//   path="./post"
-//   i=5
-// />
-//
-// output:
-// <%~
-//   include("./post.f.html", {
-//     i: 5,
-//   })
-// %>
 
 // -- constants --
 const k = {
@@ -161,7 +147,6 @@ function element(): Parser<TemplateElement> {
       ),
     ),
     (name) => map(
-      debug(
       pair(
         // attributes
         surround(
@@ -179,7 +164,6 @@ function element(): Parser<TemplateElement> {
             close(name),
           ),
         ),
-      ),
       ),
       ([attrs, children]) => ({ name, attrs, children })
     )

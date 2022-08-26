@@ -1,6 +1,6 @@
-import { assertParser } from "../../Test/mod.ts"
+import { assertParser, clean } from "../../Test/mod.ts"
 import { ParserResult } from "../Parser/Parser.ts"
-import { elements, attrs, TemplateNode, TemplateNodeKind as NK } from "./TemplateElements.ts"
+import { decode, TemplateNode } from "./TemplateElements.ts"
 
 // -- setup --
 const { test } = Deno
@@ -32,13 +32,13 @@ test("it matches elements", () => {
       },
       children: null
     }),
-    TemplateNode.text(`
+    TemplateNode.text(clean(/^ {2}(?=\s*\S)/gm, `
 
-    <a href="https://test.url">
-      test link
-    />
+      <a href="https://test.url">
+        test link
+      />
 
-    `),
+    `)),
     TemplateNode.element({
       name: "w:frag",
       attrs: {
@@ -49,6 +49,6 @@ test("it matches elements", () => {
     })
   ]
 
-  const match = elements()
+  const match = decode()
   assertParser(match(input.trim()), ParserResult.value(output, ""))
 })

@@ -7,11 +7,13 @@ import {
   inner,
   literal,
   map,
+  mapInput,
   outer,
   pattern,
   pred,
-  sequence,
+  repeat,
   right,
+  sequence,
   surround,
   trio,
 } from "../Parser/mod.ts"
@@ -39,6 +41,7 @@ const k = {
 // the possible parsed node types
 export enum TemplateNodeKind {
   text,
+  slice,
   element,
 }
 
@@ -47,12 +50,17 @@ import NK = TemplateNodeKind
 // a parsed node
 export type TemplateNode
   = { kind: NK.text, text: string }
+  | { kind: NK.slice, input: string, len: number }
   | { kind: NK.element, element: TemplateElement }
 
 export const TemplateNode = {
   // create a text node
   text(text: string): TemplateNode {
     return { kind: NK.text, text }
+  },
+  // create a slice node
+  slice(input: string, len: number): TemplateNode {
+    return { kind: NK.slice, input, len }
   },
   // create an element node
   element(element: TemplateElement): TemplateNode {
@@ -83,10 +91,47 @@ export class TemplateElements {
 
 // -- i/parsers
 // a parser for a sequence of elements
-export function elements(): Parser<TemplateNode[]> {
-  return map(
-    element(),
-    (e) => [TemplateNode.element(e)]
+export function decode(): Parser<TemplateNode[]> {
+  return repeat(
+    either(
+      map(
+        element(),
+        (e) => TemplateNode.element(e)
+      ),
+      mapInput(
+        any,
+        (_, input) => TemplateNode.slice(input, 1)
+      ),
+    ),
+    () => [],
+    (nodes: TemplateNode[], node) => {
+      // if this node was merged w/ the last
+      let isMerge = false
+
+      // get previous node
+      const i = nodes.length - 1
+      const p = nodes[i]
+
+      /// if the prev was a slice
+      if (p != null && p.kind === NK.slice) {
+        // if this is also a slice, merge
+        if (node.kind === NK.slice) {
+          isMerge = true
+          p.len += node.len
+        }
+        // otherwise, convert prev to text
+        else {
+          nodes[i] = TemplateNode.text(p.input.slice(0, p.len))
+        }
+      }
+
+      // if no merge, append a new node
+      if (!isMerge) {
+        nodes.push(node)
+      }
+
+      return nodes
+    },
   )
 }
 

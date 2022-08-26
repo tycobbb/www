@@ -74,15 +74,23 @@ export function any(input: Slice): ParserResult<string> {
 
 // -- i/combinators
 // a parser with a value transformed by a functiom
-export function map<I, O>(
-  p1: Parser<I>,
-  transform: (i: I) => O
-): Parser<O> {
+export function map<A, B>(
+  p1: Parser<A>,
+  transform: (value: A) => B
+): Parser<B> {
+  return mapInput(p1, (val, _) => transform(val))
+}
+
+// a parser with a value & input transformed by a functiom
+export function mapInput<A, B>(
+  p1: Parser<A>,
+  transform: (value: A, input: Slice) => B
+): Parser<B> {
   return (input) => {
     const r1 = p1(input)
     switch (r1.stat) {
     case PS.success:
-      return ParserResult.value(transform(r1.value), r1.slice)
+      return ParserResult.value(transform(r1.value, input), r1.slice)
     case PS.failure:
       return r1
     }

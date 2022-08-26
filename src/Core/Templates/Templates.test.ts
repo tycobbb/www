@@ -1,4 +1,4 @@
-import { assertEquals, assertLength, clean, stubEvents } from "../../Test/mod.ts"
+import { assertEquals, assertLength, scrub, stubEvents } from "../../Test/mod.ts"
 import { Templates } from "./Templates.ts"
 import { TemplateEvent } from "./TemplateEvent.ts"
 
@@ -38,7 +38,7 @@ test("it includes a fragment", async () => {
   `)
 
   const res = await tmpl.render("posts/test")
-  assertEquals(clean(res), "012")
+  assertEquals(scrub(res), "012")
 })
 
 test("it includes an absolutely-pathed fragment", async () => {
@@ -49,7 +49,7 @@ test("it includes an absolutely-pathed fragment", async () => {
   `)
 
   const res = await tmpl.render("posts/test")
-  assertEquals(clean(res), "hello")
+  assertEquals(scrub(res), "hello")
 })
 
 test("it includes a fragment element", async () => {
@@ -63,7 +63,7 @@ test("it includes a fragment element", async () => {
   `)
 
   const res = await tmpl.render("posts/test")
-  assertEquals(clean(res), "5")
+  assertEquals(scrub(res), "5")
 })
 
 test("it applies layouts", async () => {
@@ -78,7 +78,7 @@ test("it applies layouts", async () => {
   `)
 
   const res = await tmpl.render("page/test")
-  assertEquals(clean(res), "012")
+  assertEquals(scrub(res), "012")
 })
 
 test("it uses data", async () => {
@@ -91,7 +91,7 @@ test("it uses data", async () => {
   `)
 
   const res = await tmpl.render("page/test")
-  assertEquals(clean(res), "testdata")
+  assertEquals(scrub(res), "testdata")
 })
 
 test("it emits include events", async () => {

@@ -1,9 +1,17 @@
+import { white } from "https://deno.land/std@0.122.0/fmt/colors.ts"
+
 // -- constants --
-// matches all whitespace
-const kWhitespacePattern = /\s*/g
+const k = {
+  whitespace: /\s*/g
+}
 
 // -- impls --
 // removes all whitespace
-export function clean(text: string): string {
-  return text.replaceAll(kWhitespacePattern, "")
+export function scrub(text: string): string {
+  return clean(k.whitespace, text)
+}
+
+/// removes the specified pattern from the string
+export function clean(pattern: RegExp, text: string): string {
+  return text.replaceAll(pattern, "")
 }

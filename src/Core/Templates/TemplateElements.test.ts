@@ -20,7 +20,14 @@ test("it matches elements", () => {
     <w:frag
       path="./test"
       test="two"
-    />
+    >
+      plain text
+
+      <w:frag
+        path="./test"
+        test="three"
+      />
+    </w:frag>
   `
 
   const output: TemplateNode[] = [
@@ -30,7 +37,7 @@ test("it matches elements", () => {
         path: "./test",
         test: "one",
       },
-      children: null
+      children: null,
     }),
     TemplateNode.text(clean(/^ {2}(?=\s*\S)/gm, `
 
@@ -45,8 +52,23 @@ test("it matches elements", () => {
         path: "./test",
         test: "two",
       },
-      children: null
-    })
+      children: [
+        TemplateNode.text(clean(/(^ {4}(?=\s*\S))|( {2}$)/gm, `
+          plain text
+
+        `)),
+        TemplateNode.element({
+          name: "w:frag",
+          attrs: {
+            path: "./test",
+            test: "three",
+          },
+          children: null,
+        }),
+        TemplateNode.text(clean(/ {4}$/gm, `
+        `)),
+      ],
+    }),
   ]
 
   const match = decode()

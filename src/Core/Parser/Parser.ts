@@ -97,8 +97,8 @@ export function mapInput<A, B>(
   }
 }
 
-// a parser followed by another pareser
-export function flatMap<A, B>(
+// a parser followed by another parser using value of the first (e.g. flat map)
+export function then<A, B>(
   p1: Parser<A>,
   transform: (i: A) => Parser<B>
 ): Parser<B> {
@@ -114,10 +114,10 @@ export function flatMap<A, B>(
 }
 
 // a parser that whose value passes the test
-export function pred<V>(
-  p1: Parser<V>,
-  predicate: (v: V) => boolean
-): Parser<V> {
+export function pred<A>(
+  p1: Parser<A>,
+  predicate: (v: A) => boolean
+): Parser<A> {
   return (input) => {
     const r1 = p1(input)
 
@@ -131,11 +131,34 @@ export function pred<V>(
   }
 }
 
-/// a parser the validates the value of another parser
-export function validate<V>(
-  p1: Parser<V>,
-  validate: (input: Slice, res: ParserSuccess<V>) => ParserResult<V>,
-): Parser<V> {
+// a parser that requires another parser fail
+export function unless<A>(
+  p1: Parser<A>,
+  p2: Parser<unknown> | null,
+): Parser<A> {
+  // if unconditional, always try the parser
+  if (p2 === null) {
+    return p1
+  }
+
+  // otherwise, we may short-circuit on the condition
+  return (input) => {
+    // if condition succeeds, error
+    const r2 = p2(input)
+    if (r2.stat === PS.success) {
+      return ParserResult.error(input, `[parser] unless - short-circuiting parser succeeded`)
+    }
+
+    // otherwise, try the parser
+    return p1(input)
+  }
+}
+
+// a parser the validates the value of another parser
+export function validate<A>(
+  p1: Parser<A>,
+  validate: (input: Slice, res: ParserSuccess<A>) => ParserResult<A>,
+): Parser<A> {
   return (input) => {
     const r1 = p1(input)
     if (r1.stat === PS.success) {
@@ -377,6 +400,16 @@ export function either<A, B>(
 
     // if neither pass, this fails
     return ParserResult.error(input, `[parser] either - both failed`)
+  }
+}
+
+// -- i/debug
+// a debug helper
+export function debug<A>(
+  p1: Parser<A>
+): Parser<A> {
+  return (input) => {
+    return p1(input)
   }
 }
 

@@ -2,13 +2,16 @@ import { EtaConfig } from "https://deno.land/x/eta@v1.12.3/config.ts"
 import { Parser } from "../Parser/mod.ts"
 import {
   any,
+  debug,
   delimited,
   either,
+  then,
   inner,
   literal,
   map,
   mapInput,
   outer,
+  pair,
   pattern,
   pred,
   repeat,
@@ -16,6 +19,7 @@ import {
   sequence,
   surround,
   trio,
+  unless,
 } from "../Parser/mod.ts"
 
 // input:
@@ -40,18 +44,18 @@ const k = {
 // -- types --
 // the possible parsed node types
 export enum TemplateNodeKind {
+  element,
   text,
   slice,
-  element,
 }
 
 import NK = TemplateNodeKind
 
 // a parsed node
 export type TemplateNode
-  = { kind: NK.text, text: string }
+  = { kind: NK.element, element: TemplateElement }
+  | { kind: NK.text, text: string }
   | { kind: NK.slice, input: string, len: number }
-  | { kind: NK.element, element: TemplateElement }
 
 export const TemplateNode = {
   // create a text node
@@ -72,7 +76,7 @@ export const TemplateNode = {
 export type TemplateElement = {
   name: string,
   attrs: TemplateElementAttrs,
-  children: string | null,
+  children: TemplateNode[] | null,
 }
 
 // an element's attributes
@@ -90,88 +94,95 @@ export class TemplateElements {
 }
 
 // -- i/parsers
-// a parser for a sequence of elements
+// a parser for a sequence of nodes
 export function decode(): Parser<TemplateNode[]> {
-  return repeat(
-    either(
-      map(
-        element(),
-        (e) => TemplateNode.element(e)
-      ),
-      mapInput(
-        any,
-        (_, input) => TemplateNode.slice(input, 1)
-      ),
-    ),
-    () => [],
-    (nodes: TemplateNode[], node) => {
-      // if this node was merged w/ the last
-      let isMerge = false
+  return nodes()
+}
 
-      // get previous node
-      const i = nodes.length - 1
-      const p = nodes[i]
+// a parser for a sequence of nodes
+export function nodes(close: Parser<unknown> | null = null): Parser<TemplateNode[]> {
+  return map(
+    repeat(
+      either(
+        map(
+          element(),
+          (e) => TemplateNode.element(e)
+        ),
+        mapInput(
+          unless(
+            any,
+            close,
+          ),
+          (_, input) => TemplateNode.slice(input, 1)
+        ),
+      ),
+      () => [],
+      // merge slices
+      (nodes: TemplateNode[], n) => {
+        const p = nodes[nodes.length - 1]
 
-      /// if the prev was a slice
-      if (p != null && p.kind === NK.slice) {
-        // if this is also a slice, merge
-        if (node.kind === NK.slice) {
-          isMerge = true
-          p.len += node.len
+        // if the prev and next are slices, merge
+        if (p != null && p.kind === NK.slice && n.kind === NK.slice) {
+          p.len += n.len
         }
-        // otherwise, convert prev to text
+        // otherwise, append the new node
         else {
-          nodes[i] = TemplateNode.text(p.input.slice(0, p.len))
+          nodes.push(n)
         }
-      }
 
-      // if no merge, append a new node
-      if (!isMerge) {
-        nodes.push(node)
-      }
+        return nodes
+      },
+    ),
+    // finalize slices as text
+    (nodes) => {
+      return nodes.map((n) => {
+        if (n.kind === NK.slice) {
+          return TemplateNode.text(n.input.slice(0, n.len))
+        }
 
-      return nodes
+        return n
+      })
     },
   )
 }
 
-// a parser for a element
+// a parser for an element
 function element(): Parser<TemplateElement> {
-  return map(
-    trio(
-      // open tag
-      right(
+  return then(
+    // open tag
+    right(
+      pair(
         literal("<"),
-        pred(
-          identifier(),
-          (id) => id === "w:frag"
-        ),
-      ),
-      // attributes
-      surround(
-        attrs(),
         whitespace(),
       ),
-      // close tag...
-      either(
-        // self-closing
-        literal("/>"),
-        // or with children
-        inner(
-          literal(">"),
-          surround(
-            children(),
-            whitespace(),
-          ),
-          literal("/>"),
-        ),
+      pred(
+        identifier(),
+        (id) => id === "w:frag"
       ),
     ),
-    (vs) => ({
-      name: vs[0],
-      attrs: vs[1],
-      children: vs[2],
-    })
+    (name) => map(
+      debug(
+      pair(
+        // attributes
+        surround(
+          attrs(),
+          whitespace(),
+        ),
+        // close tag...
+        either(
+          // self-closing
+          literal("/>"),
+          // or with children
+          inner(
+            literal(">"),
+            children(name),
+            close(name),
+          ),
+        ),
+      ),
+      ),
+      ([attrs, children]) => ({ name, attrs, children })
+    )
   )
 }
 
@@ -217,9 +228,21 @@ function attrValue(): Parser<string> {
   )
 }
 
-// a parser for an element's children
-function children(): Parser<string> {
-  return any
+// a parser for a named close tag
+function close(name: string): Parser<unknown> {
+  return trio(
+    literal("</"),
+    surround(
+      literal(name),
+      whitespace()
+    ),
+    literal(">"),
+  )
+}
+
+// a parser for children closed by a named tag
+function children(name: string) {
+  return nodes(close(name))
 }
 
 // -- i/p/shared

@@ -1,5 +1,4 @@
-import { EtaConfig } from "https://deno.land/x/eta@v1.12.3/config.ts"
-import { Parser } from "../Parser/mod.ts"
+import { Parser, ParserStatus as PS } from "../Parser/mod.ts"
 import {
   any,
   delimited,
@@ -37,84 +36,108 @@ const k = {
 }
 
 // -- types --
+// a parsing configuration
+export type HtmlConfig = Readonly<{
+  elements: ReadonlySet<string>
+}>
+
 // the possible parsed node types
-export enum TemplateNodeKind {
+export enum HtmlNodeKind {
   element,
   text,
   slice,
 }
 
-import NK = TemplateNodeKind
+import NK = HtmlNodeKind
 
 // a parsed node
-export type TemplateNode
-  = { kind: NK.element, element: TemplateElement }
+export type HtmlNode
+  = { kind: NK.element, element: HtmlElement }
   | { kind: NK.text, text: string }
   | { kind: NK.slice, input: string, len: number }
 
-export const TemplateNode = {
+export const HtmlNode = {
   // create a text node
-  text(text: string): TemplateNode {
+  text(text: string): HtmlNode {
     return { kind: NK.text, text }
   },
   // create a slice node
-  slice(input: string, len: number): TemplateNode {
+  slice(input: string, len: number): HtmlNode {
     return { kind: NK.slice, input, len }
   },
   // create an element node
-  element(element: TemplateElement): TemplateNode {
+  element(element: HtmlElement): HtmlNode {
     return { kind: NK.element, element }
   }
 }
 
 // an element
-export type TemplateElement = {
+export type HtmlElement = {
   name: string,
-  attrs: TemplateElementAttrs,
-  children: TemplateNode[] | null,
+  attrs: HtmlElementAttrs,
+  children: HtmlNode[] | null,
 }
 
 // an element's attributes
-export type TemplateElementAttrs = {
+export type HtmlElementAttrs = {
   [key: string]: string
 }
 
 // -- impls --
-// an eta plugin that compiles build-time html elements into eta calls
-export class TemplateElements {
-  // -- EtaPlugin --
-  processTemplate(str: string, _: EtaConfig): string {
-    return str
+// an html parser for a set of elements
+export class Html {
+  // -- props --
+  // the list of legal elements
+  readonly #decode: Parser<HtmlNode[]>
+
+  // -- liftime --
+  // create a new html parser
+  constructor(elements: string[]) {
+    // init config
+    const cfg = Object.freeze({
+      elements: Object.freeze(new Set(elements))
+    })
+
+    this.#decode = nodes(cfg, null)
+  }
+
+  // -- queries --
+  // decode input into nodes, returning null if error
+  decode(input: string): HtmlNode[] | null {
+    const res = this.#decode(input)
+    if (res.stat === PS.success) {
+      return res.value
+    } else {
+      return null
+    }
   }
 }
 
 // -- i/parsers
 // a parser for a sequence of nodes
-export function decode(): Parser<TemplateNode[]> {
-  return nodes()
-}
-
-// a parser for a sequence of nodes
-export function nodes(close: Parser<unknown> | null = null): Parser<TemplateNode[]> {
+function nodes(
+  cfg: HtmlConfig,
+  close: Parser<unknown> | null,
+): Parser<HtmlNode[]> {
   return map(
     repeat(
       either(
         map(
-          element(),
-          (e) => TemplateNode.element(e)
+          element(cfg),
+          (e) => HtmlNode.element(e)
         ),
         mapInput(
           unless(
             any,
             close,
           ),
-          (_, input) => TemplateNode.slice(input, 1)
+          (_, input) => HtmlNode.slice(input, 1)
         ),
       ),
       // init list
       () => [],
       // build list, merging consecutive slices
-      (nodes: TemplateNode[], n) => {
+      (nodes: HtmlNode[], n) => {
         const p = nodes[nodes.length - 1]
 
         // if the prev and next are slices, merge
@@ -133,7 +156,7 @@ export function nodes(close: Parser<unknown> | null = null): Parser<TemplateNode
     (nodes) => {
       return nodes.map((n) => {
         if (n.kind === NK.slice) {
-          return TemplateNode.text(n.input.slice(0, n.len))
+          return HtmlNode.text(n.input.slice(0, n.len))
         }
 
         return n
@@ -143,7 +166,9 @@ export function nodes(close: Parser<unknown> | null = null): Parser<TemplateNode
 }
 
 // a parser for an element
-function element(): Parser<TemplateElement> {
+function element(
+  cfg: HtmlConfig
+): Parser<HtmlElement> {
   return then(
     // open tag
     right(
@@ -153,7 +178,7 @@ function element(): Parser<TemplateElement> {
       ),
       pred(
         identifier(),
-        (id) => id === "w:frag"
+        (name) => cfg.elements.has(name)
       ),
     ),
     // the rest, closed by the same name
@@ -171,7 +196,7 @@ function element(): Parser<TemplateElement> {
           // or with children
           inner(
             literal(">"),
-            children(name),
+            children(cfg, name),
             close(name),
           ),
         ),
@@ -187,14 +212,14 @@ function element(): Parser<TemplateElement> {
 }
 
 // a parser for a sequence of attrs
-function attrs(): Parser<TemplateElementAttrs> {
+function attrs(): Parser<HtmlElementAttrs> {
   return map(
     delimited(
       attr(),
       whitespace(),
     ),
     // convert list of kv-tuples into a map
-    (as) => (as.reduce((memo: TemplateElementAttrs, [k, v]) => {
+    (as) => (as.reduce((memo: HtmlElementAttrs, [k, v]) => {
       memo[k] = v
       return memo
     }, {}))
@@ -239,8 +264,8 @@ function close(name: string): Parser<unknown> {
 }
 
 // a parser for children closed by a named tag
-function children(name: string) {
-  return nodes(close(name))
+function children(cfg: HtmlConfig, name: string) {
+  return nodes(cfg, close(name))
 }
 
 // -- i/p/shared

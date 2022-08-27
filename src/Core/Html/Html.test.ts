@@ -1,12 +1,15 @@
-import { assertParser, clean } from "../../Test/mod.ts"
-import { ParserResult } from "../Parser/Parser.ts"
-import { decode, TemplateNode } from "./TemplateElements.ts"
+import { assertEquals, clean } from "../../Test/mod.ts"
+import { Html, HtmlNode } from "./Html.ts"
 
 // -- setup --
 const { test } = Deno
 
 // -- tests --
 test("it matches elements", () => {
+  const html = new Html([
+    "w:frag"
+  ])
+
   const input = `
     <w:frag
       path="./test"
@@ -30,8 +33,8 @@ test("it matches elements", () => {
     </w:frag>
   `
 
-  const output: TemplateNode[] = [
-    TemplateNode.element({
+  const output: HtmlNode[] = [
+    HtmlNode.element({
       name: "w:frag",
       attrs: {
         path: "./test",
@@ -39,25 +42,25 @@ test("it matches elements", () => {
       },
       children: null,
     }),
-    TemplateNode.text(clean(/^ {2}(?=\s*\S)/gm, `
+    HtmlNode.text(clean(/^ {2}(?=\s*\S)/gm, `
 
       <a href="https://test.url">
         test link
       />
 
     `)),
-    TemplateNode.element({
+    HtmlNode.element({
       name: "w:frag",
       attrs: {
         path: "./test",
         test: "two",
       },
       children: [
-        TemplateNode.text(clean(/(^ {4}(?=\s*\S))|( {2}$)/gm, `
+        HtmlNode.text(clean(/(^ {4}(?=\s*\S))|( {2}$)/gm, `
           plain text
 
         `)),
-        TemplateNode.element({
+        HtmlNode.element({
           name: "w:frag",
           attrs: {
             path: "./test",
@@ -65,12 +68,12 @@ test("it matches elements", () => {
           },
           children: null,
         }),
-        TemplateNode.text(clean(/ {4}$/gm, `
+        HtmlNode.text(clean(/ {4}$/gm, `
         `)),
       ],
     }),
   ]
 
-  const match = decode()
-  assertParser(match(input.trim()), ParserResult.value(output, ""))
+  const actual = html.decode(input.trim())
+  assertEquals(actual, output)
 })

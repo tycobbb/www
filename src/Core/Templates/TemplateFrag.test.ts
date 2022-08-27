@@ -6,7 +6,7 @@ const { test } = Deno
 
 // -- tests --
 test("it compiles w:frag elements", () => {
-  const plugin = TemplateFrag.plugin()
+  const plugin = new TemplateFrag.Plugin()
 
   const input = `
     <w:frag

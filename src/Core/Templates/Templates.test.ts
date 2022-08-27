@@ -56,9 +56,9 @@ test("it includes a fragment element", async () => {
   reset()
   tmpl.add("posts/post", `<%= it.i %>`)
   tmpl.add("posts/test", `
-    <w-frag
+    <w:frag
       path="./post"
-      i=5
+      i="5"
     />
   `)
 

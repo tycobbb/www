@@ -103,7 +103,5 @@ class TemplateFragPlugin {
 // factory for template frag helpers
 export const TemplateFrag = {
   helper,
-  plugin: () => {
-    return new TemplateFragPlugin()
-  }
+  Plugin: TemplateFragPlugin,
 }

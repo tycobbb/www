@@ -108,8 +108,12 @@ export class Templates {
       plugins: [
         // expost helpers as globals
         new TemplateHelpers(),
+
         // pass parent path to helpers,
         new TemplateParent(),
+
+        // compile w:frag html elements
+        new TemplateFrag.Plugin(),
       ]
     })
   }

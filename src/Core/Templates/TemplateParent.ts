@@ -12,6 +12,7 @@ import {
   map,
   pair,
   pattern,
+  sequence,
   sparse,
   string,
   surround,
@@ -25,11 +26,11 @@ const k = {
   fn: {
     // the fn name; can be a compound identifier, e.g. `Object.assign`
     name: /^[a-zA-Z\$_][\w\$_\.]*/,
-    // a fallback arg, anything that's not a delimiter
+    // a fallback arg part, anything that's not a delimiter
     // TODO: this matches chunks of objects and can screw with a fn's args list,
     // e.g. `{k1:"v1"` from `{k1:"v1",k2:"v2"}`. but this may not matter for us
     // in practice.
-    arg: /^[^,\)]*/,
+    part: /^[^,\)]+/,
   },
 }
 
@@ -72,6 +73,10 @@ type Helper = {
 
 // a helper arg
 type HelperArg
+  = HelperArgPart[]
+
+// a part of a helper arg
+type HelperArgPart
   = Helper
   | string
 
@@ -89,7 +94,7 @@ export class TemplateParent {
 
   // -- queries --
   // compile a list of nodes
-  #compile(nodes: HelperNode[], parent: string): string {
+  #compile(nodes: HelperNode[], parent: HelperArg): string {
     const m = this
 
     const compiled = nodes.reduce((res, node) => {
@@ -105,7 +110,7 @@ export class TemplateParent {
   }
 
   // compile a helper fn
-  #compileFn(fn: Helper, parent: string): string {
+  #compileFn(fn: Helper, parent: HelperArg): string {
     const m = this
 
     // insert parent as second arg in helper call
@@ -125,16 +130,14 @@ export class TemplateParent {
     return compiled
   }
 
-  // compile a helper fn's
-  #compileFnArgs(args: HelperArg[], parent: string) {
+  // compile a helper fn's args
+  #compileFnArgs(args: HelperArg[], parent: HelperArg) {
     return args
-      .map((a) => {
-        if (typeof a === "string") {
-          return a
-        }
-
-        return this.#compileFn(a, parent)
-      })
+      .map((arg) => (
+        arg
+          .map((p) => typeof p === "string" ? p : this.#compileFn(p, parent))
+          .join("")
+      ))
       .join(",")
   }
 
@@ -150,7 +153,7 @@ export class TemplateParent {
     }
 
     // the parent is the quoted path
-    const parent = `"${path}"`
+    const parent = [`"${path}"`]
 
     // decode nodes
     const nodes = m.#decode(str)
@@ -203,10 +206,12 @@ function $helper(): Parser<Helper> {
       left(
         surround(
           delimited(
-            first(
-              string(),
-              helper(),
-              pattern(/^[^,\)]*/),
+            sequence(
+              first(
+                string(),
+                helper(),
+                pattern(k.fn.part),
+              ),
             ),
             surround(
               literal(","),

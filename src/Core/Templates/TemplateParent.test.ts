@@ -1,4 +1,4 @@
-import { assertEquals, clean } from "../../Test/mod.ts"
+import { assertEquals } from "../../Test/mod.ts"
 import { TemplateParent } from "./TemplateParent.ts"
 
 // -- setup --
@@ -8,10 +8,10 @@ const { test } = Deno
 test("it compiles helpers", () => {
   const plugin = new TemplateParent()
   const input = `
-    include(__l,Object.assign(it,{body:tR},__lP),{k1:"v1",k2:420})
+    include("test" + 3,Object.assign(it,{body:tR},__lP),{a:"1",b:"2"})
   `
   const output = `
-    include(__l,"parent",Object.assign(it,{body:tR},__lP),{k1:"v1",k2:420})
+    include("test" + 3,"parent",Object.assign(it,{body:tR},__lP),{a:"1",b:"2"})
   `
 
   // deno-lint-ignore no-explicit-any

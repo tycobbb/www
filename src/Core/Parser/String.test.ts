@@ -1,6 +1,6 @@
 import { assertParser } from "../../Test/mod.ts"
 import { ParserResult } from "./Parsers.ts"
-import { str } from "./Common.ts"
+import { str } from "./String.ts"
 
 // -- setup --
 const { test } = Deno

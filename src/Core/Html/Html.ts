@@ -1,4 +1,4 @@
-import { Parser, ParserStatus as PS } from "../Parser/mod.ts"
+import { Parser, ParserStatus as PS, } from "../Parser/mod.ts"
 import {
   any,
   cache,

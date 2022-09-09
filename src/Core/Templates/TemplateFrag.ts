@@ -73,7 +73,7 @@ class TemplateFragPlugin {
         frag("${path}.f.html", {
           ${Object
             .entries(attrs)
-            .map(([key, val]) => `${key}: "${val}"`)
+            .map(([key, val]) => `${key}: "${JSON.stringify(val).slice(1, -1)}"`)
             .join(",\n")}
         })
       %>

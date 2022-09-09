@@ -27,7 +27,10 @@ export type ParserResult<V>
 
 // a parser that may parse a slice
 export type Parser<V>
-  = (str: Slice) => ParserResult<V>
+  = (input: Slice) => ParserResult<V>
+
+export type ParserWith<V, S>
+  = (input: Slice, state: S) => ParserResult<V>
 
 // -- impls --
 export const ParserResult = {
@@ -376,39 +379,78 @@ export function delimited<A, B>(
     }
 
     // otherwise, return value
-    return ParserResult.value(values, rest)
+    return ParserResult.value(values, restEntry)
   }
 }
 
-// a parser that matches either of two parsers
-export function either<A, B>(
+// a parser that matches the first of two parsers
+export function first<A, B>(
   p1: Parser<A>,
-  p2: Parser<B>
-): Parser<A | B> {
+  p2: Parser<B>,
+): Parser<A | B>;
+
+// a parser that matches the first of three parsers
+export function first<A, B, C>(
+  p1: Parser<A>,
+  p2: Parser<B>,
+  p3: Parser<C>,
+): Parser<A | B | C>;
+
+// a parser that matches the first of four parsers
+export function first<A, B, C, D>(
+  p1: Parser<A>,
+  p2: Parser<B>,
+  p3: Parser<C>,
+  p4: Parser<D>,
+): Parser<A | B | C | D>;
+
+export function first<A, B, C, D>(
+  ...ps: Parser<A | B | C | D>[]
+): Parser<A | B | C | D> {
   return (input) => {
     // try the first parser
-    const r1 = p1(input)
-    if (r1.stat === PS.success) {
-      return r1
-    }
-
-    // try the second parser
-    const r2 = p2(input)
-    if (r2.stat === PS.success) {
-      return r2
+    for (const pi of ps) {
+      const ri = pi(input)
+      if (ri.stat === PS.success) {
+        return ri
+      }
     }
 
     // if neither pass, this fails
-    return ParserResult.error(input, `[parser] either - both failed`)
+    return ParserResult.error(input, `[parser] first - all failed`)
   }
 }
 
-// -- i/debug
-// a debug helper
-export function debug<A>(
-  p1: Parser<A>
+// a parser created once at runtime; you might need this to avoid infinite
+// recursion.
+export function lazy<A>(
+  create: () => Parser<A>,
+): Parser<A> {
+  // the instance
+  let p1: Parser<A> | null
+
+  // the caching parser
+  return (input) => {
+    p1 ||= create()
+    return p1(input)
+  }
+}
+
+// a parser created once-by-key at runtime; you might need this to avoid
+// infinite recursion.
+export function cache<A>(
+  mem: { [key: string]: Parser<A> },
+  key: string,
+  create: () => Parser<A>
 ): Parser<A> {
   return (input) => {
+    // find or create the parser
+    let p1 = mem[key]
+    if (p1 == null) {
+      p1 = mem[key] = create()
+    }
+
+    // and try it
     return p1(input)
   }
 }
@@ -420,4 +462,19 @@ export function tuple<A, B>(
   i2: B
 ): [A, B] {
   return [i1, i2]
+}
+
+// -- i/utils
+// unwrap a parser into a fn producing an optional
+export function unwrap<A>(
+  p1: Parser<A>
+): (input: string) => A | null {
+  return (input) => {
+    const r1 = p1(input)
+    if (r1.stat === PS.success) {
+      return r1.value
+    } else {
+      return null
+    }
+  }
 }

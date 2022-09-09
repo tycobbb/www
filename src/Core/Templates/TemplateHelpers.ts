@@ -13,7 +13,6 @@ export class TemplateHelpers {
   // the list of all helpers
   static readonly all = [
     ...TemplateHelpers.new,
-    "layout",
     "include"
   ]
 

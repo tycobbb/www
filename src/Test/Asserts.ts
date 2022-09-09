@@ -1,5 +1,5 @@
 import { AssertionError, assert, assertEquals, assertMatch } from "https://deno.land/std@0.122.0/testing/asserts.ts"
-import { ParserResult, ParserStatus as PS } from "../Core/Parser/Parser.ts"
+import { ParserResult, ParserStatus as PS } from "../Core/Parser/mod.ts"
 
 // -- asserts --
 // asserts the value is null

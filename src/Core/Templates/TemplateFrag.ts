@@ -36,7 +36,7 @@ class TemplateFragPlugin {
 
   // -- queries --
   // compile a list of nodes
-  compile(nodes: HtmlNode[]): string {
+  #compile(nodes: HtmlNode[]): string {
     const m = this
 
     const compiled = nodes.reduce((res, node) => {
@@ -44,9 +44,7 @@ class TemplateFragPlugin {
       case NK.text:
         return res + node.text
       case NK.element:
-        return res + m.compileEl(node.element)
-      case NK.slice:
-        throw new Error("found a slice in the list of html nodes")
+        return res + m.#compileEl(node.element)
       }
     }, "")
 
@@ -54,7 +52,7 @@ class TemplateFragPlugin {
   }
 
   // compile an element
-  compileEl(el: HtmlElement): string {
+  #compileEl(el: HtmlElement): string {
     const m = this
 
     // validate path
@@ -66,7 +64,7 @@ class TemplateFragPlugin {
     // compile children
     // TODO: this won't quite work yet...
     if (el.children != null) {
-      attrs.children = m.compile(el.children)
+      attrs.children = m.#compile(el.children)
     }
 
     // compile into helper call
@@ -95,7 +93,7 @@ class TemplateFragPlugin {
     }
 
     // compile template
-    const compiled = m.compile(nodes)
+    const compiled = m.#compile(nodes)
     return compiled
   }
 }

@@ -1,22 +1,23 @@
 import { Parser, ParserStatus as PS } from "../Parser/mod.ts"
 import {
   any,
+  cache,
   delimited,
-  either,
+  first,
   inner,
   literal,
   map,
-  mapInput,
   outer,
   pair,
   pattern,
   pred,
-  repeat,
   right,
+  sparse,
   surround,
   then,
   trio,
   unless,
+  whitespace,
 } from "../Parser/mod.ts"
 
 // -- constants --
@@ -29,10 +30,9 @@ const k = {
   attr: {
     value: /[^\"]*/,
   },
-  // utility patterns
-  core: {
-    whitespace: /^\s*/,
-  },
+  body: {
+    cache: <{[key: string]: Parser<HtmlElement>}>{}
+  }
 }
 
 // -- types --
@@ -45,25 +45,19 @@ export type HtmlConfig = Readonly<{
 export enum HtmlNodeKind {
   element,
   text,
-  slice,
 }
 
 import NK = HtmlNodeKind
 
-// a parsed node
+// a parsed html node
 export type HtmlNode
   = { kind: NK.element, element: HtmlElement }
   | { kind: NK.text, text: string }
-  | { kind: NK.slice, input: string, len: number }
 
 export const HtmlNode = {
   // create a text node
   text(text: string): HtmlNode {
     return { kind: NK.text, text }
-  },
-  // create a slice node
-  slice(input: string, len: number): HtmlNode {
-    return { kind: NK.slice, input, len }
   },
   // create an element node
   element(element: HtmlElement): HtmlNode {
@@ -119,49 +113,16 @@ function nodes(
   cfg: HtmlConfig,
   close: Parser<unknown> | null,
 ): Parser<HtmlNode[]> {
-  return map(
-    repeat(
-      either(
-        map(
-          element(cfg),
-          (e) => HtmlNode.element(e)
-        ),
-        mapInput(
-          unless(
-            any,
-            close,
-          ),
-          (_, input) => HtmlNode.slice(input, 1)
-        ),
-      ),
-      // init list
-      () => [],
-      // build list, merging consecutive slices
-      (nodes: HtmlNode[], n) => {
-        const p = nodes[nodes.length - 1]
-
-        // if the prev and next are slices, merge
-        if (p != null && p.kind === NK.slice && n.kind === NK.slice) {
-          p.len += n.len
-        }
-        // otherwise, append the new node
-        else {
-          nodes.push(n)
-        }
-
-        return nodes
-      },
+  return sparse(
+    map(
+      element(cfg),
+      HtmlNode.element,
     ),
-    // finalize slices as text
-    (nodes) => {
-      return nodes.map((n) => {
-        if (n.kind === NK.slice) {
-          return HtmlNode.text(n.input.slice(0, n.len))
-        }
-
-        return n
-      })
-    },
+    unless(
+      any,
+      close,
+    ),
+    HtmlNode.text,
   )
 }
 
@@ -171,43 +132,69 @@ function element(
 ): Parser<HtmlElement> {
   return then(
     // open tag
-    right(
-      pair(
-        literal("<"),
+    open(cfg),
+    // the rest, closed by the same name
+    (name) => body(cfg, name),
+  )
+}
+
+// a parser for an element's opening tag
+function open(
+  cfg: HtmlConfig,
+): Parser<string> {
+  return right(
+    pair(
+      literal("<"),
+      whitespace(),
+    ),
+    pred(
+      identifier(),
+      (name) => cfg.elements.has(name)
+    ),
+  )
+}
+
+// a parser for an element's body
+function body(
+  cfg: HtmlConfig,
+  name: string,
+): Parser<HtmlElement> {
+  return cache(
+    k.body.cache,
+    `html/body/${name}`,
+    () => $body(cfg, name),
+  )
+}
+
+function $body(
+  cfg: HtmlConfig,
+  name: string,
+): Parser<HtmlElement> {
+  return map(
+    pair(
+      // attributes
+      surround(
+        attrs(),
         whitespace(),
       ),
-      pred(
-        identifier(),
-        (name) => cfg.elements.has(name)
+      // close tag...
+      first(
+        // self-closing
+        literal("/>"),
+        // or with children
+        inner(
+          literal(">"),
+          children(cfg, name),
+          close(name),
+        ),
       ),
     ),
-    // the rest, closed by the same name
-    (name) => map(
-      pair(
-        // attributes
-        surround(
-          attrs(),
-          whitespace(),
-        ),
-        // close tag...
-        either(
-          // self-closing
-          literal("/>"),
-          // or with children
-          inner(
-            literal(">"),
-            children(cfg, name),
-            close(name),
-          ),
-        ),
-      ),
-      // convert into element
-      ([attrs, children]) => ({
-        name,
-        attrs,
-        children
-      })
-    )
+    // convert into element
+    ([attrs, children]) => ({
+      name,
+      attrs,
+      children
+    })
   )
 }
 
@@ -272,9 +259,4 @@ function children(cfg: HtmlConfig, name: string) {
 // a parser for an identifier
 function identifier(): Parser<string> {
   return pattern(k.identifier.name)
-}
-
-// a parser for repeated whitespace
-function whitespace(): Parser<string> {
-  return pattern(k.core.whitespace)
 }

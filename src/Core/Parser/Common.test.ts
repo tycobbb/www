@@ -1,17 +1,13 @@
 import { assertParser } from "../../Test/mod.ts"
 import { ParserResult } from "./Parsers.ts"
-import { string } from "./Common.ts"
-import {
-  any,
-  pattern,
-} from "./Parsers.ts"
+import { str } from "./Common.ts"
 
 // -- setup --
 const { test } = Deno
 
 // -- tests --
 test("it matches strings", () => {
-  const match = string()
+  const match = str.quoted()
 
   const str1 = `"a double-quoted \\" string"`
   assertParser(match(str1), ParserResult.value(str1, ""))

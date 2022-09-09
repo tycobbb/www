@@ -54,7 +54,7 @@ test("it includes an absolutely-pathed fragment", async () => {
 
 test("it includes a fragment element", async () => {
   reset()
-  tmpl.add("posts/post", `<%= it.i %>`)
+  tmpl.add("posts/post.f.html", `<%= it.i %>`)
   tmpl.add("posts/test", `
     <w:frag
       path="./post"

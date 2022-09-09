@@ -1,5 +1,6 @@
 import { Parser } from "./Parsers.ts"
 import {
+  map,
   pattern,
 } from "./Parsers.ts"
 
@@ -17,7 +18,18 @@ export function whitespace(): Parser<string> {
   return pattern(k.wspace)
 }
 
-// a parser for a string value
-export function string(): Parser<string> {
+// a parser for the contents of a quoted string
+export function str(): Parser<string> {
+  return map(
+    quoted(),
+    (s) => s.slice(1, -1),
+  )
+}
+
+// a parser for a quoted string
+export function quoted(): Parser<string> {
   return pattern(k.string)
 }
+
+// str namespace
+str.quoted = quoted

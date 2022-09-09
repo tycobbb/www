@@ -13,6 +13,7 @@ import {
   pred,
   right,
   sparse,
+  str,
   surround,
   then,
   trio,
@@ -22,15 +23,13 @@ import {
 
 // -- constants --
 const k = {
-  // identifier patterns
+  // identifiers
   identifier: {
     name: /^[a-zA-Z]([\w:-]*\w)?/,
   },
-  // attribute patterns
-  attr: {
-    value: /[^\"]*/,
-  },
+  // body element
   body: {
+    // cache for lazily-evaluated parsers keyed by path
     cache: <{[key: string]: Parser<HtmlElement>}>{}
   }
 }
@@ -232,10 +231,7 @@ function attrName(): Parser<string> {
 
 // a parser for the value of an attr
 function attrValue(): Parser<string> {
-  return surround(
-    pattern(k.attr.value),
-    literal("\""),
-  )
+  return str()
 }
 
 // a parser for a named close tag

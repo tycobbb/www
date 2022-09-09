@@ -14,7 +14,7 @@ import {
   pattern,
   sequence,
   sparse,
-  string,
+  str,
   surround,
   unwrap,
   whitespace,
@@ -208,7 +208,7 @@ function $helper(): Parser<Helper> {
           delimited(
             sequence(
               first(
-                string(),
+                str.quoted(),
                 helper(),
                 pattern(k.fn.part),
               ),

@@ -70,7 +70,7 @@ class TemplateFragPlugin {
     // compile into helper call
     const compiled = `
       <%~
-        frag("${path}", {
+        frag("${path}.f.html", {
           ${Object
             .entries(attrs)
             .map(([key, val]) => `${key}: "${val}"`)

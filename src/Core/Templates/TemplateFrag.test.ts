@@ -17,7 +17,7 @@ test("it compiles w:frag elements", () => {
 
   const output = `
     <%~
-      frag("./test", {
+      frag("./test.f.html", {
         test: "one"
       })
     %>

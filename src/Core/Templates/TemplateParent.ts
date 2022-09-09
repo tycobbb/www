@@ -4,35 +4,32 @@ import { TemplateHelpers } from "./TemplateHelpers.ts"
 import { Parser } from "../Parser/mod.ts"
 import {
   any,
-  debug,
   delimited,
-  mapInput,
-  inner,
+  first,
   lazy,
   left,
   literal,
   map,
-  pattern,
-  pred,
-  first,
-  string,
-  sparse,
   pair,
+  pattern,
+  sparse,
+  string,
   surround,
-  trio,
   unwrap,
   whitespace,
 } from "../Parser/mod.ts"
 
 // -- constants --
 const k = {
-  // identifier patterns
+  // fn patterns
   fn: {
+    // the fn name; can be a compound identifier, e.g. `Object.assign`
     name: /^[a-zA-Z\$_][\w\$_\.]*/,
-  },
-  // arg patterns
-  arg: {
-    path: /^[^,]+/,
+    // a fallback arg, anything that's not a delimiter
+    // TODO: this matches chunks of objects and can screw with a fn's args list,
+    // e.g. `{k1:"v1"` from `{k1:"v1",k2:"v2"}`. but this may not matter for us
+    // in practice.
+    arg: /^[^,\)]*/,
   },
 }
 

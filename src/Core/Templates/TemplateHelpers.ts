@@ -23,6 +23,12 @@ export class TemplateHelpers {
   // -- EtaPlugin --
   // add helpers as template globals
   processFnString(fnStr: string, _: EtaConfig) {
-    return `var ${TemplateHelpers.globals}; ${fnStr}`
+    const lines = [
+      `var ${TemplateHelpers.globals}`,
+      `Object.prototype.pick = function(...ks) { return ks.map((k) => this[k]) }`,
+      `${fnStr}`,
+    ]
+
+    return lines.join(";")
   }
 }

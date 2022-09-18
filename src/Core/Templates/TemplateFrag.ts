@@ -5,16 +5,34 @@ import { Html, HtmlNode, HtmlElement, HtmlNodeKind as NK } from "../Html/mod.ts"
 import { TemplateEvent } from "./TemplateEvent.ts"
 import { TemplatePath } from "./TemplatePath.ts"
 
+// -- types --
+// and include helper fn
+type IncludeFn
+  = (path: string, cfg: EtaConfig) => unknown
+
 // -- constants --
-// the base include fn
-const kInclude: (path: string, cfg: EtaConfig) => unknown
-  = E.config.include!.bind(E.config)
+const k = {
+  // include helpers
+  include: {
+    // the base fn
+    base: <IncludeFn>E.config.include!.bind(E.config),
+  },
+  // frag elements
+  frag: {
+    // the element name
+    name: "w:frag",
+    // the slot element/attr
+    slot: "w:slot",
+  }
+}
 
 // -- impls --
 // create the helper from its deps
-const helper = (evts: EventStream<TemplateEvent>) => (
+const helper = (evts: EventStream<TemplateEvent>) => {
+  const base = k.include.base
+
   // a helper for including html fragments
-  function frag(path: string, parent: string, cfg: EtaConfig) {
+  return function frag(path: string, parent: string, cfg: EtaConfig) {
     // resolve path against parent
     const child = TemplatePath.resolve(path, parent)
 
@@ -22,20 +40,21 @@ const helper = (evts: EventStream<TemplateEvent>) => (
     evts.send(TemplateEvent.include(child, parent))
 
     // run original include w/ resolved path
-    return kInclude(child, cfg)
+    return base(child, cfg)
   }
-)
+}
 
 // an eta plugin that compiles build-time frag elements into helper calls
 class TemplateFragPlugin {
   // -- props --
   // the html parser
   #html: Html = new Html([
-    "w:frag"
+    k.frag.name,
+    k.frag.slot,
   ])
 
   // -- queries --
-  // compile a list of nodes
+  /// compile a list of nodes
   #compile(nodes: HtmlNode[]): string {
     const m = this
 
@@ -44,27 +63,45 @@ class TemplateFragPlugin {
       case NK.text:
         return res + node.text
       case NK.element:
-        return res + m.#compileEl(node.element)
+        return res + m.#compileFrag(node.element)
       }
     }, "")
 
     return compiled
   }
 
-  // compile an element
-  #compileEl(el: HtmlElement): string {
+  /// compile an element
+  #compileFrag(el: HtmlElement): string {
     const m = this
+
+    // validate el
+    if (el.name !== k.frag.name) {
+      throw new Error(`can't compile ${el.name} elements`)
+    }
 
     // validate path
     const { path, ...attrs } = el.attrs
     if (path == null) {
-      throw new Error("w:frag was missing path")
+      throw new Error("w:frag must have a `path`")
     }
 
     // compile children
-    // TODO: this won't quite work yet...
     if (el.children != null) {
-      attrs.children = m.#compile(el.children)
+      // split children into body and slots
+      const body: HtmlNode[] = []
+      for (const c of el.children) {
+        // if not a slot, add to body
+        if (c.kind !== NK.element || c.element.name !== k.frag.slot) {
+          body.push(c)
+        }
+        // otherwise, compile the slot
+        else {
+          attrs[c.element.attrs.name] = m.#compileSlot(c.element)
+        }
+      }
+
+      // compile body
+      attrs.body = m.#compile(body)
     }
 
     // compile into helper call
@@ -80,6 +117,24 @@ class TemplateFragPlugin {
     `
 
     return compiled
+  }
+
+  /// compile a slot element
+  #compileSlot(el: HtmlElement): string {
+    const m = this
+
+    // validate el
+    const name = el.attrs.name
+    if (name == null) {
+      throw new Error("w:slot must have a `name`")
+    }
+
+    if (el.children == null) {
+      throw new Error("w:slot must have `children`")
+    }
+
+    // and compile it
+    return m.#compile(el.children)
   }
 
   // -- EtaPlugin --

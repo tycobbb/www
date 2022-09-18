@@ -27,3 +27,34 @@ test("it compiles w:frag elements", () => {
   const actual = plugin.processTemplate(input, null as any)
   assertEquals(clean(/^ {2}(?=\s*\S)/gm, actual.trim()), output.trim())
 })
+
+test("it compiles w:frag elements w/ slots", () => {
+  const plugin = new TemplateFrag.Plugin()
+
+  const input = `
+    <w:frag
+      path="./test"
+      test="one"
+    >
+      <p>test</p>
+
+      <w:slot name="slot">
+        <p>test slot</p>
+      </w:slot>
+    </w:frag>
+  `
+
+  const output = `
+    <%~
+      frag("./test.f.html", {
+        test: "one",
+slot: "\\n        <p>test slot</p>\\n      ",
+body: "\\n      <p>test</p>\\n\\n      \\n    "
+      })
+    %>
+  `
+
+  // deno-lint-ignore no-explicit-any
+  const actual = plugin.processTemplate(input, null as any)
+  assertEquals(clean(/^ {2}(?=\s*\S)/gm, actual.trim()), output.trim())
+})

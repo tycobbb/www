@@ -26,7 +26,7 @@ export class SyncFiles {
   // starts syncing files
   start(): void {
     this.#evts.on(async (e) => {
-      switch (e.kind) {
+      switch (e.name) {
       case "copy-dir":
         await this.#copyDir(e.file.path); break
       case "copy-file":

@@ -4,31 +4,31 @@ import { File, FileRef } from "../File/mod.ts"
 // -- types --
 // an application event
 export type Event
-  = { kind: "copy-dir", file: FileRef }
-  | { kind: "copy-file", file: FileRef }
-  | { kind: "delete-file", file: Path }
-  | { kind: "save-file", file: File }
-  | { kind: "change-file", file: File }
+  = { name: "copy-dir", file: FileRef }
+  | { name: "copy-file", file: FileRef }
+  | { name: "delete-file", file: Path }
+  | { name: "save-file", file: File }
+  | { name: "change-file", file: File }
 
 // -- factories --
 export const Event = {
   // an event to copy a directory
   copyDir(file: FileRef): Event {
-    return { kind: "copy-dir", file }
+    return { name: "copy-dir", file }
   },
 
   // an event to copy a file
   copyFile(file: FileRef): Event {
-    return { kind: "copy-file", file }
+    return { name: "copy-file", file }
   },
 
   // an event to delete a file
   deleteFile(file: Path): Event {
-    return { kind: "delete-file", file }
+    return { name: "delete-file", file }
   },
 
   // an event to save a file w/ text
   saveFile(file: File): Event {
-    return { kind: "save-file", file }
+    return { name: "save-file", file }
   },
 }

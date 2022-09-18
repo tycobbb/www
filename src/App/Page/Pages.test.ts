@@ -25,6 +25,6 @@ test("it links a page and layout", async () => {
   assertLength(evts.all, 1)
 
   const evt = evts.all[0]
-  assertEquals(evt.kind, "save-file")
+  assertEquals(evt.name, "save-file")
   assertEquals((<File>evt.file).path.rel, "b1.html")
 })

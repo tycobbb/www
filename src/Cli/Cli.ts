@@ -64,16 +64,16 @@ export class Cli {
 
   // starts listening for output
   start(): void {
-    this.#evts.on((e) => {
-      switch (e.kind) {
+    this.#evts.on((evt) => {
+      switch (evt.name) {
       case "copy-dir":
         // falls through
       case "copy-file":
-        this.#drawSavedFile("copy ", e.file.path); break
+        this.#drawSavedFile("copy ", evt.file.path); break
       case "delete-file":
-        log.i(`- delete: ${e.file.rel}`); break
+        log.i(`- delete: ${evt.file.rel}`); break
       case "save-file":
-        this.#drawSavedFile("build", e.file.path); break
+        this.#drawSavedFile("build", evt.file.path); break
       default: break
       }
 

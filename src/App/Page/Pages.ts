@@ -218,7 +218,7 @@ export class Pages {
   #onEvent(evt: Event) {
     const m = this
 
-    switch (evt.kind) {
+    switch (evt.name) {
     case "delete-file":
       m.delete(evt.file); break;
     }
@@ -226,7 +226,7 @@ export class Pages {
 
   // when a template event happens
   #onTemplateEvent(evt: TemplateEvent) {
-    if (evt.kind === "include") {
+    if (evt.name === "include") {
       this.#addDep(evt.child, evt.parent)
     }
   }

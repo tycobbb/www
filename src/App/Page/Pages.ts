@@ -61,15 +61,15 @@ export class Pages {
 
     // find the node
     const id = file.path.rel
-    const ref = this.#db.nodes[id]
+    const node = this.#db.nodes[id]
 
     // if missing, create the node
-    if (ref == null) {
+    if (node == null) {
       await m.#create(id, file)
     }
     // otherwise, flag it as changed
     else {
-      ref.deref()!.flag()
+      node.val.flag()
     }
   }
 
@@ -129,7 +129,7 @@ export class Pages {
 
     // get initial list of dirty nodes
     const initial = Object.values(m.#db.nodes)
-      .map((r) => r.deref()!)
+      .map((n) => n.val)
       .filter((n) => n.isDirty)
 
     // process iteratively until all nodes are finished
@@ -209,8 +209,8 @@ export class Pages {
     }
 
     // add dependency between nodes
-    cn.deref()!.addDependent(pn)
-    pn.deref()!.addDependency(cn)
+    cn.val.addDependent(pn)
+    pn.val.addDependency(cn)
   }
 
   // -- events --

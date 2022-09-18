@@ -62,16 +62,15 @@ export class PageNode implements PageDependent, PageDependency {
     m.#isDirty = true
 
     // and flag any dependents
-    for (const ref of m.#dependents) {
+    for (const dep of m.#dependents) {
       // if dep was deleted, remove it
-      const dep = ref.deref()
-      if (dep == null) {
-        m.#dependents.delete(ref)
+      if (!dep.isPresent) {
+        m.#dependents.delete(dep)
         continue
       }
 
       // otherwise, flag it
-      dep.flag()
+      dep.val.flag()
     }
   }
 
@@ -101,15 +100,14 @@ export class PageNode implements PageDependent, PageDependency {
     const m = this
 
     // and flag any dependents
-    for (const ref of m.#dependencies) {
+    for (const dep of m.#dependencies) {
       // if dep was deleted, remove it
-      const dep = ref.deref()
-      if (dep == null) {
-        m.#dependencies.delete(ref)
+      if (!dep.isPresent) {
+        m.#dependencies.delete(dep)
         continue
       }
 
-      if (dep.isDirty) {
+      if (dep.val.isDirty) {
         return false
       }
     }

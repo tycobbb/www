@@ -2,23 +2,33 @@
 export class Ref<T> {
   // -- props --
   // the underlying reference
-  #ref: T | null
+  #val: T | null
 
   // -- lifetime --
   // create a new ref
-  constructor(ref: T) {
-    this.#ref = ref
+  constructor(val: T) {
+    this.#val = val
   }
 
   // -- commands --
   // delete the underlying reference
   delete() {
-    this.#ref = null
+    this.#val = null
   }
 
   // -- queries --
-  // get the underlying reference, if it exists
-  deref(): T | null {
-    return this.#ref
+  // if the ref exists
+  get isPresent(): boolean {
+    return this.#val != null
+  }
+
+  // get the underlying reference, or throw an error if it doesn't
+  get val(): T {
+    const val = this.#val
+    if (val == null) {
+      throw new Error(`tried to unwrap null!`)
+    }
+
+    return val
   }
 }

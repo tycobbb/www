@@ -3,7 +3,7 @@ import { single } from "../Scope.ts"
 import { EventStream, EventBus, EventListener } from "../Events.ts"
 import { TemplateEvent } from "./TemplateEvent.ts"
 import { TemplateFrag } from "./TemplateFrag.ts"
-import { TemplateData } from "./TemplateData.ts"
+import { TemplateData, TemplateDataDb } from "./TemplateData.ts"
 import { TemplateHelpers } from "./TemplateHelpers.ts"
 import { TemplateParent } from "./TemplateParent.ts"
 
@@ -18,7 +18,7 @@ export class Templates {
   #evts: EventStream<TemplateEvent>
 
   // a store for arbitrary template data
-  #data: TemplateData
+  #data: TemplateDataDb
 
   // -- lifetime --
   // create a new template repo

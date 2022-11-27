@@ -28,6 +28,11 @@ export function assertNotIncludes(actual: string, substring: string) {
   assert(!actual.includes(substring), `${actual} included ${substring}`)
 }
 
+// asserts the actual set has the element
+export function assertHas<T>(actual: Set<T>, element: T) {
+  assert(actual.has(element), `${actual} did not have ${element}`)
+}
+
 // asserts the values are partially equal given a selector
 export function assertPartial<T, U>(actual: T, expected: T, select: (val: T) => U) {
   try {

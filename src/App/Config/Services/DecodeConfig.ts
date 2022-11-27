@@ -67,7 +67,12 @@ export class DecodeConfig {
     const src = paths.src
 
     // decode raw paths
-    const raw = []
+    const raw = [
+      ".git",
+      ".gitignore",
+      ".wwwignore",
+      paths.dst.str,
+    ]
 
     // decode .gitignore paths
     const gitignore = src.join(".gitignore")

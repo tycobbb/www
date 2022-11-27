@@ -1,5 +1,16 @@
-import { AssertionError, assert, assertEquals, assertMatch } from "https://deno.land/std@0.122.0/testing/asserts.ts"
-import { ParserResult, ParserStatus as PS } from "../Core/Parser/mod.ts"
+import {
+  AssertionError,
+  assert,
+  assertEquals,
+  assertMatch,
+  assertThrows,
+  assertRejects,
+} from "https://deno.land/std@0.122.0/testing/asserts.ts"
+
+import {
+  ParserResult,
+  ParserStatus as PS
+} from "../Core/Parser/mod.ts"
 
 // -- asserts --
 // asserts the value is null
@@ -50,4 +61,10 @@ export function assertParser<V>(
 }
 
 // -- reexports --
-export { assert, assertEquals, assertMatch }
+export {
+  assert,
+  assertEquals,
+  assertMatch,
+  assertThrows,
+  assertRejects,
+}

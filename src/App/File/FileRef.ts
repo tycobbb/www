@@ -20,5 +20,5 @@ export const FileRef = {
       path,
       kind: kind || FileKind.fromPath(path)
     }
-  }
+  },
 }

@@ -1,7 +1,7 @@
 import { Args, parse } from "https://deno.land/std@0.122.0/flags/mod.ts"
 import { Path } from "../Core/mod.ts"
 import { Log, LogLevel, log } from "../Core/mod.ts"
-import { Events, Fatal } from "../App/mod.ts"
+import { Events, Fatal, Warning } from "../App/mod.ts"
 
 // -- types --
 type SaveMsg = {
@@ -82,8 +82,14 @@ export class Cli {
   }
 
   catch(err: Error): void {
+    // log warnings
+    if (err instanceof Warning) {
+      log.e(this.#hdoc(`
+        ? warn: ${err.message}
+      `))
+    }
     // log and exit on fatal
-    if (err instanceof Fatal) {
+    else if (err instanceof Fatal) {
       log.e(this.#hdoc(`
         ✘ err: ${err.message}
         - run \`www --help\` for more info

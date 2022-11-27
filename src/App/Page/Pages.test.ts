@@ -1,5 +1,5 @@
 import { stubConfig, stubEvents, assertEquals, assertLength } from "../../Test/mod.ts"
-import { File, FileRef } from "../File/mod.ts"
+import { File, FileRef, FilePath } from "../File/mod.ts"
 import { Pages } from "./Pages.ts"
 
 // -- setup --
@@ -27,4 +27,21 @@ test("it links a page and layout", async () => {
   const evt = evts.all[0]
   assertEquals(evt.name, "save-file")
   assertEquals((<File>evt.file).path.rel, "b1.html")
+})
+
+test("it deletes nodes w/ a compiled representation", async () => {
+  const pages = new Pages(cfg, evts)
+  evts.reset()
+  await pages.change(FileRef.init(src.join("./bz.l.html")))
+  await pages.change(FileRef.init(src.join("./b1.p.html")))
+  await pages.change(FileRef.init(src.join("./links.d.json")))
+
+  pages.delete(FileRef.init(src.join("./b1.p.html")))
+  pages.delete(FileRef.init(src.join("./links.d.json")))
+
+  assertLength(evts.all, 1)
+
+  const evt = evts.all[0]
+  assertEquals(evt.name, "delete-file")
+  assertEquals((<FilePath>evt.file).rel, "b1.html")
 })

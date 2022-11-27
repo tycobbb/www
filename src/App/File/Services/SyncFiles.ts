@@ -3,6 +3,7 @@ import { Path } from "../../../Core/mod.ts"
 import { Config } from "../../Config/mod.ts"
 import { Events } from "../../Event/mod.ts"
 import { File } from "../../File/mod.ts"
+import { Warning } from "../../Error/mod.ts"
 
 // resolves file events against the filesystem
 export class SyncFiles {
@@ -69,6 +70,10 @@ export class SyncFiles {
   // delete a file from its dst path
   async #deleteFile(file: Path) {
     const dst = file.setBase(this.#cfg.paths.dst)
+    if (!await dst.exists()) {
+      throw new Warning(`tried to delete file that did not exist ${file}`)
+    }
+
     await dst.rm()
   }
 

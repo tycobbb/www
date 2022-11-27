@@ -5,11 +5,12 @@ import { FileRef, FileKind } from "../File/mod.ts"
 import { Pages } from "../Page/mod.ts"
 import { Event, Events } from "../Event/mod.ts"
 import { Action } from "./Action.ts"
+import { Env } from "../Config/Env.ts"
 
 // -- types --
 type WatchEvent
   = { kind: "add", file: FileRef }
-  | { kind: "delete", path: Path }
+  | { kind: "delete", file: FileRef }
 
 // -- impls --
 // rebuild pages on fs change
@@ -63,22 +64,31 @@ export class Watch implements Action {
 
           // if it's a delete, remove it from the graph and fs
           if (evt.kind === "delete") {
-            this.#evts.send(Event.deleteFile(evt.path))
-            return
+            switch (evt.file.kind.type) {
+            // if it's a flat dir or file, delete it directly
+            case "dir":
+              // falls through
+            case "file":
+              this.#evts.send(Event.deleteFile(evt.file.path)); break
+            // otherwise, remove it from the graph
+            default:
+              this.#pages.delete(evt.file)
+            }
           }
-
-          switch (evt.file.kind.type) {
-          // if it's a dir, copy it
-          case "dir":
-            this.#evts.send(Event.copyDir(evt.file)); break;
-          // if it's not a file managed by the graph, copy it
-          case "file":
-            this.#evts.send(Event.copyFile(evt.file)); break;
-          // otherwise, add it to the graph
-          default:
-            this.#pages.change(evt.file)
-            await this.#pages.render()
-            break
+          // otherwise, add this file
+          else {
+            switch (evt.file.kind.type) {
+            // if it's a dir, copy it
+            case "dir":
+              this.#evts.send(Event.copyDir(evt.file)); break
+            // if it's not a file managed by the graph, copy it
+            case "file":
+              this.#evts.send(Event.copyFile(evt.file)); break
+            // otherwise, add it to the graph
+            default:
+              this.#pages.change(evt.file)
+              await this.#pages.render()
+            }
           }
         })
       }
@@ -99,7 +109,7 @@ export class Watch implements Action {
 
         // if file stat is missing, this is a delete (does happen)
         if (stat == null) {
-          return { kind: "delete", path }
+          return { kind: "delete", file: FileRef.init(path) }
         }
         // if this is a directory, add that
         else if (stat.isDirectory) {
@@ -111,7 +121,7 @@ export class Watch implements Action {
         }
       }
       case "remove":
-        return { kind: "delete", path }
+        return { kind: "delete", file: FileRef.init(path) }
       default:
         log.e(`! unknown FsEvent: ${kind} -> ${path.str}`)
         return null

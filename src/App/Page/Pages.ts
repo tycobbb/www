@@ -1,7 +1,7 @@
 import { single } from "../../Core/Scope.ts"
-import { Path, Ref, Templates, TemplateEvent } from "../../Core/mod.ts"
+import { Ref, Templates, TemplateEvent } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
-import { FileRef } from "../File/mod.ts"
+import { File, FileRef, FilePath } from "../File/mod.ts"
 import { Event, Events } from "../Event/mod.ts"
 import { Page } from "./Page.ts"
 import { PageNode } from "./PageNode.ts"
@@ -50,7 +50,6 @@ export class Pages {
     }
 
     // listen to file events
-    m.#evts.on(m.#onEvent.bind(m))
     m.#tmpl.on(m.#onTemplateEvent.bind(m))
   }
 
@@ -100,11 +99,11 @@ export class Pages {
 
   // remove the page or layout for this path, if one exists
   // TODO: what to do with nodes depending on a deleted node?
-  delete(path: Path): void {
+  delete(file: FileRef): void {
     const m = this
 
     // get the db id
-    const id = path.rel
+    const id = file.path.rel
 
     // get the node
     const ref = m.#db.nodes[id]
@@ -113,7 +112,7 @@ export class Pages {
       return
     }
 
-    // delete the reference so other nodes remove it from their dependents
+    // delete the ref so other nodes remove it from their dependents
     ref.delete()
 
     // delete the template
@@ -121,6 +120,11 @@ export class Pages {
 
     // remove it from the db
     delete m.#db.nodes[id]
+
+    // if this node has a compiled representation, delete it
+    if (file.kind.type === "page") {
+      m.#evts.send(Event.deleteFile(file.path.setExt("html")))
+    }
   }
 
   // renders any dirty pages
@@ -187,12 +191,15 @@ export class Pages {
     // render the page to string
     const text = await m.#tmpl.render(node.id)
 
-    // create the page
-    const page = new Page(node.path, text)
-    const file = page.render()
+    // render the page
+    const page = new Page(text)
+    const html = page.render()
 
-    // save the file
-    m.#evts.send(Event.saveFile(file))
+    // and emit a new copy
+    m.#evts.send(Event.saveFile({
+      path: node.path.setExt("html"),
+      text: html,
+    }))
   }
 
   // add a dependency between two nodes
@@ -214,16 +221,6 @@ export class Pages {
   }
 
   // -- events --
-  // when an app event happens
-  #onEvent(evt: Event) {
-    const m = this
-
-    switch (evt.name) {
-    case "delete-file":
-      m.delete(evt.file); break;
-    }
-  }
-
   // when a template event happens
   #onTemplateEvent(evt: TemplateEvent) {
     if (evt.name === "include") {

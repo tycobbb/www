@@ -18,8 +18,7 @@ const src = cfg.paths.src
 
 // -- tests --
 test("it cleans up nested templates", () => {
-  const path = src.join("./test.p.html")
-  const page = new Page(path, `
+  const page = new Page(`
     <html>
     <body>
       <w:template>
@@ -29,14 +28,13 @@ test("it cleans up nested templates", () => {
     </html>
   `)
 
-  const file = page.render()
-  assertIncludes(file.text, "hello, test")
-  assertNotIncludes(file.text, "<w:template>")
+  const html = page.render()
+  assertIncludes(html, "hello, test")
+  assertNotIncludes(html, "<w:template>")
 })
 
 test("it merges head elements", () => {
-  const path = src.join("./test.p.html")
-  const page = new Page(path, `
+  const page = new Page(`
     <html>
     <head>
       <title>root</title>
@@ -54,15 +52,13 @@ test("it merges head elements", () => {
     </html>
   `)
 
-  const file = page.render()
-
-  assertIncludes(file.text, "<title>leaf</title>")
-  assertNotIncludes(file.text, "<w:head>")
+  const html = page.render()
+  assertIncludes(html, "<title>leaf</title>")
+  assertNotIncludes(html, "<w:head>")
 })
 
 test("it merges elements with the head attribute", () => {
-  const path = src.join("./test.p.html")
-  const page = new Page(path, `
+  const page = new Page(`
     <html>
     <head>
       <title>root</title>
@@ -79,8 +75,8 @@ test("it merges elements with the head attribute", () => {
     </html>
   `)
 
-  const file = page.render()
-  assertIncludes(file.text, "<title>leaf</title>")
-  assertNotIncludes(file.text, "<title>root</title>")
-  assertNotIncludes(file.text, "w:head")
+  const html = page.render()
+  assertIncludes(html, "<title>leaf</title>")
+  assertNotIncludes(html, "<title>root</title>")
+  assertNotIncludes(html, "w:head")
 })

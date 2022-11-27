@@ -1,24 +1,19 @@
 import { DOMParser, Element } from "https://deno.land/x/deno_dom@v0.1.21-alpha/deno-dom-wasm.ts"
-import { File, FilePath } from "../File/mod.ts"
 
 // an html page in the built site
 export class Page {
   // -- props --
-  // the raw file path
-  #path: FilePath
-
   // the raw html string
   #text: string
 
   // -- lifetime --
-  constructor(path: FilePath, text: string) {
-    this.#path = path
+  constructor(text: string) {
     this.#text = text
   }
 
   // -- commands --
   // compile the page, producing a `File`
-  render(): File {
+  render(): string {
     const m = this
 
     // parse the document
@@ -64,12 +59,7 @@ export class Page {
     }
 
     // create the file
-    const file: File = {
-      path: m.#path.setExt("html"),
-      text: $doc.outerHTML,
-    }
-
-    return file
+    return $doc.outerHTML
   }
 
   // merge an element into the head

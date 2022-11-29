@@ -8,7 +8,7 @@ export type Event
   | { name: "copy-file", file: FileRef }
   | { name: "delete-file", file: Path }
   | { name: "save-file", file: File }
-  | { name: "change-file", file: File }
+  | { name: "show-warning", msg: string, cause?: Error }
 
 // -- factories --
 export const Event = {
@@ -31,4 +31,9 @@ export const Event = {
   saveFile(file: File): Event {
     return { name: "save-file", file }
   },
+
+  // an event to show a warning
+  showWarning(msg: string, cause?: Error): Event {
+    return { name: "show-warning", msg, cause }
+  }
 }

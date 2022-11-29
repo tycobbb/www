@@ -1,5 +1,5 @@
-import { stubConfig, stubEvents, assertEquals, assertLength } from "../../Test/mod.ts"
-import { File, FileRef, FilePath } from "../File/mod.ts"
+import { stubConfig, stubEvents, assert, assertEquals, assertLength, assertIncludes, assertInstanceOf } from "../../Test/mod.ts"
+import { FileRef } from "../File/mod.ts"
 import { Pages } from "./Pages.ts"
 
 // -- setup --
@@ -25,8 +25,8 @@ test("it links a page and layout", async () => {
   assertLength(evts.all, 1)
 
   const evt = evts.all[0]
-  assertEquals(evt.name, "save-file")
-  assertEquals((<File>evt.file).path.rel, "b1.html")
+  assert(evt.name === "save-file")
+  assertEquals(evt.file.path.rel, "b1.html")
 })
 
 test("it deletes nodes w/ a compiled representation", async () => {
@@ -42,6 +42,22 @@ test("it deletes nodes w/ a compiled representation", async () => {
   assertLength(evts.all, 1)
 
   const evt = evts.all[0]
-  assertEquals(evt.name, "delete-file")
-  assertEquals((<FilePath>evt.file).rel, "b1.html")
+  assert(evt.name === "delete-file")
+  assertEquals(evt.file.rel, "b1.html")
+})
+
+test("it warns when a template throws an error during compilation", async () => {
+  const pages = new Pages(cfg, evts)
+  evts.reset()
+
+  const path = src.join("./e1.p.html")
+  await pages.change(FileRef.init(path))
+
+  await pages.render();
+  assertLength(evts.all, 1)
+
+  const evt = evts.all[0]
+  assert(evt.name === "show-warning")
+  assertIncludes(evt.msg, "the template 'e1.p.html' threw an error during compilation")
+  assertInstanceOf(evt.cause, Error)
 })

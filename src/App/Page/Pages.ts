@@ -1,7 +1,7 @@
 import { single } from "../../Core/Scope.ts"
 import { Ref, Templates, TemplateEvent } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
-import { File, FileRef, FilePath } from "../File/mod.ts"
+import { FileRef } from "../File/mod.ts"
 import { Event, Events } from "../Event/mod.ts"
 import { Page } from "./Page.ts"
 import { PageNode } from "./PageNode.ts"
@@ -152,7 +152,7 @@ export class Pages {
         // refresh its template
         m.#tmpl.add(id, await node.read())
 
-        // do extra work based on kind
+        // render the node if necessary
         switch (node.kind.type) {
         case "data":
           await m.#renderData(node); break
@@ -189,7 +189,17 @@ export class Pages {
     const m = this
 
     // render the page to string
-    const text = await m.#tmpl.render(node.id)
+    let text
+    try {
+      text = await m.#tmpl.render(node.id)
+    } catch (err) {
+      m.#evts.send(Event.showWarning(
+        `the template '${node.path.rel}' threw an error during compilation`,
+        err
+      ))
+
+      return
+    }
 
     // render the page
     const page = new Page(text)

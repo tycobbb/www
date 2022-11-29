@@ -1,5 +1,5 @@
 import { DecodeConfig } from "./DecodeConfig.ts"
-import { assert, assertEquals, assertHas } from "../../../Test/mod.ts"
+import { assertEquals, assertHas } from "../../../Test/mod.ts"
 
 // -- setup --
 const { test } = Deno

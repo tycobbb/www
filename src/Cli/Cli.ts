@@ -1,7 +1,7 @@
 import { Args, parse } from "https://deno.land/std@0.122.0/flags/mod.ts"
 import { Path } from "../Core/mod.ts"
 import { Log, LogLevel, log } from "../Core/mod.ts"
-import { Events, Fatal, Warning } from "../App/mod.ts"
+import { Event, Events, Fatal } from "../App/mod.ts"
 
 // -- types --
 type SaveMsg = {
@@ -74,6 +74,8 @@ export class Cli {
         log.i(`- delete: ${evt.file.rel}`); break
       case "save-file":
         this.#drawSavedFile("build", evt.file.path); break
+      case "show-warning":
+        this.#drawWarning(evt); break
       default: break
       }
 
@@ -82,14 +84,8 @@ export class Cli {
   }
 
   catch(err: Error): void {
-    // log warnings
-    if (err instanceof Warning) {
-      log.e(this.#hdoc(`
-        ? warn: ${err.message}
-      `))
-    }
     // log and exit on fatal
-    else if (err instanceof Fatal) {
+    if (err instanceof Fatal) {
       log.e(this.#hdoc(`
         ✘ err: ${err.message}
         - run \`www --help\` for more info
@@ -133,6 +129,13 @@ export class Cli {
 
     // log the message and update the log id
     rec.logId = log.i(msg)
+  }
+
+  #drawWarning(evt: Extract<Event, { name: "show-warning" }>) {
+    log.e(this.#hdoc(`
+      ? warn: ${evt.msg}
+      ↳ ${evt.cause}
+    `))
   }
 
   // -- queries --

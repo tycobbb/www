@@ -1,9 +1,8 @@
 import { transient } from "../../../Core/Scope.ts"
 import { Path } from "../../../Core/mod.ts"
 import { Config } from "../../Config/mod.ts"
-import { Events } from "../../Event/mod.ts"
+import { Events, Event } from "../../Event/mod.ts"
 import { File } from "../../File/mod.ts"
-import { Warning } from "../../Error/mod.ts"
 
 // resolves file events against the filesystem
 export class SyncFiles {
@@ -69,9 +68,14 @@ export class SyncFiles {
 
   // delete a file from its dst path
   async #deleteFile(file: Path) {
-    const dst = file.setBase(this.#cfg.paths.dst)
+    const m = this
+
+    const dst = file.setBase(m.#cfg.paths.dst)
     if (!await dst.exists()) {
-      throw new Warning(`tried to delete file that did not exist ${file}`)
+      m.#evts.send(Event.showWarning(
+        `tried to delete file that did not exist '${file}'`
+      ))
+      return
     }
 
     await dst.rm()

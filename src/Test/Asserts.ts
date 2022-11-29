@@ -15,22 +15,42 @@ import {
 // -- asserts --
 // asserts the value is null
 export function assertLength<T>(actual: T[], expected: number) {
-  assert(actual.length === expected, `${actual} did not have length of ${expected}`)
+  assert(
+    actual.length === expected,
+    `\nexpected\n  ${actual}\nto have length\n  ${expected}\nbut it was\n  ${actual.length}`
+  )
 }
 
 // asserts the actual string contains the substring
 export function assertIncludes(actual: string, substring: string) {
-  assert(actual.includes(substring), `${actual} did not include ${substring}`)
+  assert(
+    actual.includes(substring),
+    `\nexpected\n  "${actual}"\nto include\n  "${substring}"\nbut it did not.`
+  )
 }
 
 // asserts the actual string does not contain the substring
 export function assertNotIncludes(actual: string, substring: string) {
-  assert(!actual.includes(substring), `${actual} included ${substring}`)
+  assert(
+    !actual.includes(substring),
+    `\nexpected\n  "${actual}"\nto not include\n  "${substring}"\nbut it did.`
+  )
 }
 
 // asserts the actual set has the element
 export function assertHas<T>(actual: Set<T>, element: T) {
-  assert(actual.has(element), `${actual} did not have ${element}`)
+  assert(
+    actual.has(element),
+    `\nexpected\n  ${actual}\nto have\n  ${element}\nbut it did not.`
+  )
+}
+
+// asserts the actual value has a prototype
+export function assertInstanceOf<T>(actual: unknown, type: new() => T) {
+  assert(
+    actual instanceof type,
+    `\nexpected\n  ${actual}\nto be an instance of\n  ${type}\nbut it was not.`
+  )
 }
 
 // asserts the values are partially equal given a selector

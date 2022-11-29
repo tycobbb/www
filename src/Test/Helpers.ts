@@ -1,5 +1,3 @@
-import { white } from "https://deno.land/std@0.122.0/fmt/colors.ts"
-
 // -- constants --
 const k = {
   whitespace: /\s*/g

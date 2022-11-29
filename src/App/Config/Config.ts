@@ -14,6 +14,9 @@ export class Config {
   // the execution environment
   readonly env: Env
 
+  // the port
+  readonly port: number
+
   // a collection of config paths
   readonly paths: Paths
 
@@ -23,10 +26,12 @@ export class Config {
   // -- lifecycle --
   constructor(
     env: Env,
+    port: number,
     paths: Paths,
     ignored: Set<string>
   ) {
     this.env = env
+    this.port = port
     this.paths = paths
     this.ignored = ignored
   }

@@ -49,11 +49,12 @@ export class Cli {
         src  the path to the src directory
 
       options:
-        -u, --up       runs as a dev server
-        -p, --prod     runs production mode
-        -o, --out <p>  sets the output path
-        -v, --verbose  prints more logs
-        -h, --help     prints this message
+        -u, --up        runs as a dev server
+        -x, --port <p>  the dev server port
+        -p, --prod      runs production mode
+        -o, --out <p>   sets the output path
+        -v, --verbose   prints more logs
+        -h, --help      prints this message
 
       environment:
         PROD=1  starts in production
@@ -189,11 +190,12 @@ export class Cli {
   static parse(args: string[]) {
     return new Cli(parse(args, {
       alias: {
-        "h": "help",
-        "o": "out",
-        "p": "prod",
         "u": "up",
+        "x": "port",
+        "p": "prod",
+        "o": "out",
         "v": "verbose",
+        "h": "help",
       },
       boolean: [
         "help",

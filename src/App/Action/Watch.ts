@@ -5,7 +5,6 @@ import { FileRef, FileKind } from "../File/mod.ts"
 import { Pages } from "../Page/mod.ts"
 import { Event, Events } from "../Event/mod.ts"
 import { Action } from "./Action.ts"
-import { Env } from "../Config/Env.ts"
 
 // -- types --
 type WatchEvent

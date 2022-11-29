@@ -6,6 +6,7 @@ import { Config } from "../Config/mod.ts"
 import { FileUrl } from "../File/mod.ts"
 import { Fatal } from "../Error/mod.ts"
 import { Action } from "./Action.ts"
+import { magenta } from "https://deno.land/std@0.122.0/fmt/colors.ts"
 
 // -- constants --
 // text to display if status text is missing (should not happen)
@@ -39,7 +40,7 @@ export class Serve implements Action {
 
     // start the server
     const host = "0.0.0.0"
-    const port = 8888
+    const port = m.#cfg.port
     const proc = serve(m.#serveFile.bind(m), {
       hostname: host,
       port,
@@ -111,7 +112,7 @@ export class Serve implements Action {
     try {
       // find the file w/ a dummy request
       const file = `${info.status}.html`
-      const req = new Request(`http://0.0.0.0:8888/${file}`)
+      const req = new Request(`http://0.0.0.0:${m.#cfg.port}/${file}`)
       const path = m.#cfg.paths.dst.join(file)
       const res = await serveFile(req, path.str)
 

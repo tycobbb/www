@@ -10,6 +10,7 @@ export function stubConfig() {
 
   return new Config(
     Env.Dev,
+    420,
     new Paths(
       root,
       root.join("dist")

@@ -11,6 +11,12 @@ test("it builds to a custom dir", async () => {
   assertEquals(cfg.paths.dst.str, "test")
 })
 
+test("it start on a custom port", async () => {
+  const decode = new DecodeConfig({ _: ["./test/fixtures"], port: 420 })
+  const cfg = await decode.call()
+  assertEquals(cfg.port, 420)
+})
+
 test("it always ignores the dst dir", async () => {
   const decode = new DecodeConfig({ _: ["./test/fixtures"], out: "test" })
   const cfg = await decode.call()

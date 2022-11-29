@@ -16,13 +16,16 @@ export class DecodeConfig {
 
   // -- command --
   async call(): Promise<Config> {
+    const m = this
+
     // parse components
-    const env = this.#decodeEnv()
-    const paths = await this.#decodePaths()
-    const ignores = await this.#decodeIgnores(paths)
+    const env = m.#decodeEnv()
+    const port = m.#decodePort()
+    const paths = await m.#decodePaths()
+    const ignores = await m.#decodeIgnores(paths)
 
     // build config
-    return new Config(env, paths, ignores)
+    return new Config(env, port, paths, ignores)
   }
 
   // -- c/helpers
@@ -33,6 +36,10 @@ export class DecodeConfig {
     } else {
       return Env.Dev
     }
+  }
+
+  #decodePort(): number {
+    return this.#args.port || 8888
   }
 
   async #decodePaths(): Promise<Paths> {

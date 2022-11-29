@@ -78,7 +78,7 @@ r/0:
 
 ## run the tool (server)
 r/up:
-	$(tr-deno) run $(ts-opts) $(ds-root) $(dr-root) --up
+	$(tr-deno) run $(ts-opts) $(ds-root) $(dr-root) --up -x 420
 .PHONY: r/up
 
 ## -- test (t) --

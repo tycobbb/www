@@ -4,8 +4,7 @@ import { Event } from "./Event.ts"
 
 // -- module --
 // an stream of application events
-export type Events =
-  EventStream<Event>
+export type Events = EventStream<Event>
 
 // a module that provides an app event stream
 export type EventsModule = {
@@ -14,5 +13,5 @@ export type EventsModule = {
 
 // -- impls --
 export const Events: EventsModule = {
-  get: single(() => new EventBus<Event>())
+  get: single(() => new EventBus<Event>()),
 }

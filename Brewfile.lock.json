@@ -34,6 +34,20 @@
             }
           }
         }
+      },
+      "asdf": {
+        "version": "0.11.3",
+        "bottle": {
+          "rebuild": 0,
+          "root_url": "https://ghcr.io/v2/homebrew/core",
+          "files": {
+            "all": {
+              "cellar": ":any_skip_relocation",
+              "url": "https://ghcr.io/v2/homebrew/core/asdf/blobs/sha256:d467470a78f635e6218700fc882153c047328b9f18bd7ab42011da2919f228d5",
+              "sha256": "d467470a78f635e6218700fc882153c047328b9f18bd7ab42011da2919f228d5"
+            }
+          }
+        }
       }
     }
   },
@@ -46,6 +60,14 @@
         "CLT": "",
         "Xcode": "",
         "macOS": "11.6"
+      },
+      "ventura": {
+        "HOMEBREW_VERSION": "4.0.16",
+        "HOMEBREW_PREFIX": "/opt/homebrew",
+        "Homebrew/homebrew-core": "api",
+        "CLT": "14.2.0.0.1.1668646533",
+        "Xcode": "14.2",
+        "macOS": "13.0"
       }
     }
   }

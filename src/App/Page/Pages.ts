@@ -1,24 +1,19 @@
 import { single } from "../../Core/Scope.ts"
-import { Ref, Templates, TemplateEvent } from "../../Core/mod.ts"
-import { Config } from "../Config/mod.ts"
+import { Ref, Templates, TemplateEvent, log } from "../../Core/mod.ts"
 import { FileRef } from "../File/mod.ts"
 import { Event, Events } from "../Event/mod.ts"
 import { Page } from "./Page.ts"
 import { PageNode } from "./PageNode.ts"
 
 // -- types --
-type Table<T>
-  = {[key: string]: T}
+type Table<T> = { [key: string]: T }
 
-  // -- impls -
+// -- impls -
 export class Pages {
   // -- module --
   static readonly get = single(() => new Pages())
 
   // -- deps --
-  // the config
-  #cfg: Config
-
   // a stream of file events
   #evts: Events
 
@@ -28,19 +23,14 @@ export class Pages {
   // -- props --
   // a database of nodes keyed by path
   #db: {
-    nodes: Table<Ref<PageNode>>,
+    nodes: Table<Ref<PageNode>>
   }
 
   // -- lifetime --
-  constructor(
-    cfg = Config.get(),
-    evts = Events.get(),
-    tmpl = Templates.get(),
-  ) {
+  constructor(evts = Events.get(), tmpl = Templates.get()) {
     const m = this
 
     // set deps
-    this.#cfg = cfg
     this.#evts = evts
     this.#tmpl = tmpl
 
@@ -154,10 +144,12 @@ export class Pages {
 
         // render the node if necessary
         switch (node.kind.type) {
-        case "data":
-          await m.#renderData(node); break
-        case "page":
-          await m.#renderPage(node); break
+          case "data":
+            await m.#renderData(node)
+            break
+          case "page":
+            await m.#renderPage(node)
+            break
         }
 
         // clear its flag
@@ -178,10 +170,13 @@ export class Pages {
 
     // render the data into json
     const text = await m.#tmpl.render(id)
-    const json = JSON.parse(text)
+    const data = JSON.parse(text) as unknown
 
     // add it as template data
-    m.#tmpl.addData(id, json)
+    m.#tmpl.addData(id, data)
+
+    // log debug message
+    log.d(`d [pges] add: ${id}\n${text}`)
   }
 
   // render the page and emit it as a file
@@ -193,10 +188,12 @@ export class Pages {
     try {
       text = await m.#tmpl.render(node.id)
     } catch (err) {
-      m.#evts.send(Event.showWarning(
-        `the template '${node.path.rel}' threw an error during compilation`,
-        err
-      ))
+      m.#evts.send(
+        Event.showWarning(
+          `the template '${node.path.rel}' threw an error during compilation`,
+          err
+        )
+      )
 
       return
     }
@@ -206,10 +203,12 @@ export class Pages {
     const html = page.render()
 
     // and emit a new copy
-    m.#evts.send(Event.saveFile({
-      path: node.path.setExt("html"),
-      text: html,
-    }))
+    m.#evts.send(
+      Event.saveFile({
+        path: node.path.setExt("html"),
+        text: html,
+      })
+    )
   }
 
   // add a dependency between two nodes

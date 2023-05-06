@@ -5,8 +5,8 @@ import { Event, Events, Fatal } from "../App/mod.ts"
 
 // -- types --
 type SaveMsg = {
-  id: string,
-  logId: number | null,
+  id: string
+  logId: number | null
   count: number
 }
 
@@ -23,14 +23,11 @@ export class Cli {
   #saveMsg: SaveMsg = {
     id: "",
     logId: null,
-    count: 0
+    count: 0,
   }
 
   // -- lifetime --
-  constructor(
-    args: Args,
-    evts = Events.get(),
-  ) {
+  constructor(args: Args, evts = Events.get()) {
     this.#evts = evts
     this.#args = args
 
@@ -41,7 +38,8 @@ export class Cli {
   // -- commands --
   // prints the usage and exits
   usage(): void {
-    log.i(this.#hdoc(`
+    log.i(
+      this.#hdoc(`
       usage:
         www [options] <src>
 
@@ -58,7 +56,8 @@ export class Cli {
 
       environment:
         PROD=1  starts in production
-    `))
+    `)
+    )
 
     Deno.exit(1)
   }
@@ -67,17 +66,20 @@ export class Cli {
   start(): void {
     this.#evts.on((evt) => {
       switch (evt.name) {
-      case "copy-dir":
+        case "copy-dir":
         // falls through
-      case "copy-file":
-        this.#drawSavedFile("copy ", evt.file.path); break
-      case "delete-file":
-        log.i(`- delete: ${evt.file.rel}`); break
-      case "save-file":
-        this.#drawSavedFile("build", evt.file.path); break
-      case "show-warning":
-        this.#drawWarning(evt); break
-      default: break
+        case "copy-file":
+          this.#drawSavedFile("copy ", evt.file.path)
+          break
+        case "delete-file":
+          log.i(`- delete: ${evt.file.rel}`)
+          break
+        case "save-file":
+          this.#drawSavedFile("build", evt.file.path)
+          break
+        case "show-warning":
+          this.#drawWarning(evt)
+          break
       }
 
       return Promise.resolve()
@@ -87,10 +89,12 @@ export class Cli {
   catch(err: Error): void {
     // log and exit on fatal
     if (err instanceof Fatal) {
-      log.e(this.#hdoc(`
+      log.e(
+        this.#hdoc(`
         ✘ err: ${err.message}
         - run \`www --help\` for more info
-      `))
+      `)
+      )
 
       Deno.exit(2)
     }
@@ -133,10 +137,12 @@ export class Cli {
   }
 
   #drawWarning(evt: Extract<Event, { name: "show-warning" }>) {
-    log.e(this.#hdoc(`
+    log.e(
+      this.#hdoc(`
       ? warn: ${evt.msg}
       ↳ ${evt.cause}
-    `))
+    `)
+    )
   }
 
   // -- queries --
@@ -188,21 +194,18 @@ export class Cli {
   // -- factories --
   // build the cli from raw cmd line args
   static parse(args: string[]) {
-    return new Cli(parse(args, {
-      alias: {
-        "u": "up",
-        "x": "port",
-        "p": "prod",
-        "o": "out",
-        "v": "verbose",
-        "h": "help",
-      },
-      boolean: [
-        "help",
-        "prod",
-        "up",
-        "verbose",
-      ],
-    }))
+    return new Cli(
+      parse(args, {
+        alias: {
+          u: "up",
+          x: "port",
+          p: "prod",
+          o: "out",
+          v: "verbose",
+          h: "help",
+        },
+        boolean: ["help", "prod", "up", "verbose"],
+      })
+    )
   }
 }

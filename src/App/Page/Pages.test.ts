@@ -1,4 +1,12 @@
-import { stubConfig, stubEvents, assert, assertEquals, assertLength, assertIncludes, assertInstanceOf } from "../../Test/mod.ts"
+import {
+  stubConfig,
+  stubEvents,
+  assert,
+  assertEquals,
+  assertLength,
+  assertIncludes,
+  assertInstanceOf,
+} from "../../Test/mod.ts"
 import { FileRef } from "../File/mod.ts"
 import { Pages } from "./Pages.ts"
 
@@ -14,7 +22,7 @@ const src = cfg.paths.src
 
 // -- tests --
 test("it links a page and layout", async () => {
-  const pages = new Pages(cfg, evts)
+  const pages = new Pages(evts)
   evts.reset()
   await pages.change(FileRef.init(src.join("./bz.l.html")))
   await pages.change(FileRef.init(src.join("./link.f.html")))
@@ -22,15 +30,15 @@ test("it links a page and layout", async () => {
   await pages.change(FileRef.init(src.join("./b1.p.html")))
 
   await pages.render()
-  assertLength(evts.all, 1)
+  assertLength(evts.all, 2)
 
-  const evt = evts.all[0]
+  const evt = evts.all[1]
   assert(evt.name === "save-file")
   assertEquals(evt.file.path.rel, "b1.html")
 })
 
 test("it deletes nodes w/ a compiled representation", async () => {
-  const pages = new Pages(cfg, evts)
+  const pages = new Pages(evts)
   evts.reset()
   await pages.change(FileRef.init(src.join("./bz.l.html")))
   await pages.change(FileRef.init(src.join("./b1.p.html")))
@@ -39,25 +47,28 @@ test("it deletes nodes w/ a compiled representation", async () => {
   pages.delete(FileRef.init(src.join("./b1.p.html")))
   pages.delete(FileRef.init(src.join("./links.d.json")))
 
-  assertLength(evts.all, 1)
+  assertLength(evts.all, 2)
 
-  const evt = evts.all[0]
+  const evt = evts.all[1]
   assert(evt.name === "delete-file")
   assertEquals(evt.file.rel, "b1.html")
 })
 
 test("it warns when a template throws an error during compilation", async () => {
-  const pages = new Pages(cfg, evts)
+  const pages = new Pages(evts)
   evts.reset()
 
   const path = src.join("./e1.p.html")
   await pages.change(FileRef.init(path))
 
-  await pages.render();
+  await pages.render()
   assertLength(evts.all, 1)
 
   const evt = evts.all[0]
   assert(evt.name === "show-warning")
-  assertIncludes(evt.msg, "the template 'e1.p.html' threw an error during compilation")
+  assertIncludes(
+    evt.msg,
+    "the template 'e1.p.html' threw an error during compilation"
+  )
   assertInstanceOf(evt.cause, Error)
 })

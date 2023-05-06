@@ -7,9 +7,15 @@ import { Event, Events } from "../Event/mod.ts"
 import { Action } from "./Action.ts"
 
 // -- types --
-type WatchEvent
-  = { kind: "add", file: FileRef }
-  | { kind: "delete", file: FileRef }
+type WatchEvent =
+  | {
+    kind: "add",
+    file: FileRef
+  }
+  | {
+    kind: "delete",
+    file: FileRef
+  }
 
 // -- impls --
 // rebuild pages on fs change

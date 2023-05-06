@@ -69,17 +69,13 @@ export class Cli {
         case "copy-dir":
         // falls through
         case "copy-file":
-          this.#drawSavedFile("copy ", evt.file.path)
-          break
+          this.#drawSavedFile("copy ", evt.file.path); break
         case "delete-file":
-          log.i(`- delete: ${evt.file.rel}`)
-          break
+          log.i(`- delete: ${evt.file.rel}`); break
         case "save-file":
-          this.#drawSavedFile("build", evt.file.path)
-          break
+          this.#drawSavedFile("build", evt.file.path); break
         case "show-warning":
-          this.#drawWarning(evt)
-          break
+          this.#drawWarning(evt); break
       }
 
       return Promise.resolve()

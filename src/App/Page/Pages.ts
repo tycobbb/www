@@ -145,11 +145,9 @@ export class Pages {
         // render the node if necessary
         switch (node.kind.type) {
           case "data":
-            await m.#renderData(node)
-            break
+            await m.#renderData(node); break
           case "page":
-            await m.#renderPage(node)
-            break
+            await m.#renderPage(node); break
         }
 
         // clear its flag

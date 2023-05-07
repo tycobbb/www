@@ -119,7 +119,8 @@ export class Templates {
 
         // compile w:frag html elements
         new TemplateHtml([
-          new TemplateFrag.Compiler()
+          new TemplateFrag.Compiler(),
+          new TemplateQuery.Compiler()
         ]),
       ]
     })

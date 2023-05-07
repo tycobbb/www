@@ -19,16 +19,16 @@ test("it compiles w:frag elements", () => {
   `
 
   const output = `
-      <%~
-        frag("./test.f.html", {
-          test: "one"
-        })
-      %>
+    <%~
+      frag("./test.f.html", {
+        test: "one"
+      })
+    %>
   `
 
   // deno-lint-ignore no-explicit-any
   const actual = plugin.processTemplate(input, null as any)
-  assertEquals(clean(/^ {2}(?=\s*\S)/gm, actual.trim()), output.trim())
+  assertEquals(clean(/^ {4}(?=\s*\S)/gm, actual.trim()), output.trim())
 })
 
 test("it compiles w:frag elements w/ slots", () => {
@@ -50,16 +50,16 @@ test("it compiles w:frag elements w/ slots", () => {
   `
 
   const output = `
-      <%~
-        frag("./test.f.html", {
-          test: "one",
+    <%~
+      frag("./test.f.html", {
+        test: "one",
 slot: "\\n        <p>test slot</p>\\n      ",
 body: "\\n      <p>test</p>\\n\\n      \\n    "
-        })
-      %>
+      })
+    %>
   `
 
   // deno-lint-ignore no-explicit-any
   const actual = plugin.processTemplate(input, null as any)
-  assertEquals(clean(/^ {2}(?=\s*\S)/gm, actual.trim()), output.trim())
+  assertEquals(clean(/^ {4}(?=\s*\S)/gm, actual.trim()), output.trim())
 })

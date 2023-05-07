@@ -5,6 +5,7 @@ import { EventStream } from "../Events.ts"
 import { TemplateEvent } from "./TemplateEvent.ts"
 import { TemplatePath } from "./TemplatePath.ts"
 import { TemplateHtmlCompiler, TemplateHtmlElementCompiler } from "./TemplateHtmlCompiler.ts"
+import { TemplateHtml } from "./TemplateHtml.ts"
 
 // -- types --
 // include helper fn
@@ -116,10 +117,7 @@ export class TemplateFrag {
       const compiled = `
         <%~
           frag("${path}.f.html", {
-            ${Object
-              .entries(attrs)
-              .map(([key, val]) => `${key}: "${JSON.stringify(val).slice(1, -1)}"`)
-              .join(",\n")}
+            ${TemplateHtml.compileAttrs(attrs)}
           })
         %>
       `

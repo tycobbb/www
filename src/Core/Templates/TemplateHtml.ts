@@ -1,5 +1,5 @@
 import { EtaConfig } from "https://deno.land/x/eta@v1.12.3/config.ts"
-import { Html, HtmlNode, HtmlElement, HtmlNodeKind as NK } from "../Html/mod.ts"
+import { Html, HtmlNode, HtmlElement, HtmlNodeKind as NK, HtmlElementAttrs } from "../Html/mod.ts"
 import { TemplateHtmlCompiler, TemplateHtmlElementCompiler } from "./TemplateHtmlCompiler.ts"
 
 // -- impls --
@@ -45,6 +45,17 @@ export class TemplateHtml implements TemplateHtmlCompiler {
     }
 
     throw new Error(`[tmpls] found no compiler for ${el.name}`)
+  }
+
+  // -- helpers --
+  /// compile element attributes into a js- object key-value pairs
+  static compileAttrs(attrs: HtmlElementAttrs) {
+    const result = Object
+      .entries(attrs)
+      .map(([key, val]) => `${key}: "${JSON.stringify(val).slice(1, -1)}"`)
+      .join(",\n")
+
+    return result
   }
 
   // -- EtaPlugin --

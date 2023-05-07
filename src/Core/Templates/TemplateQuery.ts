@@ -1,6 +1,18 @@
 import { EventStream } from "../Events.ts"
 import { TemplateEvent } from "./TemplateEvent.ts"
 import { TemplatePath } from "./TemplatePath.ts"
+import { TemplateHtmlCompiler, TemplateHtmlElementCompiler } from "./TemplateHtmlCompiler.ts"
+import { HtmlElement } from "../Html/mod.ts";
+import { TemplateHtml } from "./TemplateHtml.ts";
+
+// -- constants --
+const k = {
+  // query elements
+  query: {
+    // the element name
+    name: "w:query",
+  }
+}
 
 // -- types --
 // a template query helper fn
@@ -12,12 +24,6 @@ export type TemplatePageDb =
   unknown
 
 // -- impls --
-// TODO: this should probably leverage a lot of what's happening in TempalteFrag
-// to achieve an html-like syntax for the query:
-//
-// <w:query path="posts/*">
-//   <%= it.name %>
-// </w:query>
 export class TemplateQuery {
   // -- deps --
   // the template page data store
@@ -56,5 +62,46 @@ export class TemplateQuery {
     evts: EventStream<TemplateEvent>
   ): TemplateQueryFn {
     return new TemplateQuery(db, evts).#query;
+  }
+
+  // -- compiler --
+  // an eta plugin that compiles build-time query elements into helper calls
+  static Compiler = class TemplateQueryCompiler implements TemplateHtmlElementCompiler  {
+    // -- TemplateHtmlElementCompiler --
+    get names(): string[] {
+      return [
+        k.query.name,
+      ]
+    }
+
+    // compile an element
+    compile(el: HtmlElement, html: TemplateHtmlCompiler): string | null {
+      // validate el
+      if (el.name !== k.query.name) {
+        return null
+      }
+
+      // validate path
+      const { path, ...attrs } = el.attrs
+      if (path == null) {
+        throw new Error("w:query must have a `path`")
+      }
+
+      // compile children
+      if (el.children != null) {
+        attrs.body = html.compile(el.children)
+      }
+
+      // compile into helper call
+      const compiled = `
+        <%~
+          query("${path}", {
+            ${TemplateHtml.compileAttrs(attrs)}
+          })
+        %>
+      `
+
+      return compiled
+    }
   }
 }

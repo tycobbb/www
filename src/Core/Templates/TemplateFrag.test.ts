@@ -16,11 +16,11 @@ test("it compiles w:frag elements", () => {
   `
 
   const output = `
-    <%~
-      frag("./test.f.html", {
-        test: "one"
-      })
-    %>
+      <%~
+        frag("./test.f.html", {
+          test: "one"
+        })
+      %>
   `
 
   // deno-lint-ignore no-explicit-any
@@ -45,13 +45,13 @@ test("it compiles w:frag elements w/ slots", () => {
   `
 
   const output = `
-    <%~
-      frag("./test.f.html", {
-        test: "one",
+      <%~
+        frag("./test.f.html", {
+          test: "one",
 slot: "\\n        <p>test slot</p>\\n      ",
 body: "\\n      <p>test</p>\\n\\n      \\n    "
-      })
-    %>
+        })
+      %>
   `
 
   // deno-lint-ignore no-explicit-any

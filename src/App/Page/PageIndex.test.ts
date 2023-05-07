@@ -40,3 +40,36 @@ test("it queries a path", () => {
   assert(cursor1 != null)
   assertIs(cursor1, cursor2)
 })
+
+test("it matches existing nodes to a query", () => {
+  const index = new PageIndex()
+
+  const note = new PageNode("note", FileRef.init(Path.raw("notes/test")))
+  const post = new PageNode("post", FileRef.init(Path.raw("posts/test")))
+  index.add(note)
+  index.add(post)
+
+  const posts = index.query("posts")
+
+  note.flag()
+  assert(!posts.isDirty)
+
+  post.flag()
+  assert(posts.isDirty)
+})
+
+test("it matches new nodes to a query", () => {
+  const index = new PageIndex()
+  const posts = index.query("posts")
+
+  const note = new PageNode("note", FileRef.init(Path.raw("notes/test")))
+  const post = new PageNode("post", FileRef.init(Path.raw("posts/test")))
+  index.add(note)
+  index.add(post)
+
+  note.flag()
+  assert(!posts.isDirty)
+
+  post.flag()
+  assert(posts.isDirty)
+})

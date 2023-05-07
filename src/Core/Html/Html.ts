@@ -80,7 +80,7 @@ export type HtmlElementAttrs = {
 // an html parser for a set of elements
 export class Html {
   // -- props --
-  // the list of legal elements
+  // a parser for a sequence of html nodes
   readonly #decode: Parser<HtmlNode[]>
 
   // -- liftime --

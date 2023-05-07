@@ -1,9 +1,10 @@
 import * as E from "https://deno.land/x/eta@v1.12.3/mod.ts"
 import { EtaConfig } from "https://deno.land/x/eta@v1.12.3/config.ts"
-import { Html, HtmlNode, HtmlElement, HtmlNodeKind as NK } from "../Html/mod.ts"
+import { HtmlNode, HtmlElement, HtmlNodeKind as NK } from "../Html/mod.ts"
 import { EventStream } from "../Events.ts"
 import { TemplateEvent } from "./TemplateEvent.ts"
 import { TemplatePath } from "./TemplatePath.ts"
+import { TemplateHtmlCompiler, TemplateHtmlElementCompiler } from "./TemplateHtmlCompiler.ts"
 
 // -- types --
 // include helper fn
@@ -58,40 +59,32 @@ export class TemplateFrag {
     return k.include.base(child, cfg)
   }
 
-  // -- plugin --
+  // -- factories --
+  // create a template frag helper fn
+  static helper(
+    evts: EventStream<TemplateEvent>
+  ): TemplateFragFn {
+    return new TemplateFrag(evts).#frag;
+  }
+
+  // -- compiler --
   // an eta plugin that compiles build-time frag elements into helper calls
-  static Plugin = class TemplateFragPlugin {
-    // -- props --
-    // the html parser
-    #html: Html = new Html([
-      k.frag.name,
-      k.frag.slot,
-    ])
-
-    // -- queries --
-    // compile a list of nodes
-    #compile(nodes: HtmlNode[]): string {
-      const m = this
-
-      const compiled = nodes.reduce((res, node) => {
-        switch (node.kind) {
-          case NK.text:
-            return res + node.text
-          case NK.element:
-            return res + m.#compileFrag(node.element)
-        }
-      }, "")
-
-      return compiled
+  static Compiler = class TemplateFragCompiler implements TemplateHtmlElementCompiler  {
+    // -- TemplateHtmlElementCompiler --
+    get names(): string[] {
+      return [
+        k.frag.name,
+        k.frag.slot,
+      ]
     }
 
     // compile an element
-    #compileFrag(el: HtmlElement): string {
+    compile(el: HtmlElement, html: TemplateHtmlCompiler): string | null {
       const m = this
 
       // validate el
       if (el.name !== k.frag.name) {
-        throw new Error(`can't compile ${el.name} elements`)
+        return null
       }
 
       // validate path
@@ -111,12 +104,12 @@ export class TemplateFrag {
           }
           // otherwise, compile the slot
           else {
-            attrs[c.element.attrs.name] = m.#compileSlot(c.element)
+            attrs[c.element.attrs.name] = m.#compileSlot(c.element, html)
           }
         }
 
         // compile body
-        attrs.body = m.#compile(body)
+        attrs.body = html.compile(body)
       }
 
       // compile into helper call
@@ -135,9 +128,7 @@ export class TemplateFrag {
     }
 
     // compile a slot element
-    #compileSlot(el: HtmlElement): string {
-      const m = this
-
+    #compileSlot(el: HtmlElement, html: TemplateHtmlCompiler): string {
       // validate el
       const name = el.attrs.name
       if (name == null) {
@@ -149,30 +140,7 @@ export class TemplateFrag {
       }
 
       // and compile it
-      return m.#compile(el.children)
+      return html.compile(el.children)
     }
-
-    // -- EtaPlugin --
-    processTemplate(tmpl: string, _: EtaConfig): string {
-      const m = this
-
-      // decode nodes
-      const nodes = m.#html.decode(tmpl)
-      if (nodes == null) {
-        return tmpl
-      }
-
-      // compile template
-      const compiled = m.#compile(nodes)
-      return compiled
-    }
-  }
-
-  // -- factories --
-  // create a template frag helper fn
-  static helper(
-    evts: EventStream<TemplateEvent>
-  ): TemplateFragFn {
-    return new TemplateFrag(evts).#frag;
   }
 }

@@ -2,6 +2,7 @@ import * as E from "https://deno.land/x/eta@v1.12.3/mod.ts"
 import { single } from "../Scope.ts"
 import { EventStream, EventBus, EventListener } from "../Events.ts"
 import { TemplateEvent } from "./TemplateEvent.ts"
+import { TemplateHtml } from "./TemplateHtml.ts"
 import { TemplateFrag } from "./TemplateFrag.ts"
 import { TemplateData, TemplateDataDb } from "./TemplateData.ts"
 import { TemplateHelpers } from "./TemplateHelpers.ts"
@@ -117,7 +118,9 @@ export class Templates {
         new TemplateParent(),
 
         // compile w:frag html elements
-        new TemplateFrag.Plugin(),
+        new TemplateHtml([
+          new TemplateFrag.Compiler()
+        ]),
       ]
     })
   }

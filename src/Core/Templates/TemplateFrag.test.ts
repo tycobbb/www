@@ -1,12 +1,15 @@
 import { assertEquals, clean } from "../../Test/mod.ts"
 import { TemplateFrag } from "./TemplateFrag.ts"
+import { TemplateHtml } from "./TemplateHtml.ts"
 
 // -- setup --
 const { test } = Deno
 
 // -- tests --
 test("it compiles w:frag elements", () => {
-  const plugin = new TemplateFrag.Plugin()
+  const plugin = new TemplateHtml([
+    new TemplateFrag.Compiler()
+  ])
 
   const input = `
     <w:frag
@@ -29,7 +32,9 @@ test("it compiles w:frag elements", () => {
 })
 
 test("it compiles w:frag elements w/ slots", () => {
-  const plugin = new TemplateFrag.Plugin()
+  const plugin = new TemplateHtml([
+    new TemplateFrag.Compiler()
+  ])
 
   const input = `
     <w:frag

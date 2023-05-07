@@ -12,7 +12,7 @@ export class PageIndex {
   #nodes: Table<Ref<PageNode>> = {}
 
   // a map of paths to active cursors
-  #cursors: Table<PageCursor> = {}
+  #cursors: Table<Ref<PageCursor>> = {}
 
   // -- commands --
   // add a new node
@@ -25,8 +25,8 @@ export class PageIndex {
 
     // add the node to any cursors
     for (const cursor of Object.values(m.#cursors)) {
-      if (cursor.match(ref)) {
-        cursor.addDependency(ref)
+      if (cursor.val.match(ref)) {
+        cursor.val.addDependency(ref)
       }
     }
   }
@@ -56,12 +56,12 @@ export class PageIndex {
   }
 
   // get a cursor to the watched path
-  query(path: string): PageCursor {
+  query(path: string): Ref<PageCursor> {
     const m = this
 
-    let cursor: PageCursor | null = m.#cursors[path]
+    let cursor: Ref<PageCursor> | null = m.#cursors[path]
     if (cursor == null) {
-      cursor = m.#initCursor(path)
+      cursor = new Ref(m.#initCursor(path))
       m.#cursors[path] = cursor
     }
 

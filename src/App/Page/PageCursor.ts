@@ -25,7 +25,7 @@ export class PageCursor implements PageDependency {
   // -- queries --
   // if the node matches the cursor
   match(node: Ref<PageNode>) {
-    return this.#query.test(node.val.path.str)
+    return this.#query.test(node.val.path.rel)
   }
 
   // -- PageDependent --

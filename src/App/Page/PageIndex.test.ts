@@ -52,10 +52,10 @@ test("it matches existing nodes to a query", () => {
   const posts = index.query("posts/*")
 
   note.flag()
-  assert(!posts.isDirty)
+  assert(!posts.val.isDirty)
 
   post.flag()
-  assert(posts.isDirty)
+  assert(posts.val.isDirty)
 })
 
 test("it matches new nodes to a query", () => {
@@ -68,8 +68,8 @@ test("it matches new nodes to a query", () => {
   index.add(post)
 
   note.flag()
-  assert(!posts.isDirty)
+  assert(!posts.val.isDirty)
 
   post.flag()
-  assert(posts.isDirty)
+  assert(posts.val.isDirty)
 })

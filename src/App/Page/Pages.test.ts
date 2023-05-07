@@ -33,8 +33,8 @@ test("it links a page and layout", async () => {
 test("it deletes nodes w/ a compiled representation", async () => {
   const pages = new Pages(evts)
   evts.reset()
-  await pages.change(FileRef.init(src.join("./bz.l.html")))
   await pages.change(FileRef.init(src.join("./b1.p.html")))
+  await pages.change(FileRef.init(src.join("./bz.l.html")))
   await pages.change(FileRef.init(src.join("./links.d.json")))
 
   pages.delete(FileRef.init(src.join("./b1.p.html")))
@@ -48,7 +48,22 @@ test("it deletes nodes w/ a compiled representation", async () => {
 })
 
 test("it queries for associated pages", async () => {
-  // TODO:
+  const pages = new Pages(evts)
+  evts.reset()
+  await pages.change(FileRef.init(src.join("./bz.l.html")))
+  await pages.change(FileRef.init(src.join("./c1.p.html")))
+  await pages.change(FileRef.init(src.join("./c1/one.p.html")))
+
+  await pages.render()
+  assertLength(evts.all, 2)
+
+  let evt = evts.all[0]
+  assert(evt.name === "save-file")
+  assertEquals(evt.file.path.rel, "c1/one.html")
+
+  evt = evts.all[1]
+  assert(evt.name === "save-file")
+  assertEquals(evt.file.path.rel, "c1.html")
 })
 
 test("it warns when a template throws an error during compilation", async () => {

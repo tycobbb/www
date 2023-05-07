@@ -1,3 +1,4 @@
-<a href="<%= it.url %>">
-  <%= it.text %>
+<%~ link = data("links.d.json")[it.link] %>
+<a href="<%= link.url %>">
+  <%= link.text %>
 </a>

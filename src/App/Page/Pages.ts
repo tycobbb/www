@@ -125,7 +125,7 @@ export class Pages {
       // for all remaining dirty nodes
       for (const node of Array.from(dirty)) {
         // if waiting on dependencies, skip
-        if (!node.isReady) {
+        if (!node.isReady()) {
           continue
         }
 
@@ -135,12 +135,10 @@ export class Pages {
         // refresh its template
         m.#tmpl.add(id, await node.read())
 
-        // render the node if necessary
-        switch (node.kind.type) {
-        case "data":
-          await m.#renderData(node); break
-        case "page":
-          await m.#renderPage(node); break
+        // render the node; if rendering short-circuited, don't clear
+        const isRendered = await m.#renderNode(node)
+        if (!isRendered) {
+          continue
         }
 
         // clear its flag
@@ -152,8 +150,22 @@ export class Pages {
     }
   }
 
+  // render the node
+  async #renderNode(node: PageNode): Promise<boolean> {
+    const m = this
+
+    switch (node.kind.type) {
+    case "data":
+      return await m.#renderData(node)
+    case "page":
+      return await m.#renderPage(node)
+    default:
+      return Promise.resolve(true)
+    }
+  }
+
   // render data and add it to the template repo
-  async #renderData(node: PageNode): Promise<void> {
+  async #renderData(node: PageNode): Promise<boolean> {
     const m = this
 
     // grab id
@@ -168,10 +180,12 @@ export class Pages {
 
     // log debug message
     log.d(`d [pges] add: ${id}\n${text}`)
+
+    return true
   }
 
   // render the page and emit it as a file
-  async #renderPage(node: PageNode): Promise<void> {
+  async #renderPage(node: PageNode): Promise<boolean> {
     const m = this
 
     // render the page to string
@@ -185,12 +199,14 @@ export class Pages {
           err
         )
       )
-      return
+      return false
     }
 
-    // TODO: rendering the template could emit a query (or data, if we defer
-    // data) event that makes this page no longer ready to render, at which
-    // point we should short-circuit
+    // rendering might create a query or data dependency causing the page to no
+    // longer be renderable
+    if (!node.isReady()) {
+      return false
+    }
 
     // render the page
     const page = new Page(text)
@@ -205,13 +221,15 @@ export class Pages {
         text: html,
       })
     )
+
+    return true
   }
 
   // add a dependency between two nodes
   #addDep(childId: string, parentId: string) {
     const m = this
 
-    // get page nodes
+    // get the page nodes
     const cn = m.#index.get(childId)
     const pn = m.#index.get(parentId)
 
@@ -226,10 +244,17 @@ export class Pages {
   }
 
   #addQuery(query: string, parentId: string) {
-    // TODO: get the query from the index, add it to the parent node
-    // const query = m.index.query(query)
-    // const node = m.index.get(parentId)
-    // node.addDependency(query)
+    const m = this
+
+    // get the page node
+    const pn = m.#index.get(parentId)
+    if (pn == null) {
+      throw new Error(`failed to add query ${query} <=> ${parentId}=${pn}`)
+    }
+
+    // get the query dependency
+    const cursor = m.#index.query(query)
+    pn.val.addDependency(cursor)
   }
 
   // -- events --

@@ -7,12 +7,15 @@ import { PageNode } from "./PageNode.ts";
 // -- setup --
 const { test } = Deno
 
+// -- data --
+const src = "testroot"
+
 // -- tests --
 test("it matches nodes", () => {
   const cursor = new PageCursor("posts/*")
 
-  const note = new Ref(new PageNode("", FileRef.init(Path.raw("notes/test"))))
-  const post = new Ref(new PageNode("", FileRef.init(Path.raw("posts/test"))))
+  const note = new Ref(new PageNode("", FileRef.init(Path.raw("notes/test", src))))
+  const post = new Ref(new PageNode("", FileRef.init(Path.raw("posts/test", src))))
 
   assert(cursor.match(note) == false)
   assert(cursor.match(post) == true)
@@ -20,7 +23,7 @@ test("it matches nodes", () => {
 
 test("it does not match the glob root", () => {
   const cursor = new PageCursor("posts/*")
-  const posts = new Ref(new PageNode("", FileRef.init(Path.raw("posts"))))
+  const posts = new Ref(new PageNode("", FileRef.init(Path.raw("posts", src))))
 
   assert(cursor.match(posts) == false)
 })

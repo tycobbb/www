@@ -1,19 +1,12 @@
-import {
-  stubConfig,
-  stubEvents,
-  assert,
-  assertEquals,
-  assertLength,
-  assertIncludes,
-  assertInstanceOf,
-} from "../../Test/mod.ts"
+import { stubLog, stubConfig, stubEvents, assert, assertEquals, assertLength, assertIncludes, assertInstanceOf } from "../../Test/mod.ts"
 import { FileRef } from "../File/mod.ts"
 import { Pages } from "./Pages.ts"
 
 // -- setup --
 const { test } = Deno
 
-// stub config
+// stub globals
+stubLog()
 const cfg = stubConfig()
 const evts = stubEvents()
 
@@ -30,9 +23,9 @@ test("it links a page and layout", async () => {
   await pages.change(FileRef.init(src.join("./b1.p.html")))
 
   await pages.render()
-  assertLength(evts.all, 2)
+  assertLength(evts.all, 1)
 
-  const evt = evts.all[1]
+  const evt = evts.all[0]
   assert(evt.name === "save-file")
   assertEquals(evt.file.path.rel, "b1.html")
 })
@@ -47,9 +40,9 @@ test("it deletes nodes w/ a compiled representation", async () => {
   pages.delete(FileRef.init(src.join("./b1.p.html")))
   pages.delete(FileRef.init(src.join("./links.d.json")))
 
-  assertLength(evts.all, 2)
+  assertLength(evts.all, 1)
 
-  const evt = evts.all[1]
+  const evt = evts.all[0]
   assert(evt.name === "delete-file")
   assertEquals(evt.file.rel, "b1.html")
 })

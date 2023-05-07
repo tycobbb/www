@@ -4,6 +4,7 @@ import { FileRef } from "../File/mod.ts"
 import { Event, Events } from "../Event/mod.ts"
 import { Page } from "./Page.ts"
 import { PageNode } from "./PageNode.ts"
+import { PageIndex } from "./PageIndex.ts"
 
 // -- types --
 type Table<T> = { [key: string]: T }
@@ -21,10 +22,8 @@ export class Pages {
   #tmpl: Templates
 
   // -- props --
-  // a database of nodes keyed by path
-  #db: {
-    nodes: Table<Ref<PageNode>>
-  }
+  // an index of page nodes
+  #index: PageIndex
 
   // -- lifetime --
   constructor(evts = Events.get(), tmpl = Templates.get()) {
@@ -35,9 +34,7 @@ export class Pages {
     this.#tmpl = tmpl
 
     // set props
-    this.#db = {
-      nodes: {},
-    }
+    this.#index = new PageIndex()
 
     // listen to file events
     m.#tmpl.on(m.#onTemplateEvent.bind(m))
@@ -50,7 +47,7 @@ export class Pages {
 
     // find the node
     const id = file.path.rel
-    const node = this.#db.nodes[id]
+    const node = m.#index.get(id)
 
     // if missing, create the node
     if (node == null) {
@@ -68,7 +65,7 @@ export class Pages {
 
     // add it to the databse
     const node = new PageNode(id, file)
-    m.#db.nodes[id] = new Ref(node)
+    m.#index.add(node)
 
     // do extra work based on kind
     const type = file.kind.type
@@ -96,20 +93,16 @@ export class Pages {
     const id = file.path.rel
 
     // get the node
-    const ref = m.#db.nodes[id]
-    if (ref == null) {
-      // TODO: already deleted, this should probably warn
+    if (m.#index.get(id) == null) {
+      log.e(`x [pges] tried to delete node '${id}', but it does not exist`)
       return
     }
-
-    // delete the ref so other nodes remove it from their dependents
-    ref.delete()
 
     // delete the template
     m.#tmpl.delete(id)
 
-    // remove it from the db
-    delete m.#db.nodes[id]
+    // delete the node from the index
+    m.#index.delete(id)
 
     // if this node has a compiled representation, delete it
     if (file.kind.type === "page") {
@@ -122,9 +115,11 @@ export class Pages {
     const m = this
 
     // get initial list of dirty nodes
-    const initial = Object.values(m.#db.nodes)
+    const initial = new Set(m.#index
+      .all
       .map((n) => n.val)
       .filter((n) => n.isDirty)
+    )
 
     // process iteratively until all nodes are finished
     const dirty = new Set(initial)
@@ -210,16 +205,16 @@ export class Pages {
   }
 
   // add a dependency between two nodes
-  #addDep(child: string, parent: string) {
+  #addDep(childId: string, parentId: string) {
     const m = this
 
     // get page nodes
-    const cn = m.#db.nodes[child]
-    const pn = m.#db.nodes[parent]
+    const cn = m.#index.get(childId)
+    const pn = m.#index.get(parentId)
 
     // fail if either is missing
     if (cn == null || pn == null) {
-      throw new Error(`failed to add dep ${child}=${cn} <=> ${parent}=${pn}`)
+      throw new Error(`failed to add dep ${childId}=${cn} <=> ${parentId}=${pn}`)
     }
 
     // add dependency between nodes

@@ -12,6 +12,7 @@ export interface PageDependency {
   get isDirty(): boolean
 }
 
+// -- impls --
 // a node in the page tree
 export class PageNode implements PageDependent, PageDependency {
   // -- props --
@@ -99,7 +100,7 @@ export class PageNode implements PageDependent, PageDependency {
   isReady(): boolean {
     const m = this
 
-    // and flag any dependents
+    // if any dependency is dirty, this is not ready
     for (const dep of m.#dependencies) {
       // if dep was deleted, remove it
       if (!dep.isPresent) {

@@ -1,7 +1,7 @@
-import { assert } from "../../Test/mod.ts"
+import { assert, MockNode } from "../../Test/mod.ts"
 import { Path, Ref } from "../../Core/mod.ts"
 import { FileRef } from "../File/mod.ts"
-import { PageNode, PageDependent, PageDependency } from "./PageNode.ts"
+import { PageNode } from "./PageNode.ts"
 
 // -- setup --
 const { test } = Deno
@@ -33,14 +33,3 @@ test("it purges deleted dependencies", () => {
 
   assert(node.isReady())
 })
-
-// -- mocks --
-class MockNode implements PageDependent, PageDependency {
-  // -- props --
-  isDirty = false
-
-  // -- PageDependent --
-  flag(): void {
-    this.isDirty = true
-  }
-}

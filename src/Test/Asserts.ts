@@ -13,7 +13,15 @@ import {
 } from "../Core/Parser/mod.ts"
 
 // -- asserts --
-// asserts the value is null
+// asserts the actual and expected values have reference-equality
+export function assertIs<T>(actual: T, other: T) {
+  assert(
+    Object.is(actual, other),
+    `\nexpected\n  "${actual}"\nto be have reference-equality w/\n  "${other}"\nbut it did not.`
+  )
+}
+
+// asserts the length of the array
 export function assertLength<T>(actual: T[], expected: number) {
   assert(
     actual.length === expected,

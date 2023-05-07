@@ -1,10 +1,15 @@
-import { Path, EventListener, EventBus } from '../Core/mod.ts'
-import { Config } from '../App/Config/Config.ts'
+import { Path, EventListener, EventBus, Log, LogLevel } from '../Core/mod.ts'
 import { Env } from '../App/Config/Env.ts'
+import { Config } from '../App/Config/Config.ts'
 import { Paths } from '../App/Config/Paths.ts'
 import { Event } from '../App/Event/mod.ts'
+import { PageDependency, PageDependent } from "../App/Page/PageNode.ts";
 
 // -- stubs --
+export function stubLog() {
+  Log.set(LogLevel.None)
+}
+
 export function stubConfig() {
   const root = Path.base("./test/fixtures")
 
@@ -67,7 +72,14 @@ class MockEvents<E> extends EventBus<E> {
       super.reset()
     }
   }
-
 }
 
+export class MockNode implements PageDependent, PageDependency {
+  // -- props --
+  isDirty = false
 
+  // -- PageDependent --
+  flag(): void {
+    this.isDirty = true
+  }
+}

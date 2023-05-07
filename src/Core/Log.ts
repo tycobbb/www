@@ -2,6 +2,7 @@ import { transient } from "./Scope.ts"
 
 // -- types --
 export enum LogLevel {
+  None = -1,
   Error = 0,
   Info = 1,
   Debug = 2,

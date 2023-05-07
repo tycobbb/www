@@ -41,7 +41,7 @@ test("it includes a fragment", async () => {
   assertEquals(scrub(res), "012")
 })
 
-test("it includes an absolutely-pathed fragment", async () => {
+test("it includes a fragment by absolute path", async () => {
   reset()
   tmpl.add("base", `hello`)
   tmpl.add("posts/test", `
@@ -66,7 +66,7 @@ test("it includes a fragment element", async () => {
   assertEquals(scrub(res), "5")
 })
 
-test("it applies layouts", async () => {
+test("it includes a layout", async () => {
   reset()
   tmpl.add("page/layout", `
     0<%= it.body %>2
@@ -81,7 +81,7 @@ test("it applies layouts", async () => {
   assertEquals(scrub(res), "012")
 })
 
-test("it uses data", async () => {
+test("it includes data", async () => {
   reset()
   tmpl.addData("page/strings", {
     test: "test data"

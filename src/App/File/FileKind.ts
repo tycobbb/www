@@ -42,16 +42,16 @@ export class FileKind {
     // detect type
     let type: FileType
     switch (ext[0]) {
-    case "p":
-      type = "page"; break
-    case "l":
-      type = "layout"; break
-    case "f":
-      type = "fragment"; break
-    case "d":
-      type = "data"; break
-    default:
-      type = "file"; break
+      case "p":
+        type = "page"; break
+      case "l":
+        type = "layout"; break
+      case "f":
+        type = "fragment"; break
+      case "d":
+        type = "data"; break
+      default:
+        type = "file"; break
     }
 
     // detect format; nodes drop the type prefix

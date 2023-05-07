@@ -9,7 +9,7 @@ export function scrub(text: string): string {
   return clean(k.whitespace, text)
 }
 
-/// removes the specified pattern from the string
+// removes the specified pattern from the string
 export function clean(pattern: RegExp, text: string): string {
   return text.replaceAll(pattern, "")
 }

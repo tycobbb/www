@@ -1,13 +1,10 @@
 import { single } from "../../Core/Scope.ts"
-import { Ref, Templates, TemplateEvent, log } from "../../Core/mod.ts"
+import { Templates, TemplateEvent, log } from "../../Core/mod.ts"
 import { FileRef } from "../File/mod.ts"
 import { Event, Events } from "../Event/mod.ts"
 import { Page } from "./Page.ts"
 import { PageNode } from "./PageNode.ts"
 import { PageIndex } from "./PageIndex.ts"
-
-// -- types --
-type Table<T> = { [key: string]: T }
 
 // -- impls -
 export class Pages {
@@ -78,6 +75,7 @@ export class Pages {
       m.#tmpl.add(id, await node.read())
 
       // if it's data, also render it so that it's available on first compile
+      // TODO: make data deferrable
       if (type === "data") {
         await m.#renderData(node)
       }
@@ -139,10 +137,10 @@ export class Pages {
 
         // render the node if necessary
         switch (node.kind.type) {
-          case "data":
-            await m.#renderData(node); break
-          case "page":
-            await m.#renderPage(node); break
+        case "data":
+          await m.#renderData(node); break
+        case "page":
+          await m.#renderPage(node); break
         }
 
         // clear its flag
@@ -187,13 +185,18 @@ export class Pages {
           err
         )
       )
-
       return
     }
+
+    // TODO: rendering the template could emit a query (or data, if we defer
+    // data) event that makes this page no longer ready to render, at which
+    // point we should short-circuit
 
     // render the page
     const page = new Page(text)
     const html = page.render()
+
+    // TODO: store page metadata in template data
 
     // and emit a new copy
     m.#evts.send(
@@ -222,11 +225,21 @@ export class Pages {
     pn.val.addDependency(cn)
   }
 
+  #addQuery(query: string, parentId: string) {
+    // TODO: get the query from the index, add it to the parent node
+    // const query = m.index.query(query)
+    // const node = m.index.get(parentId)
+    // node.addDependency(query)
+  }
+
   // -- events --
   // when a template event happens
   #onTemplateEvent(evt: TemplateEvent) {
-    if (evt.name === "include") {
-      this.#addDep(evt.child, evt.parent)
+    switch (evt.name) {
+      case "include":
+        this.#addDep(evt.child, evt.parent); break
+      case "query":
+        this.#addQuery(evt.query, evt.parent); break
     }
   }
 }

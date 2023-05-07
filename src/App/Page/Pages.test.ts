@@ -47,6 +47,10 @@ test("it deletes nodes w/ a compiled representation", async () => {
   assertEquals(evt.file.rel, "b1.html")
 })
 
+test("it queries for associated pages", async () => {
+  // TODO:
+})
+
 test("it warns when a template throws an error during compilation", async () => {
   const pages = new Pages(evts)
   evts.reset()

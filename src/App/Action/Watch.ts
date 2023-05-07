@@ -70,29 +70,29 @@ export class Watch implements Action {
           // if it's a delete, remove it from the graph and fs
           if (evt.kind === "delete") {
             switch (evt.file.kind.type) {
-            // if it's a flat dir or file, delete it directly
-            case "dir":
-              // falls through
-            case "file":
-              this.#evts.send(Event.deleteFile(evt.file.path)); break
-            // otherwise, remove it from the graph
-            default:
-              this.#pages.delete(evt.file)
+              // if it's a flat dir or file, delete it directly
+              case "dir":
+                // falls through
+              case "file":
+                this.#evts.send(Event.deleteFile(evt.file.path)); break
+              // otherwise, remove it from the graph
+              default:
+                this.#pages.delete(evt.file)
             }
           }
           // otherwise, add this file
           else {
             switch (evt.file.kind.type) {
-            // if it's a dir, copy it
-            case "dir":
-              this.#evts.send(Event.copyDir(evt.file)); break
-            // if it's not a file managed by the graph, copy it
-            case "file":
-              this.#evts.send(Event.copyFile(evt.file)); break
-            // otherwise, add it to the graph
-            default:
-              this.#pages.change(evt.file)
-              await this.#pages.render()
+              // if it's a dir, copy it
+              case "dir":
+                this.#evts.send(Event.copyDir(evt.file)); break
+              // if it's not a file managed by the graph, copy it
+              case "file":
+                this.#evts.send(Event.copyFile(evt.file)); break
+              // otherwise, add it to the graph
+              default:
+                this.#pages.change(evt.file)
+                await this.#pages.render()
             }
           }
         })

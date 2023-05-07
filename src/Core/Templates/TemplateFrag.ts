@@ -54,23 +54,23 @@ class TemplateFragPlugin {
   ])
 
   // -- queries --
-  /// compile a list of nodes
+  // compile a list of nodes
   #compile(nodes: HtmlNode[]): string {
     const m = this
 
     const compiled = nodes.reduce((res, node) => {
       switch (node.kind) {
-      case NK.text:
-        return res + node.text
-      case NK.element:
-        return res + m.#compileFrag(node.element)
+        case NK.text:
+          return res + node.text
+        case NK.element:
+          return res + m.#compileFrag(node.element)
       }
     }, "")
 
     return compiled
   }
 
-  /// compile an element
+  // compile an element
   #compileFrag(el: HtmlElement): string {
     const m = this
 
@@ -119,7 +119,7 @@ class TemplateFragPlugin {
     return compiled
   }
 
-  /// compile a slot element
+  // compile a slot element
   #compileSlot(el: HtmlElement): string {
     const m = this
 

@@ -6,6 +6,7 @@ import { TemplateFrag } from "./TemplateFrag.ts"
 import { TemplateData, TemplateDataDb } from "./TemplateData.ts"
 import { TemplateHelpers } from "./TemplateHelpers.ts"
 import { TemplateParent } from "./TemplateParent.ts"
+import { TemplateQuery } from "./TemplateQuery.ts"
 
 // -- impls --
 // eta templates that support relative pathing
@@ -104,9 +105,12 @@ export class Templates {
       // define data helper
       data: TemplateData.helper(m.#data, m.#evts),
 
+      // define query helper
+      query: TemplateQuery.helper(m.#data, m.#evts),
+
       // add plugins
       plugins: [
-        // expost helpers as globals
+        // expose helpers as globals
         new TemplateHelpers(),
 
         // pass parent path to helpers,

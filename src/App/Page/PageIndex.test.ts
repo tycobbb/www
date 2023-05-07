@@ -34,8 +34,8 @@ test("it removes a node", () => {
 test("it queries a path", () => {
   const index = new PageIndex()
 
-  const cursor1 = index.query("./posts")
-  const cursor2 = index.query("./posts")
+  const cursor1 = index.query("posts/*")
+  const cursor2 = index.query("posts/*")
 
   assert(cursor1 != null)
   assertIs(cursor1, cursor2)
@@ -49,7 +49,7 @@ test("it matches existing nodes to a query", () => {
   index.add(note)
   index.add(post)
 
-  const posts = index.query("posts")
+  const posts = index.query("posts/*")
 
   note.flag()
   assert(!posts.isDirty)
@@ -60,7 +60,7 @@ test("it matches existing nodes to a query", () => {
 
 test("it matches new nodes to a query", () => {
   const index = new PageIndex()
-  const posts = index.query("posts")
+  const posts = index.query("posts/*")
 
   const note = new PageNode("note", FileRef.init(Path.raw("notes/test")))
   const post = new PageNode("post", FileRef.init(Path.raw("posts/test")))

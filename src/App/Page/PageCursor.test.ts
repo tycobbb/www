@@ -9,13 +9,20 @@ const { test } = Deno
 
 // -- tests --
 test("it matches nodes", () => {
-  const cursor = new PageCursor("posts")
+  const cursor = new PageCursor("posts/*")
 
-  const note = new Ref(new PageNode("note", FileRef.init(Path.raw("notes/test"))))
-  const post = new Ref(new PageNode("post", FileRef.init(Path.raw("posts/test"))))
+  const note = new Ref(new PageNode("", FileRef.init(Path.raw("notes/test"))))
+  const post = new Ref(new PageNode("", FileRef.init(Path.raw("posts/test"))))
 
   assert(cursor.match(note) == false)
   assert(cursor.match(post) == true)
+})
+
+test("it does not match the glob root", () => {
+  const cursor = new PageCursor("posts/*")
+  const posts = new Ref(new PageNode("", FileRef.init(Path.raw("posts"))))
+
+  assert(cursor.match(posts) == false)
 })
 
 test("it is dirty if any of its dependencies are dirty", () => {

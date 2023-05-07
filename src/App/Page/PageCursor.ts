@@ -1,3 +1,4 @@
+import { globToRegExp } from "https://deno.land/std@0.184.0/path/glob.ts";
 import { Ref } from "../../Core/mod.ts"
 import { PageDependency, PageNode } from "./PageNode.ts";
 
@@ -5,14 +6,14 @@ import { PageDependency, PageNode } from "./PageNode.ts";
 export class PageCursor implements PageDependency {
   // -- props --
   // the cursor query
-  #query: string
+  #query: RegExp
 
   // the set of dependenices
   #dependencies: Set<Ref<PageDependency>> = new Set()
 
   // -- lifetime --
   constructor(query: string) {
-    this.#query = query
+    this.#query = globToRegExp(query)
   }
 
   // -- commands --
@@ -24,7 +25,7 @@ export class PageCursor implements PageDependency {
   // -- queries --
   // if the node matches the cursor
   match(node: Ref<PageNode>) {
-    return node.val.path.str.startsWith(this.#query)
+    return this.#query.test(node.val.path.str)
   }
 
   // -- PageDependent --

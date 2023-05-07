@@ -27,14 +27,14 @@ export class SyncFiles {
   start(): void {
     this.#evts.on(async (e) => {
       switch (e.name) {
-      case "copy-dir":
-        await this.#copyDir(e.file.path); break
-      case "copy-file":
-        await this.#copyFile(e.file.path); break
-      case "delete-file":
-        await this.#deleteFile(e.file); break
-      case "save-file":
-        await this.#saveFile(e.file); break
+        case "copy-dir":
+          await this.#copyDir(e.file.path); break
+        case "copy-file":
+          await this.#copyFile(e.file.path); break
+        case "delete-file":
+          await this.#deleteFile(e.file); break
+        case "save-file":
+          await this.#saveFile(e.file); break
       }
     })
   }

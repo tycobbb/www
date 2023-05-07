@@ -73,10 +73,10 @@ export function sparse<A>(
     (nodes) => {
       return nodes.map((n) => {
         switch (n.kind) {
-        case NK.inner:
-          return n.inner
-        case NK.slice:
-          return fromText(n.input.slice(0, n.len))
+          case NK.inner:
+            return n.inner
+          case NK.slice:
+            return fromText(n.input.slice(0, n.len))
         }
       })
     },

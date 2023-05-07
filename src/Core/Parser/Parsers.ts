@@ -92,10 +92,10 @@ export function mapInput<A, B>(
   return (input) => {
     const r1 = p1(input)
     switch (r1.stat) {
-    case PS.success:
-      return ParserResult.value(transform(r1.value, input), r1.slice)
-    case PS.failure:
-      return r1
+      case PS.success:
+        return ParserResult.value(transform(r1.value, input), r1.slice)
+      case PS.failure:
+        return r1
     }
   }
 }
@@ -108,10 +108,10 @@ export function then<A, B>(
   return (input) => {
     const r1 = p1(input)
     switch (r1.stat) {
-    case PS.success:
-      return transform(r1.value)(r1.slice)
-    case PS.failure:
-      return r1
+      case PS.success:
+        return transform(r1.value)(r1.slice)
+      case PS.failure:
+        return r1
     }
   }
 }
@@ -282,7 +282,7 @@ export function pair<A, B>(
   }
 }
 
-/// a parser of three sequential parsers
+// a parser of three sequential parsers
 export function trio<A, B, C>(
   p1: Parser<A>,
   p2: Parser<B>,
@@ -310,7 +310,7 @@ export function right<A, B>(
   return map(pair(p1, p2), ([_, r]) => r)
 }
 
-/// a parser of a trio that returns the outer values
+// a parser of a trio that returns the outer values
 export function outer<A, B, C>(
   p1: Parser<A>,
   p2: Parser<B>,
@@ -322,7 +322,7 @@ export function outer<A, B, C>(
   )
 }
 
-/// a parser of a trio that returns the inner value
+// a parser of a trio that returns the inner value
 export function inner<A, B, C>(
   p1: Parser<A>,
   p2: Parser<B>,

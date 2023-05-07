@@ -1,6 +1,5 @@
 import { EtaConfig } from "https://deno.land/x/eta@v1.12.3/config.ts"
 import { TemplateHelpers } from "./TemplateHelpers.ts"
-
 import { Parser } from "../Parser/mod.ts"
 import {
   any,
@@ -99,10 +98,10 @@ export class TemplateParent {
 
     const compiled = nodes.reduce((res, node) => {
       switch (node.kind) {
-      case NK.text:
-        return res + node.text
-      case NK.helper:
-        return res + m.#compileFn(node.helper, parent)
+        case NK.text:
+          return res + node.text
+        case NK.helper:
+          return res + m.#compileFn(node.helper, parent)
       }
     }, "")
 

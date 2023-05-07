@@ -50,15 +50,15 @@ export class Scan implements Action {
         log.d(`d [scan] add: ${f.path.str}`)
 
         switch (f.kind.type) {
-        // if this is a directory, copy it
-        case "dir":
-          this.#evts.send(Event.copyDir(f)); break
-        // if this is a flat file, copy it
-        case "file":
-          this.#evts.send(Event.copyFile(f)); break
-        // otherwise, add it to the graph
-        default:
-          await this.#pages.change(f); break
+          // if this is a directory, copy it
+          case "dir":
+            this.#evts.send(Event.copyDir(f)); break
+          // if this is a flat file, copy it
+          case "file":
+            this.#evts.send(Event.copyFile(f)); break
+          // otherwise, add it to the graph
+          default:
+            await this.#pages.change(f); break
         }
       }
     }

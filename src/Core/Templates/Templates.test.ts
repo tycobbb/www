@@ -114,3 +114,14 @@ test("it emits include events", async () => {
   assertEquals(evts.all[1], TemplateEvent.include("posts/post0", "posts/test" ))
   assertEquals(evts.all[2], TemplateEvent.include("posts/post1", "posts/test" ))
 })
+
+test("it emits query events", async () => {
+  reset()
+  tmpl.add("posts", `
+    <%~ query("./posts/*") %>
+  `)
+
+  await tmpl.render("posts")
+  assertLength(evts.all, 1)
+  assertEquals(evts.all[0], TemplateEvent.query("posts/*", "posts" ))
+})

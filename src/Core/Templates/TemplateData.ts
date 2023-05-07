@@ -1,29 +1,27 @@
 import { EventStream } from "../Events.ts"
-import { map } from "../Parser/Parsers.ts"
 import { TemplateEvent } from "./TemplateEvent.ts"
 import { TemplatePath } from "./TemplatePath.ts"
 
 // -- types --
-// data available to templates
-export type TemplateDataDb =
-  { [key: string | symbol]: unknown }
-
 // a template data helper fn
 type TemplateDataFn
   = (path: string, parent: string) => unknown
 
+  // data available to templates
+export type TemplateDataDb =
+  { [key: string | symbol]: unknown }
 
 // -- impls --
 export class TemplateData {
   // -- deps --
-  /// the template data store
+  // the template data store
   #db: TemplateDataDb
 
-  /// an event bus for template events
+  // an event bus for template events
   #evts: EventStream<TemplateEvent>
 
   // -- props --
-  /// a cached list of db keys
+  // a cached list of db keys
   #keys: string[] | null = null
 
   // -- lifetime --
@@ -36,7 +34,7 @@ export class TemplateData {
   }
 
   // -- queries --
-  /// get template data given a path
+  // get template data given a path
   #data: TemplateDataFn = (path, parent) => {
     const m = this
 
@@ -55,7 +53,7 @@ export class TemplateData {
     return val
   }
 
-  /// find suggested keys given a missing key
+  // find suggested keys given a missing key
   #findSuggestions(missing: string): string[] {
     const m = this
 
@@ -73,7 +71,7 @@ export class TemplateData {
   }
 
   // -- factories --
-  /// create a template data helper fn
+  // create a template data helper fn
   static helper(
     db: TemplateDataDb,
     evts: EventStream<TemplateEvent>

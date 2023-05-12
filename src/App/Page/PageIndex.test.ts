@@ -15,8 +15,8 @@ test("it adds a node", () => {
   const node = new PageNode(file)
   index.add(node)
 
-  assertEquals(index.get("test").val, node)
-  assertEquals(index.getByFile(file).val, node)
+  assertEquals(index.get("test")?.val, node)
+  assertEquals(index.getByFile(file)?.val, node)
 })
 
 test("it removes a node", () => {
@@ -29,7 +29,7 @@ test("it removes a node", () => {
   const nodeRef = index.get("test")
   index.delete("test")
 
-  assert(!nodeRef.isPresent)
+  assert(nodeRef?.isPresent === false)
   assert(index.get("test") == null)
   assert(index.getByFile(file) == null)
 })

@@ -1,4 +1,3 @@
-import * as E from "https://deno.land/x/eta@v1.12.3/mod.ts"
 import { EventStream } from "../Events.ts"
 import { HtmlElement } from "../Html/mod.ts";
 import { TemplateEvent } from "./TemplateEvent.ts"

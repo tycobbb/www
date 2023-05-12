@@ -6,7 +6,7 @@ import { Index } from "../Index.ts"
 export class TemplateCache {
   // -- props --
   // a path -> child key -> template function index
-  #children: Index<Index<TemplateFunction>> = {}
+  #children: Index<Index<TemplateFunction>> = new Map()
 
   // -- commands --
   // register the compiled template
@@ -19,14 +19,14 @@ export class TemplateCache {
     const m = this
 
     // find children for this path
-    let children = m.#children[path]
+    let children = m.#children.get(path)
     if (children == null) {
-      children = {}
-      m.#children[path] = children
+      children = new Map()
+      m.#children.set(path, children)
     }
 
     // and compile the child
-    children[key] = E.compile(raw, { path })
+    children.set(key, E.compile(raw, { path }))
   }
 
   // -- queries --
@@ -47,13 +47,13 @@ export class TemplateCache {
     const m = this
 
     // look up the template
-    const children = m.#children[path]
+    const children = m.#children.get(path)
     if (children == null) {
       throw new Error(`template ${path} has no children`)
     }
 
-    const template = children[key]
-    if (children == null) {
+    const template = children.get(key)
+    if (template == null) {
       throw new Error(`template ${path} does not have a child ${key}`)
     }
 
@@ -64,12 +64,12 @@ export class TemplateCache {
   // delete the template and children of the path
   delete(path: string) {
     E.templates.remove(path)
-    delete this.#children[path]
+    this.#children.delete(path)
   }
 
   // reset the cache (only use in testing)
   reset() {
     E.templates.reset()
-    this.#children = {}
+    this.#children.clear()
   }
 }

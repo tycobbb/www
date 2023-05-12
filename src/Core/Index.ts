@@ -1,2 +1,2 @@
 // -- types --
-export type Index<T> = { [key: string]: T }
+export type Index<T> = Map<string, T>

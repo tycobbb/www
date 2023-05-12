@@ -2,7 +2,7 @@ import { FilePath } from "./FilePath.ts"
 import { FileKind } from "./FileKind.ts"
 
 // -- types --
-export type FileRef = {
+export interface FileRef {
   // the path to the file
   readonly path: FilePath
 

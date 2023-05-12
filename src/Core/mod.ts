@@ -1,4 +1,5 @@
 export * from "./Events.ts"
+export * from "./Index.ts"
 export * from "./Log.ts"
 export * from "./Path.ts"
 export * from "./Ref.ts"

@@ -1,45 +1,60 @@
 import * as E from "https://deno.land/x/eta@v1.12.3/mod.ts"
-import { single } from "../Scope.ts"
+import { transient } from "../Scope.ts"
 import { EventStream, EventBus, EventListener } from "../Events.ts"
 import { TemplateEvent } from "./TemplateEvent.ts"
+import { TemplateCache } from "./TemplateCache.ts"
 import { TemplateHtml } from "./TemplateHtml.ts"
 import { TemplateFrag } from "./TemplateFrag.ts"
-import { TemplateData, TemplateDataDb } from "./TemplateData.ts"
-import { TemplateHelpers } from "./TemplateHelpers.ts"
+import { TemplateData } from "./TemplateData.ts"
+import { TemplateDataIndex } from "./TemplateDataIndex.ts"
 import { TemplateParent } from "./TemplateParent.ts"
 import { TemplateQuery } from "./TemplateQuery.ts"
+import { TemplateQueryMatch } from "./TemplateQueryMatch.ts"
+import { TemplateHelpers } from "./TemplateHelpers.ts"
 
-// -- impls --
 // eta templates that support relative pathing
 export class Templates {
   // -- module --
-  static readonly get = single(() => new Templates())
+  static readonly get = transient((match: TemplateQueryMatch) => new Templates(match))
+
+  // -- deps --
+  // finds all matching paths for a query
+  #match: TemplateQueryMatch
 
   // -- props --
-  // a bus for include events
+  // a bus for template events
   #evts: EventStream<TemplateEvent>
 
   // a store for arbitrary template data
-  #data: TemplateDataDb
+  #data: TemplateDataIndex
+
+  // a cache for storing and rendering stored templates
+  #cache: TemplateCache
 
   // -- lifetime --
   // create a new template repo
   constructor(
+    match: TemplateQueryMatch,
     evts: EventStream<TemplateEvent> = new EventBus()
   ) {
+    const m = this
+
+    // set deps
+    this.#match = match
+
     // set props
     this.#evts = evts
-    this.#data = {id: Math.random()}
+    this.#data = { pages: {} }
+    this.#cache = new TemplateCache()
 
     // configure eta
-    this.#configure()
+    m.#configure()
   }
 
   // -- commands --
   // add a template by path from a raw string
   add(path: string, raw: string) {
-    // register the compiled path
-    E.templates.define(path, E.compile(raw, { path }))
+    this.#cache.add(path, raw)
   }
 
   // add template data by path
@@ -47,17 +62,27 @@ export class Templates {
     this.#data[path] = data
   }
 
+  // add template page data by path
+  addPageData(path: string, data: Record<string, unknown>) {
+    this.#data.pages[path] = data
+  }
+
   // delete a template by path
   delete(path: string) {
-    E.templates.remove(path)
+    // remove the templates
+    this.#cache.delete(path)
+
+    // remove any page data
+    delete this.#data.pages[path]
   }
 
   // -- c/debug
   // reset state (only use this in testing)
   reset() {
-    E.templates.reset()
+    // reset templates
+    this.#cache.reset()
 
-    // clear data (don't create a new obj; config captures it by reference)
+    // reset data (don't create a new obj; config captures it by reference)
     const m = this
     for (const key in m.#data) {
       delete m.#data[key]
@@ -73,19 +98,11 @@ export class Templates {
   // -- queries --
   // render the template; throws an error if it doesn't exist
   async render(path: string, data: Record<string, unknown> = {}): Promise<string> {
-    // look up the template
-    const tmpl = E.templates.get(path)
-    if (tmpl == null) {
-      throw new Error(`template ${path} does not exist`)
-    }
-
-    // render the template w/ the path as context
-    return await <Promise<string>>E.renderAsync(tmpl, data)
+    return await this.#cache.render(path, data)
   }
 
   // -- setup --
   #configure() {
-    // capture ref to outer this to call listeners
     const m = this
 
     // create a frag helper to use a few times
@@ -107,7 +124,7 @@ export class Templates {
       data: TemplateData.helper(m.#data, m.#evts),
 
       // define query helper
-      query: TemplateQuery.helper(m.#data, m.#evts),
+      query: TemplateQuery.helper(m.#data, m.#match, m.#cache, m.#evts),
 
       // add plugins
       plugins: [

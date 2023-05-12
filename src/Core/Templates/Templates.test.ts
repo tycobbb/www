@@ -7,7 +7,7 @@ const { test } = Deno
 
 // we need singletons for these bc of eta's static configuration
 const evts = stubEvents<TemplateEvent>()
-const tmpl = new Templates(evts)
+const tmpl = new Templates(() => [], evts)
 
 // a helper to reset the singletons
 function reset() {

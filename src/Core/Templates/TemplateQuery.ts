@@ -1,9 +1,13 @@
+import * as E from "https://deno.land/x/eta@v1.12.3/mod.ts"
 import { EventStream } from "../Events.ts"
-import { TemplateEvent } from "./TemplateEvent.ts"
-import { TemplatePath } from "./TemplatePath.ts"
-import { TemplateHtmlCompiler, TemplateHtmlElementCompiler } from "./TemplateHtmlCompiler.ts"
 import { HtmlElement } from "../Html/mod.ts";
+import { TemplateEvent } from "./TemplateEvent.ts"
 import { TemplateHtml } from "./TemplateHtml.ts";
+import { TemplateHtmlCompiler, TemplateHtmlElementCompiler } from "./TemplateHtmlCompiler.ts"
+import { TemplateQueryMatch } from "./TemplateQueryMatch.ts";
+import { TemplateDataIndex } from "./TemplateDataIndex.ts";
+import { TemplateCache } from "./TemplateCache.ts";
+import { TemplatePath } from "./TemplatePath.ts";
 
 // -- constants --
 const k = {
@@ -16,52 +20,78 @@ const k = {
 
 // -- types --
 // a template query helper fn
-type TemplateQueryFn
-  = (path: string, parent: string) => unknown
+interface TemplateQueryFn {
+  (path: string, parent: string, attrs: TemplateQueryAttrs): unknown
+}
 
-// page data available to templates
-export type TemplatePageDb =
-  unknown
+// a map of attrs passed to the tempalte query fn
+interface TemplateQueryAttrs {
+  body: string
+}
 
 // -- impls --
 export class TemplateQuery {
   // -- deps --
-  // the template page data store
-  #db: TemplatePageDb
+  // the template data store
+  #data: TemplateDataIndex
+
+  // finds all matching paths for a query
+  #match: TemplateQueryMatch
+
+  // a cache for storing and rendering stored templates
+  #cache: TemplateCache
 
   // an event bus for template events
   #evts: EventStream<TemplateEvent>
 
   // -- lifetime --
   constructor(
-    db: TemplatePageDb,
+    data: TemplateDataIndex,
+    match: TemplateQueryMatch,
+    cache: TemplateCache,
     evts: EventStream<TemplateEvent>
   ) {
-    this.#db = db
+    this.#data = data
+    this.#match = match
+    this.#cache = cache
     this.#evts = evts
   }
 
   // -- queries --
-  // get template data given a path
-  #query: TemplateQueryFn = (path, parent) => {
+  // get template match given a path
+  #query: TemplateQueryFn = (query, parent, attrs) => {
     const m = this
 
-    // resolve query against parent
-    const query = TemplatePath.resolve(path, parent)
+    // resolve query against parent path
+    query = TemplatePath.resolve(query, parent)
 
     // send query event
     m.#evts.send(TemplateEvent.query(query, parent))
 
-    return ""
+    // compile the child template if necessary
+    m.#cache.addChild(parent, query, attrs.body)
+
+    // render matches with available data
+    let rendered = ""
+
+    const paths = m.#match(query)
+    for (const path of paths) {
+      const data = m.#data.pages[path]
+      rendered += m.#cache.renderChild(parent, query, data)
+    }
+
+    return rendered
   }
 
   // -- factories --
-  // create a template data helper fn
+  // create a template match helper fn
   static helper(
-    db: TemplatePageDb,
+    data: TemplateDataIndex,
+    match: TemplateQueryMatch,
+    cache: TemplateCache,
     evts: EventStream<TemplateEvent>
   ): TemplateQueryFn {
-    return new TemplateQuery(db, evts).#query;
+    return new TemplateQuery(data, match, cache, evts).#query
   }
 
   // -- compiler --
@@ -88,9 +118,11 @@ export class TemplateQuery {
       }
 
       // compile children
-      if (el.children != null) {
-        attrs.body = html.compile(el.children)
+      if (el.children == null) {
+        throw new Error("w:query must have children")
       }
+
+      attrs.body = html.compile(el.children)
 
       // compile into helper call
       const compiled = `

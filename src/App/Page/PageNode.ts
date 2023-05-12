@@ -1,3 +1,4 @@
+import { Node } from "https://deno.land/x/deno_dom@v0.1.21-alpha/deno-dom-wasm.ts"
 import { Ref } from "../../Core/mod.ts"
 import { FileRef, FilePath, FileKind } from "../File/mod.ts"
 
@@ -16,9 +17,6 @@ export interface PageDependency {
 // a node in the page tree
 export class PageNode implements PageDependent, PageDependency {
   // -- props --
-  // the node's id
-  #id: string
-
   // if this node is dirty
   #isDirty = false
 
@@ -33,8 +31,7 @@ export class PageNode implements PageDependent, PageDependency {
 
   // -- lifetime --
   // init a new node w/ the file
-  constructor(id: string, file: FileRef) {
-    this.#id = id
+  constructor(file: FileRef) {
     this.#file = file
   }
 
@@ -78,7 +75,7 @@ export class PageNode implements PageDependent, PageDependency {
   // -- queries --
   // the node's id
   get id(): string {
-    return this.#id
+    return PageNode.id(this.#file)
   }
 
   // the path to the corresponding file
@@ -120,5 +117,11 @@ export class PageNode implements PageDependent, PageDependency {
   // if the node is dirty
   get isDirty(): boolean {
     return this.#isDirty
+  }
+
+  // -- q/static
+  // the node id for a file
+  static id(file: FileRef) {
+    return file.path.rel
   }
 }

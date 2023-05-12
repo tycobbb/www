@@ -1,4 +1,4 @@
-import { stubConfig, assertIncludes, assertNotIncludes } from "../../Test/mod.ts"
+import { assertEquals, assertIncludes, assertNotIncludes } from "../../Test/mod.ts"
 import { Page } from "./Page.ts"
 
 // -- todos --
@@ -9,12 +9,6 @@ import { Page } from "./Page.ts"
 
 // -- setup --
 const { test } = Deno
-
-// stub config
-const cfg = stubConfig()
-
-// build paths
-const src = cfg.paths.src
 
 // -- tests --
 test("it cleans up nested templates", () => {
@@ -28,7 +22,7 @@ test("it cleans up nested templates", () => {
     </html>
   `)
 
-  const html = page.render()
+  const { html } = page.render()
   assertIncludes(html, "hello, test")
   assertNotIncludes(html, "<w:template>")
 })
@@ -52,7 +46,7 @@ test("it merges head elements", () => {
     </html>
   `)
 
-  const html = page.render()
+  const { html } = page.render()
   assertIncludes(html, "<title>leaf</title>")
   assertNotIncludes(html, "<w:head>")
 })
@@ -72,11 +66,29 @@ test("it merges elements with the head attribute", () => {
       </body>
     </body>
     </html>
-    </html>
   `)
 
-  const html = page.render()
+  const { html } = page.render()
   assertIncludes(html, "<title>leaf</title>")
   assertNotIncludes(html, "<title>root</title>")
   assertNotIncludes(html, "w:head")
+})
+
+test("it includes metadata", () => {
+  const page = new Page(`
+    <html>
+    <body>
+      <w:head>
+        <title>leaf</title>
+      </w:head>
+
+      <w:template>
+        <p class="test">hello, test.</p>
+      </w:template>
+    </body>
+    </html>
+  `)
+
+  const { data } = page.render()
+  assertEquals(data.title, "leaf")
 })

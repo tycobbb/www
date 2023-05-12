@@ -1,18 +1,16 @@
-import { Ref } from "../../Core/mod.ts";
+import { Index, Ref } from "../../Core/mod.ts";
+import { FileRef } from "../File/mod.ts";
 import { PageCursor } from "./PageCursor.ts";
 import { PageNode } from "./PageNode.ts";
-
-// -- types --
-type Table<T> = { [key: string]: T }
 
 // -- impls --
 export class PageIndex {
   // -- props --
   // a map of nodes
-  #nodes: Table<Ref<PageNode>> = {}
+  #nodes: Index<Ref<PageNode>> = {}
 
   // a map of paths to active cursors
-  #cursors: Table<Ref<PageCursor>> = {}
+  #cursors: Index<Ref<PageCursor>> = {}
 
   // -- commands --
   // add a new node
@@ -55,6 +53,11 @@ export class PageIndex {
     return this.#nodes[id]
   }
 
+  // get the node for a file
+  getByFile(file: FileRef): Ref<PageNode> {
+    return this.get(PageNode.id(file))
+  }
+
   // get a cursor to the watched path
   query(path: string): Ref<PageCursor> {
     const m = this
@@ -66,6 +69,25 @@ export class PageIndex {
     }
 
     return cursor
+  }
+
+  // -- TemplateQueryMatch --
+  // finds all matching paths for a query
+  match(query: string): string[] {
+    const m = this
+
+    // find the cursor
+    const cursor = m.#cursors[query].val
+
+    // find all paths that match the cursor
+    const matches = []
+    for (const path in m.#nodes) {
+      if (cursor.matchPath(path)) {
+        matches.push(path)
+      }
+    }
+
+    return matches
   }
 
   // -- factories --

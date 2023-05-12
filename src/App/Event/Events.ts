@@ -1,5 +1,4 @@
-import { single } from "../../Core/Scope.ts"
-import { EventStream, EventBus } from "../../Core/mod.ts"
+import { EventStream, EventBus, single } from "../../Core/mod.ts"
 import { Event } from "./Event.ts"
 
 // -- module --

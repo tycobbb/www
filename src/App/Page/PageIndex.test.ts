@@ -11,17 +11,19 @@ const { test } = Deno
 test("it adds a node", () => {
   const index = new PageIndex()
 
-  const node = new PageNode("test", FileRef.init(Path.raw("")))
+  const file = FileRef.init(Path.raw("test"))
+  const node = new PageNode(file)
   index.add(node)
 
-  const nodeRef = index.get("test")
-  assertEquals(nodeRef.val, node)
+  assertEquals(index.get("test").val, node)
+  assertEquals(index.getByFile(file).val, node)
 })
 
 test("it removes a node", () => {
   const index = new PageIndex()
 
-  const node = new PageNode("test", FileRef.init(Path.raw("")))
+  const file = FileRef.init(Path.raw("test"))
+  const node = new PageNode(file)
   index.add(node)
 
   const nodeRef = index.get("test")
@@ -29,6 +31,7 @@ test("it removes a node", () => {
 
   assert(!nodeRef.isPresent)
   assert(index.get("test") == null)
+  assert(index.getByFile(file) == null)
 })
 
 test("it queries a path", () => {
@@ -41,11 +44,11 @@ test("it queries a path", () => {
   assertIs(cursor1, cursor2)
 })
 
-test("it matches existing nodes to a query", () => {
+test("it adds existing nodes to a query", () => {
   const index = new PageIndex()
 
-  const note = new PageNode("note", FileRef.init(Path.raw("notes/test")))
-  const post = new PageNode("post", FileRef.init(Path.raw("posts/test")))
+  const note = new PageNode(FileRef.init(Path.raw("notes/test")))
+  const post = new PageNode(FileRef.init(Path.raw("posts/test")))
   index.add(note)
   index.add(post)
 
@@ -58,12 +61,12 @@ test("it matches existing nodes to a query", () => {
   assert(posts.val.isDirty)
 })
 
-test("it matches new nodes to a query", () => {
+test("it adds new nodes to a query", () => {
   const index = new PageIndex()
   const posts = index.query("posts/*")
 
-  const note = new PageNode("note", FileRef.init(Path.raw("notes/test")))
-  const post = new PageNode("post", FileRef.init(Path.raw("posts/test")))
+  const note = new PageNode(FileRef.init(Path.raw("notes/test")))
+  const post = new PageNode(FileRef.init(Path.raw("posts/test")))
   index.add(note)
   index.add(post)
 
@@ -72,4 +75,16 @@ test("it matches new nodes to a query", () => {
 
   post.flag()
   assert(posts.val.isDirty)
+})
+
+test("it matches paths against a query", () => {
+  const index = new PageIndex()
+  index.query("posts/*")
+
+  index.add(new PageNode(FileRef.init(Path.raw("notes/test"))))
+  index.add(new PageNode(FileRef.init(Path.raw("posts/test1"))))
+  index.add(new PageNode(FileRef.init(Path.raw("posts/test2"))))
+
+  const match = index.match("posts/*")
+  assertEquals(match, ["posts/test1", "posts/test2"])
 })

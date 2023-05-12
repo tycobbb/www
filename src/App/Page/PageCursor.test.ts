@@ -14,8 +14,8 @@ const src = "testroot"
 test("it matches nodes", () => {
   const cursor = new PageCursor("posts/*")
 
-  const note = new Ref(new PageNode("", FileRef.init(Path.raw("notes/test", src))))
-  const post = new Ref(new PageNode("", FileRef.init(Path.raw("posts/test", src))))
+  const note = new Ref(new PageNode(FileRef.init(Path.raw("notes/test", src))))
+  const post = new Ref(new PageNode(FileRef.init(Path.raw("posts/test", src))))
 
   assert(cursor.match(note) == false)
   assert(cursor.match(post) == true)
@@ -23,7 +23,7 @@ test("it matches nodes", () => {
 
 test("it does not match the glob root", () => {
   const cursor = new PageCursor("posts/*")
-  const posts = new Ref(new PageNode("", FileRef.init(Path.raw("posts", src))))
+  const posts = new Ref(new PageNode(FileRef.init(Path.raw("posts", src))))
 
   assert(cursor.match(posts) == false)
 })

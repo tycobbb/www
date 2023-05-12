@@ -1,5 +1,4 @@
-import { transient } from "../../../Core/Scope.ts"
-import { Path } from "../../../Core/mod.ts"
+import { Path, transient } from "../../../Core/mod.ts"
 import { Config } from "../../Config/mod.ts"
 import { Events, Event } from "../../Event/mod.ts"
 import { File } from "../../File/mod.ts"

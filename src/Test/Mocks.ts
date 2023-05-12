@@ -29,7 +29,7 @@ export function stubEvents<E = Event>({ isLive } = { isLive: false }) {
 }
 
 // -- mocks --
-class MockEvents<E> extends EventBus<E> {
+export class MockEvents<E> extends EventBus<E> {
   // -- props --
   // the list of events
   all: E[] = []

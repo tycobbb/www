@@ -1,6 +1,5 @@
 import { Args } from "https://deno.land/std@0.122.0/flags/mod.ts"
-import { transient } from "../../Core/Scope.ts"
-import { Path } from "../../Core/mod.ts"
+import { Path, transient } from "../../Core/mod.ts"
 import { Env } from "./Env.ts"
 import { Paths } from "./Paths.ts"
 import { DecodeConfig } from "./Services/mod.ts"

@@ -1,21 +1,18 @@
 import { EventStream } from "../Events.ts"
 import { TemplateEvent } from "./TemplateEvent.ts"
 import { TemplatePath } from "./TemplatePath.ts"
+import { TemplateDataIndex } from "./TemplateDataIndex.ts"
 
 // -- types --
 // a template data helper fn
 type TemplateDataFn
   = (path: string, parent: string) => unknown
 
-  // data available to templates
-export type TemplateDataDb =
-  { [key: string | symbol]: unknown }
-
 // -- impls --
 export class TemplateData {
   // -- deps --
   // the template data store
-  #db: TemplateDataDb
+  #indx: TemplateDataIndex
 
   // an event bus for template events
   #evts: EventStream<TemplateEvent>
@@ -26,10 +23,10 @@ export class TemplateData {
 
   // -- lifetime --
   constructor(
-    db: TemplateDataDb,
+    db: TemplateDataIndex,
     evts: EventStream<TemplateEvent>
   ) {
-    this.#db = db
+    this.#indx = db
     this.#evts = evts
   }
 
@@ -42,7 +39,7 @@ export class TemplateData {
     const child = TemplatePath.resolve(path, parent)
 
     // get data, if any
-    const val = m.#db[child]
+    const val = m.#indx[child]
     if (val == null) {
       throw new Error(`no data for path "${child}"; did you mean: ${m.#findSuggestions(child)}?`)
     }
@@ -59,7 +56,7 @@ export class TemplateData {
 
     // lazily eval keys
     if (m.#keys == null) {
-      m.#keys = Object.keys(m.#db)
+      m.#keys = Object.keys(m.#indx)
     }
 
     // filter to possible matches
@@ -73,9 +70,9 @@ export class TemplateData {
   // -- factories --
   // create a template data helper fn
   static helper(
-    db: TemplateDataDb,
+    indx: TemplateDataIndex,
     evts: EventStream<TemplateEvent>
   ): TemplateDataFn {
-    return new TemplateData(db, evts).#data;
+    return new TemplateData(indx, evts).#data;
   }
 }

@@ -1,5 +1,20 @@
 import { DOMParser, Element } from "https://deno.land/x/deno_dom@v0.1.21-alpha/deno-dom-wasm.ts"
 
+// -- types --
+// the page rendering result
+export interface PageRender {
+  // the rendered text
+  html: string
+
+  // the page metadata / frontmatter
+  data: PageMetadata
+}
+
+export interface PageMetadata {
+  [key: string]: unknown
+}
+
+// -- impls --
 // an html page in the built site
 export class Page {
   // -- props --
@@ -13,7 +28,7 @@ export class Page {
 
   // -- commands --
   // compile the page, producing a `File`
-  render(): string {
+  render(): PageRender {
     const m = this
 
     // parse the document
@@ -58,8 +73,15 @@ export class Page {
       $t.replaceWith(...$t.childNodes)
     }
 
-    // create the file
-    return $doc.outerHTML
+    // format the result
+    const render = {
+      html: $doc.outerHTML,
+      data: {
+        title: doc.title
+      }
+    }
+
+    return render
   }
 
   // merge an element into the head

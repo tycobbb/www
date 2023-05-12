@@ -1,12 +1,10 @@
 import { serve, Status, STATUS_TEXT } from "https://deno.land/std@0.122.0/http/mod.ts"
 import { serveFile } from "https://deno.land/std@0.122.0/http/file_server.ts"
-import { transient } from "../../Core/Scope.ts"
-import { log } from "../../Core/mod.ts"
+import { log, transient } from "../../Core/mod.ts"
 import { Config } from "../Config/mod.ts"
 import { FileUrl } from "../File/mod.ts"
 import { Fatal } from "../Error/mod.ts"
 import { Action } from "./Action.ts"
-import { magenta } from "https://deno.land/std@0.122.0/fmt/colors.ts"
 
 // -- constants --
 // text to display if status text is missing (should not happen)

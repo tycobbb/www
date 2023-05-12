@@ -1,12 +1,11 @@
-import { single } from "../../Core/Scope.ts"
-import { Templates, TemplateEvent, log } from "../../Core/mod.ts"
+import { Templates, TemplateEvent, log, single } from "../../Core/mod.ts"
 import { FileRef } from "../File/mod.ts"
 import { Event, Events } from "../Event/mod.ts"
 import { Page } from "./Page.ts"
 import { PageNode } from "./PageNode.ts"
 import { PageIndex } from "./PageIndex.ts"
 
-// -- impls -
+// the page graph
 export class Pages {
   // -- module --
   static readonly get = single(() => new Pages())
@@ -19,21 +18,24 @@ export class Pages {
   #tmpl: Templates
 
   // -- props --
-  // an index of page nodes
+  // an index of page nodes & cursors
   #index: PageIndex
 
   // -- lifetime --
-  constructor(evts = Events.get(), tmpl = Templates.get()) {
+  constructor(
+    tmpl = Templates.get,
+    evts = Events.get()
+  ) {
     const m = this
-
-    // set deps
-    this.#evts = evts
-    this.#tmpl = tmpl
 
     // set props
     this.#index = new PageIndex()
 
-    // listen to file events
+    // set deps
+    this.#evts = evts
+    this.#tmpl = tmpl(m.#index.match.bind(m.#index))
+
+    // listen to template events
     m.#tmpl.on(m.#onTemplateEvent.bind(m))
   }
 
@@ -43,12 +45,11 @@ export class Pages {
     const m = this
 
     // find the node
-    const id = file.path.rel
-    const node = m.#index.get(id)
+    const node = m.#index.get(PageNode.id(file))
 
     // if missing, create the node
     if (node == null) {
-      await m.#create(id, file)
+      await m.#create(file)
     }
     // otherwise, flag it as changed
     else {
@@ -57,11 +58,11 @@ export class Pages {
   }
 
   // create a new node with an id and file
-  async #create(id: string, file: FileRef): Promise<void> {
+  async #create(file: FileRef): Promise<void> {
     const m = this
 
     // add it to the databse
-    const node = new PageNode(id, file)
+    const node = new PageNode(file)
     m.#index.add(node)
 
     // do extra work based on kind
@@ -72,7 +73,7 @@ export class Pages {
     }
     // otherwise, add it to the templates
     else {
-      m.#tmpl.add(id, await node.read())
+      m.#tmpl.add(node.id, await node.read())
 
       // if it's data, also render it so that it's available on first compile
       // TODO: make data deferrable
@@ -199,7 +200,8 @@ export class Pages {
           err
         )
       )
-      return false
+
+      return true
     }
 
     // rendering might create a query or data dependency causing the page to no
@@ -210,15 +212,16 @@ export class Pages {
 
     // render the page
     const page = new Page(text)
-    const html = page.render()
+    const pageRender = page.render()
 
-    // TODO: store page metadata in template data
+    // store the data
+    m.#tmpl.addPageData(node.id, pageRender.data)
 
     // and emit a new copy
     m.#evts.send(
       Event.saveFile({
         path: node.path.setExt("html"),
-        text: html,
+        text: pageRender.html,
       })
     )
 

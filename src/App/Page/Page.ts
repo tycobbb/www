@@ -74,10 +74,12 @@ export class Page {
     }
 
     // format the result
+    const html = $doc.outerHTML
     const render = {
-      html: $doc.outerHTML,
+      html,
       data: {
-        title: doc.title
+        body: html,
+        title: doc.title,
       }
     }
 

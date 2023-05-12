@@ -122,6 +122,7 @@ export class TemplateQuery {
         throw new Error("w:query must have children")
       }
 
+      // store body as an attr to render for each child
       attrs.body = html.compile(el.children)
 
       // compile into helper call

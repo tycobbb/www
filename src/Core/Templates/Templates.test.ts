@@ -118,7 +118,11 @@ test("it emits include events", async () => {
 test("it emits query events", async () => {
   reset()
   tmpl.add("posts", `
-    <%~ query("./posts/*") %>
+    <%~
+      query("./posts/*", {
+        body: "test"
+      })
+    %>
   `)
 
   await tmpl.render("posts")

@@ -2,6 +2,7 @@ import {
   AssertionError,
   assert,
   assertEquals,
+  assertNotEquals,
   assertMatch,
   assertThrows,
   assertRejects,
@@ -97,6 +98,7 @@ export function assertParser<V>(
 export {
   assert,
   assertEquals,
+  assertNotEquals,
   assertMatch,
   assertThrows,
   assertRejects,

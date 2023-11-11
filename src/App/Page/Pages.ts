@@ -4,7 +4,9 @@ import { Event, Events } from "../Event/mod.ts"
 import { Page } from "./Page.ts"
 import { PageNode } from "./PageNode.ts"
 import { PageIndex } from "./PageIndex.ts"
+import { PageDataTypes, PageDataType } from "./PageDataTypes.ts";
 
+// -- impls --
 // the page graph
 export class Pages {
   // -- module --
@@ -21,6 +23,9 @@ export class Pages {
   // an index of page nodes & cursors
   #index: PageIndex
 
+  // a map of data decode fns by file ext
+  #dataTypes: PageDataTypes
+
   // -- lifetime --
   constructor(
     tmpl = Templates.get,
@@ -30,6 +35,7 @@ export class Pages {
 
     // set props
     this.#index = new PageIndex()
+    this.#dataTypes = new PageDataTypes()
 
     // set deps
     this.#evts = evts
@@ -174,7 +180,18 @@ export class Pages {
 
     // render the data into json
     const text = await m.#tmpl.render(id)
-    const data = JSON.parse(text) as unknown
+
+    let data: unknown
+    try {
+      data = m.#dataTypes.decode(node.kind.format, text)
+    } catch (err) {
+      if (err instanceof PageDataTypes.MissingType) {
+        m.#warn(`the format '${node.kind.format}' is not a registered data type`, err)
+        return false
+      }
+
+      throw err
+    }
 
     // add it as template data
     m.#tmpl.addData(id, data)
@@ -194,13 +211,7 @@ export class Pages {
     try {
       text = await m.#tmpl.render(node.id)
     } catch (err) {
-      m.#evts.send(
-        Event.showWarning(
-          `the template '${node.path.rel}' threw an error during compilation`,
-          err
-        )
-      )
-
+      m.#warn(`the template '${node.path.rel}' threw an error during compilation`, err)
       return true
     }
 
@@ -246,6 +257,7 @@ export class Pages {
     pn.val.addDependency(cn)
   }
 
+  // add a query to the dependency to the node
   #addQuery(query: string, parentId: string) {
     const m = this
 
@@ -260,6 +272,11 @@ export class Pages {
     pn.val.addDependency(cursor)
   }
 
+  // show a warning cli message
+  #warn(message: string, cause?: Error) {
+    this.#evts.send(Event.showWarning(message, cause))
+  }
+
   // -- events --
   // when a template event happens
   #onTemplateEvent(evt: TemplateEvent) {
@@ -269,5 +286,11 @@ export class Pages {
       case "query":
         this.#addQuery(evt.query, evt.parent); break
     }
+  }
+
+  // -- config --
+  // register a data type & decode fn
+  addDataType(dataType: PageDataType) {
+    this.#dataTypes.add(dataType)
   }
 }

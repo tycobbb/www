@@ -65,7 +65,7 @@ b/0:
 ## clean the build
 b/clean:
 	rm -rf $(ds-build)
-.PHONY:
+.PHONY: b/clean
 
 ## -- run (r) --
 $(eval $(call alias, run, r/0))

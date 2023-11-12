@@ -1,0 +1,22 @@
+<%
+function id(d) {
+  const parts = [
+    "post",
+    d.getFullYear(),
+    d.getMonth() + 1,
+    d.getDate(),
+    d.getHours(),
+    d.getMinutes()
+  ]
+
+  return parts.join("-")
+}
+%>
+
+<% data("posts.d.tw").forEach((post) => { %>
+  <article id="<%= id(post.date) %>">
+    <span style="white-space: pre"><%~ post.body %></span>
+    <br>
+    <%= post.date.toLocaleString() %>
+  </article>
+<% }) %>

@@ -83,7 +83,7 @@ export class Html {
   // a parser for a sequence of html nodes
   readonly #decode: Parser<HtmlNode[]>
 
-  // -- liftime --
+  // -- lifetime --
   // create a new html parser
   constructor(elements: string[]) {
     // init config

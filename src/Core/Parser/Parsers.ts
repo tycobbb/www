@@ -1,75 +1,57 @@
+import { Parser, ParserResult, ParserSuccess, ParserStatus as PS, Slice, parser, dump } from "./Parser.ts"
+
 // -- types --
-// a string slice
-export type Slice
-  = string
-
-// the status of a parser result
-export enum ParserStatus {
-  success,
-  failure
-}
-
-// alias for status
-import PS = ParserStatus
-
-// a success result
-export type ParserSuccess<V>
-  = { stat: PS.success, slice: Slice, value: V }
-
-// a failure result
-export type ParserFailure
-  = { stat: PS.failure, slice: Slice, error: string }
-
-// the result of any parser
-export type ParserResult<V>
-  = ParserSuccess<V>
-  | ParserFailure
-
-// a parser that may parse a slice
-export type Parser<V>
-  = (input: Slice) => ParserResult<V>
-
-export type ParserWith<V, S>
-  = (input: Slice, state: S) => ParserResult<V>
+// an aggregate from element to accumulated value
+export type Aggregate<T, U> = [
+  () => U,
+  (memo: U, next: T) => U
+]
 
 // -- impls --
-export const ParserResult = {
-  // a success result with a value
-  value<V>(value: V, slice: Slice): ParserResult<V> {
-    return { stat: PS.success, slice, value }
-  },
-  // a success result with no value
-  empty(slice: Slice): ParserResult<null> {
-    return { stat: PS.success, slice, value: null }
-  },
-  // a failure result an error
-  error<V>(slice: Slice, error: string): ParserResult<V> {
-    return { stat: PS.failure, slice, error }
-  },
-  // a failure result with no error
-  fault<V>(slice: Slice): ParserResult<V> {
-    return { stat: PS.failure, slice, error: "" }
-  },
+function agg<T, U>(
+  initial: () => U,
+  reduce: (memo: U, next: T) => U
+): Aggregate<T, U> {
+  return [initial, reduce]
+}
+
+export const Aggregate = {
+  string: agg<string, string>(
+    () => "",
+    (memo, next) => memo + next
+  ),
+  array: <T,> () => agg<T, T[]>(
+    () => [],
+    (memo, next) => {
+      memo.push(next)
+      return memo
+    }
+  )
 }
 
 // -- i/parsers
+// a parse that always errors
+export function never<A>(input: string): ParserResult<A> {
+  return ParserResult.error(input, `never: fails`)
+}
+
 // a parser for a literal string
 export function literal(expected: string): Parser<null> {
-  return (input) => {
+  return parser(literal.name, (input) => {
     const len = expected.length
 
     if (input.startsWith(expected)) {
       return ParserResult.empty(input.slice(len))
     } else {
-      return ParserResult.error(input, `[parser] literal - ${input.slice(0, 10)}... != ${expected}`)
+      return ParserResult.error(input, `literal: ${input.slice(0, 10)}... != ${expected}`)
     }
-  }
+  })
 }
 
 // a parser for any character
 export function any(input: Slice): ParserResult<string> {
   if (input.length === 0) {
-    return ParserResult.error(input, `any - input was empty`)
+    return ParserResult.error(input, `any: input was empty`)
   } else {
     return ParserResult.value(input[0], input.slice(1))
   }
@@ -89,7 +71,7 @@ export function mapInput<A, B>(
   p1: Parser<A>,
   transform: (value: A, input: Slice) => B
 ): Parser<B> {
-  return (input) => {
+  return parser(mapInput.name, (input) => {
     const r1 = p1(input)
     switch (r1.stat) {
       case PS.success:
@@ -97,7 +79,7 @@ export function mapInput<A, B>(
       case PS.failure:
         return r1
     }
-  }
+  })
 }
 
 // a parser followed by another parser using value of the first (e.g. flat map)
@@ -105,7 +87,7 @@ export function then<A, B>(
   p1: Parser<A>,
   transform: (i: A) => Parser<B>
 ): Parser<B> {
-  return (input) => {
+  return parser(then.name, (input) => {
     const r1 = p1(input)
     switch (r1.stat) {
       case PS.success:
@@ -113,7 +95,7 @@ export function then<A, B>(
       case PS.failure:
         return r1
     }
-  }
+  })
 }
 
 // a parser that whose value passes the test
@@ -121,17 +103,17 @@ export function pred<A>(
   p1: Parser<A>,
   predicate: (v: A) => boolean
 ): Parser<A> {
-  return (input) => {
+  return parser(pred.name, (input) => {
     const r1 = p1(input)
 
     // if the value fails the test, error
     if (r1.stat === PS.success && !predicate(r1.value)) {
-      return ParserResult.error(input, `[parser] pred - ${r1.value} did not pass`)
+      return ParserResult.error(input, `pred: ${p1.name} - ${r1.value} did not pass`)
     }
 
     // otherwise, return the result
     return r1
-  }
+  })
 }
 
 // a parser that requires another parser fail
@@ -145,16 +127,16 @@ export function unless<A>(
   }
 
   // otherwise, we may short-circuit on the condition
-  return (input) => {
+  return parser(unless.name, (input) => {
     // if condition succeeds, error
     const r2 = p2(input)
     if (r2.stat === PS.success) {
-      return ParserResult.error(input, `[parser] unless - short-circuiting parser succeeded`)
+      return ParserResult.error(input, `unless: p2 ${p2.name} short-circuited p1 ${p1.name}`)
     }
 
     // otherwise, try the parser
     return p1(input)
-  }
+  })
 }
 
 // a parser the validates the value of another parser
@@ -162,59 +144,60 @@ export function validate<A>(
   p1: Parser<A>,
   validate: (input: Slice, res: ParserSuccess<A>) => ParserResult<A>,
 ): Parser<A> {
-  return (input) => {
+  return parser(validate.name, (input) => {
     const r1 = p1(input)
     if (r1.stat === PS.success) {
       return validate(input, r1)
     }
 
     return r1
-  }
+  })
 }
 
 // a parser that matches a pattern
 export function pattern(
-  pattern: RegExp
+  regex: RegExp,
+  group: number = 0
 ): Parser<string> {
-  return (input) => {
+  return parser(pattern.name, (input) => {
     // try the pattern
-    const match = input.match(pattern)
+    const match = input.match(regex)
 
     // if no match, fail
     if (match == null) {
-      return ParserResult.error(input, `[parser] pattern - ${input.slice(0, 10)}... did not match`)
+      return ParserResult.error(input, `pattern: "${dump(input.slice(0, 10) + "...")}" did not match ${regex}`)
     }
 
     // if this matched after the first index, an exception
     if (match.index !== 0) {
-      throw new Error(`[parser] pattern ${pattern} may only match at beginning of string, '^'`)
+      throw new Error(`[parser] pattern: ${regex} may only match at beginning of string, '^'`)
     }
 
     // otherwise, match the slice
-    const val = match[0]
+    const val = match[group]
     const res = ParserResult.value(
       val,
       input.slice(val.length)
     )
 
     return res
-  }
+  })
 }
 
 // a parser that repeats the zero or more times
-export function sequence<V>(
-  p1: Parser<V>,
+export function sequence<A>(
+  p1: Parser<A>,
   min = 0
-): Parser<V[]> {
+): Parser<A[]> {
   return validate(
-    repeat(p1, () => new Array<V>(), (vs, v) => {
-      vs.push(v)
-      return vs
-    }),
+    repeat(
+      p1,
+      ...Aggregate.array<A>()
+    ),
     (input, res) => {
       const n = res.value.length
       if (n < min) {
-        return ParserResult.error(input, `[parser] repeat - ${input.slice(0, 10)}... matced ${n} < ${min}`)
+        return ParserResult.error(input, `repeat: ${input.slice(0, 10)}... matched ${n} < ${min}`)
       }
 
       return res
@@ -223,12 +206,12 @@ export function sequence<V>(
 }
 
 // a parser that repeats the zero or more times
-export function repeat<V, M>(
-  p1: Parser<V>,
+export function repeat<A, M>(
+  p1: Parser<A>,
   initial: () => M,
-  reduce: (memo: M, val: V) => M,
+  reduce: (memo: M, val: A) => M,
 ): Parser<M> {
-  return (input) => {
+  return parser(repeat.name, (input) => {
     let memo = initial()
 
     // starting from the input
@@ -250,7 +233,43 @@ export function repeat<V, M>(
 
     // otherwise, return value
     return ParserResult.value(memo, rest)
-  }
+  })
+}
+
+// a parser that repeats until the delimiter
+export function repeatUntil<A, B, M>(
+  p1: Parser<A>,
+  p2: Parser<B>,
+  initial: () => M,
+  reduce: (memo: M, val: A) => M,
+): Parser<M> {
+  return parser(repeatUntil.name, (input) => {
+    // accumulate repeated value
+    let memo = initial()
+
+    // starting from input
+    let rest = input
+    while (true) {
+      // check for the delimiter to terminate
+      const r2 = p2(rest)
+      if (r2.stat === PS.success) {
+        rest = r2.slice
+        break
+      }
+
+      // if not delimited, try repeated parser
+      const r1 = p1(rest)
+      if (r1.stat === PS.failure) {
+        return ParserResult.error(input, r1.error)
+      }
+
+      // and accumulate
+      memo = reduce(memo, r1.value)
+      rest = r1.slice
+    }
+
+    return ParserResult.value(memo, rest)
+  })
 }
 
 // -- i/c/groups
@@ -259,17 +278,17 @@ export function pair<A, B>(
   p1: Parser<A>,
   p2: Parser<B>
 ): Parser<[A, B]> {
-  return (input) => {
+  return parser(pair.name, (input) => {
     // try the first parser
     const r1 = p1(input)
     if (r1.stat === PS.failure) {
-      return ParserResult.error(input, `[parser] pair - p1 did not pass`)
+      return ParserResult.error(input, `pair: p1 ${p1.name} - did not pass`)
     }
 
     // try the second parser on the remainder
     const r2 = p2(r1.slice)
     if (r2.stat === PS.failure) {
-      return ParserResult.error(input, `[parser] pair - p2 did not pass`)
+      return ParserResult.error(input, `pair: p2 ${p2.name} - did not pass`)
     }
 
     // combine the values
@@ -279,7 +298,7 @@ export function pair<A, B>(
     )
 
     return res
-  }
+  })
 }
 
 // a parser of three sequential parsers
@@ -347,7 +366,7 @@ export function delimited<A, B>(
   p1: Parser<A>,
   p2: Parser<B>
 ): Parser<A[]> {
-  return (input) => {
+  return parser(delimited.name, (input) => {
     const values = []
 
     // starting from the input
@@ -380,7 +399,7 @@ export function delimited<A, B>(
 
     // otherwise, return value
     return ParserResult.value(values, restEntry)
-  }
+  })
 }
 
 // a parser that matches the first of two parsers
@@ -407,7 +426,7 @@ export function first<A, B, C, D>(
 export function first<A, B, C, D>(
   ...ps: Parser<A | B | C | D>[]
 ): Parser<A | B | C | D> {
-  return (input) => {
+  return parser(first.name, (input) => {
     // try the first parser
     for (const pi of ps) {
       const ri = pi(input)
@@ -417,8 +436,8 @@ export function first<A, B, C, D>(
     }
 
     // if neither pass, this fails
-    return ParserResult.error(input, `[parser] first - all failed`)
-  }
+    return ParserResult.error(input, `first: all failed`)
+  })
 }
 
 // a parser created once at runtime; you might need this to avoid infinite
@@ -430,10 +449,10 @@ export function lazy<A>(
   let p1: Parser<A> | null
 
   // the caching parser
-  return (input) => {
+  return parser(lazy.name, (input) => {
     p1 ||= create()
     return p1(input)
-  }
+  })
 }
 
 // a parser created once-by-key at runtime; you might need this to avoid
@@ -443,7 +462,7 @@ export function cache<A>(
   key: string,
   create: () => Parser<A>
 ): Parser<A> {
-  return (input) => {
+  return parser(cache.name, (input) => {
     // find or create the parser
     let p1 = mem[key]
     if (p1 == null) {
@@ -452,7 +471,7 @@ export function cache<A>(
 
     // and try it
     return p1(input)
-  }
+  })
 }
 
 // -- i/data

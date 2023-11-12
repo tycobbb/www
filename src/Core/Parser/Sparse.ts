@@ -1,4 +1,4 @@
-import { Parser } from "./Parsers.ts"
+import { Parser } from "./Parser.ts"
 import {
   first,
   map,

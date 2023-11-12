@@ -1,9 +1,8 @@
-import { stubLog, stubConfig, stubEvents, assert, assertEquals, assertNotEquals, assertLength, assertIncludes, assertMatch, assertRejects } from "../../Test/mod.ts"
+import { stubLog, stubConfig, stubEvents, assert, assertEquals, assertNotEquals, assertLength, assertIncludes, assertMatch } from "../../Test/mod.ts"
 import { TemplateEvent, Templates } from "../../Core/mod.ts";
 import { FileRef } from "../File/mod.ts"
 import { Pages } from "./Pages.ts"
 import { decodeJson, decodeTw } from "../../Core/Decode/mod.ts";
-import { Fatal } from "../Error/mod.ts";
 
 // -- setup --
 const { test } = Deno
@@ -77,7 +76,7 @@ test("it decodes known data file types", async () => {
 
   const evt = evts.all[0]
   assert(evt.name === "show-warning")
-  assertIncludes(evt.msg, "the format 'xml' is not a registered data file type")
+  assertIncludes(evt.msg, "the format 'xml' is not a registered data type")
 })
 
 test("it deletes nodes w/ a compiled representation", async () => {

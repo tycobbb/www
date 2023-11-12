@@ -1,5 +1,5 @@
 import { assertParser } from "../../Test/mod.ts"
-import { ParserResult } from "./Parsers.ts"
+import { ParserResult } from "./Parser.ts"
 import { str } from "./String.ts"
 
 // -- setup --

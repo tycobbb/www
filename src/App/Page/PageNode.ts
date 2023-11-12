@@ -1,4 +1,3 @@
-import { Node } from "https://deno.land/x/deno_dom@v0.1.21-alpha/deno-dom-wasm.ts"
 import { Ref } from "../../Core/mod.ts"
 import { FileRef, FilePath, FileKind } from "../File/mod.ts"
 

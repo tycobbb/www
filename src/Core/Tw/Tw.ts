@@ -9,7 +9,6 @@ import {
   repeatUntil,
   sequence,
   whitespace,
-  debug
 } from "../Parser/mod.ts"
 
 // -- constants --

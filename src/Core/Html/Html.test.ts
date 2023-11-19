@@ -1,4 +1,4 @@
-import { assertEquals, clean } from "../../Test/mod.ts"
+import { assertEquals, clean, undent } from "../../Test/mod.ts"
 import { Html, HtmlNode } from "./Html.ts"
 
 // -- setup --

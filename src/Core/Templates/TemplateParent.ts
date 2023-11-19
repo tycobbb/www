@@ -176,12 +176,23 @@ function decode() {
 // a parser for a sequence of nodes
 function nodes(): Parser<HelperNode[]> {
   return sparse(
+    node(),
+    any,
+    HelperNode.text,
+  )
+}
+
+// a parser for a single node
+function node(): Parser<HelperNode> {
+  return first(
+    map(
+      str.quoted(),
+      HelperNode.text
+    ),
     map(
       helper(),
       HelperNode.helper
-    ),
-    any,
-    HelperNode.text,
+    )
   )
 }
 

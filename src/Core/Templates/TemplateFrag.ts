@@ -6,6 +6,7 @@ import { TemplateEvent } from "./TemplateEvent.ts"
 import { TemplatePath } from "./TemplatePath.ts"
 import { TemplateHtmlCompiler, TemplateHtmlElementCompiler } from "./TemplateHtmlCompiler.ts"
 import { TemplateHtml } from "./TemplateHtml.ts"
+import { trim } from "../String.ts"
 
 // -- types --
 // include helper fn
@@ -114,13 +115,13 @@ export class TemplateFrag {
       }
 
       // compile into helper call
-      const compiled = `
+      const compiled = trim(`
         <%~
           frag("${path}.f.html", {
             ${TemplateHtml.compileAttrs(attrs)}
           })
         %>
-      `
+      `)
 
       return compiled
     }

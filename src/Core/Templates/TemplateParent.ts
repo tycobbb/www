@@ -5,10 +5,12 @@ import {
   any,
   delimited,
   first,
+  inner,
   lazy,
   left,
   literal,
   map,
+  outer,
   pair,
   pattern,
   sequence,
@@ -31,6 +33,10 @@ const k = {
     // in practice.
     part: /^[^,\)]+/,
   },
+  obj: {
+    // an object (non-string) key
+    key: /^[a-zA-Z\$_]+/,
+  }
 }
 
 // -- types --
@@ -198,10 +204,6 @@ function node(): Parser<HelperNode> {
 
 // a parser for a helper
 function helper(): Parser<Helper> {
-  return lazy(() => $helper())
-}
-
-function $helper(): Parser<Helper> {
   return map(
     pair(
       // open fn
@@ -212,16 +214,12 @@ function $helper(): Parser<Helper> {
           literal("("),
         ),
       ),
-      // or args
+      // then args
       left(
         surround(
           delimited(
             sequence(
-              first(
-                str.quoted(),
-                helper(),
-                pattern(k.fn.part),
-              ),
+              value(),
             ),
             surround(
               literal(","),
@@ -230,6 +228,7 @@ function $helper(): Parser<Helper> {
           ),
           whitespace(),
         ),
+        // closed by a paren
         literal(")"),
       ),
     ),
@@ -238,5 +237,62 @@ function $helper(): Parser<Helper> {
       name,
       args,
     }),
+  )
+}
+
+function value(): Parser<HelperArgPart> {
+  return lazy(() => $value())
+}
+
+function $value(): Parser<HelperArgPart> {
+  return first(
+    str.quoted(),
+    object(),
+    helper(),
+    pattern(k.fn.part)
+  )
+}
+
+// an object-literal
+function object(): Parser<string> {
+  return map(
+    inner(
+      surround(
+        literal("{"),
+        whitespace(),
+      ),
+      delimited(
+        objectEntry(),
+        surround(
+          literal(","),
+          whitespace(),
+        )
+      ),
+      surround(
+        literal("}"),
+        whitespace(),
+      )
+    ),
+    (entries) => `{${entries.map(([key, val]) => `${key}:${val}`).join(",")}}`
+  )
+}
+
+// an object-literal key-value pair
+function objectEntry(): Parser<[string, HelperArgPart]> {
+  return outer(
+    objectKey(),
+    surround(
+      literal(":"),
+      whitespace(),
+    ),
+    value()
+  )
+}
+
+// an object-literal key
+function objectKey(): Parser<string> {
+  return first(
+    str.quoted(),
+    pattern(k.obj.key)
   )
 }

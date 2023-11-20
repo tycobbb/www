@@ -10,3 +10,8 @@ export function lines(content: string): string[] {
 
   return content.split(eol)
 }
+
+// trims the string
+export function trim(content: string): string {
+  return content.trim()
+}

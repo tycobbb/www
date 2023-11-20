@@ -52,18 +52,22 @@ test("it includes a fragment by absolute path", async () => {
   assertEquals(scrub(res), "hello")
 })
 
-test("it includes a fragment element", async () => {
+test("it includes a fragment element w/ args", async () => {
   reset()
-  tmpl.add("posts/post.f.html", `<%= it.i %>`)
-  tmpl.add("posts/test", `
+  tmpl.add("posts/post.f.html", undent(`
+    <%= it.link %>
+    <%= it.body %>
+  `))
+  tmpl.add("posts/test", undent(`
     <w:frag
       path="./post"
-      i="5"
+      link=\`<a href="http://test.com">test</a>\`
+      body=\`test has (parens).\`
     />
-  `)
+  `))
 
   const res = await tmpl.render("posts/test")
-  assertEquals(scrub(res), "5")
+  assertEquals(res, "&lt;a href=&quot;http://test.com&quot;&gt;test&lt;/a&gt;test has (parens).")
 })
 
 test("it includes a layout", async () => {

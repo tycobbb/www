@@ -427,7 +427,7 @@ export function first<A, B, C, D>(
   ...ps: Parser<A | B | C | D>[]
 ): Parser<A | B | C | D> {
   return parser(first.name, (input) => {
-    // try the first parser
+    // try the parsers in order
     for (const pi of ps) {
       const ri = pi(input)
       if (ri.stat === PS.success) {
@@ -435,7 +435,7 @@ export function first<A, B, C, D>(
       }
     }
 
-    // if neither pass, this fails
+    // if none pass, this fails
     return ParserResult.error(input, `first: all failed`)
   })
 }

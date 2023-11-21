@@ -13,10 +13,10 @@ import {
   outer,
   pair,
   pattern,
-  sequence,
   sparse,
   str,
   surround,
+  unless,
   unwrap,
   whitespace,
 } from "../Parser/mod.ts"
@@ -27,11 +27,8 @@ const k = {
   fn: {
     // the fn name; can be a compound identifier, e.g. `Object.assign`
     name: /^[a-zA-Z\$_][\w\$_\.]*/,
-    // a fallback arg part, anything that's not a delimiter
-    // TODO: this matches chunks of objects and can screw with a fn's args list,
-    // e.g. `{k1:"v1"` from `{k1:"v1",k2:"v2"}`. but this may not matter for us
-    // in practice.
-    part: /^[^,\)]+/,
+    // an argument delimiter
+    delimiter: /^[,\)]/
   },
   obj: {
     // an object (non-string) key
@@ -46,7 +43,6 @@ type HelperConfig = Readonly<{
 }>
 
 // the possible parsed node types
-// deno-lint-ignore no-unused-vars
 enum HelperNodeKind {
   helper,
   text,
@@ -218,9 +214,7 @@ function helper(): Parser<Helper> {
       left(
         surround(
           delimited(
-            sequence(
-              value(),
-            ),
+            value(),
             surround(
               literal(","),
               whitespace(),
@@ -240,21 +234,42 @@ function helper(): Parser<Helper> {
   )
 }
 
-function value(): Parser<HelperArgPart> {
+function value(): Parser<HelperArgPart[]> {
   return lazy(() => $value())
 }
 
-function $value(): Parser<HelperArgPart> {
-  return first(
-    str.quoted(),
-    object(),
-    helper(),
-    pattern(k.fn.part)
+function $value(): Parser<HelperArgPart[]> {
+  return map(
+    sparse(
+      first(
+        str.quoted(),
+        object(),
+        helper(),
+      ),
+      unless(
+        any,
+        pattern(k.fn.delimiter)
+      ),
+      (s) => s
+    ),
+    (values) => {
+      const parts: HelperArgPart[] = []
+
+      for (const value of values) {
+        if (Array.isArray(value)) {
+          parts.concat(value)
+        } else {
+          parts.push(value)
+        }
+      }
+
+      return parts
+    }
   )
 }
 
 // an object-literal
-function object(): Parser<string> {
+function object(): Parser<HelperArgPart[]> {
   return map(
     inner(
       surround(
@@ -273,12 +288,28 @@ function object(): Parser<string> {
         whitespace(),
       )
     ),
-    (entries) => `{${entries.map(([key, val]) => `${key}:${val}`).join(",")}}`
+    (entries) => {
+      const parts: HelperArgPart[] = []
+      parts.push("{")
+
+      for (const [key, val] of entries) {
+        if (typeof val === "string") {
+          parts.push(`${key}:${val}`)
+        } else {
+          parts.push(`${key}:`)
+          parts.concat(val)
+        }
+      }
+
+      parts.push("}")
+
+      return parts
+    }
   )
 }
 
 // an object-literal key-value pair
-function objectEntry(): Parser<[string, HelperArgPart]> {
+function objectEntry(): Parser<[string, HelperArgPart[]]> {
   return outer(
     objectKey(),
     surround(

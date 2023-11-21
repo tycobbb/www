@@ -33,6 +33,7 @@ const SparseNode = {
 }
 
 // -- impls --
+// TODO: make sparse take a reducer
 // a parser for a sparse sequence of nodes surrounded by undifferentiated text
 export function sparse<A>(
   p1: Parser<A>,

@@ -1,5 +1,7 @@
 // -- flags --
-const IS_INSTRUMENTED = false
+const INST_SUCCESS = 1 << 0
+const INST_FAILURE = 1 << 1
+const INST: number | false = false
 
 // -- types --
 // a string slice
@@ -39,17 +41,28 @@ export type ParserWith<V, S>
 // -- impls --
 // init a parser
 export function parser<V>(name: string, parser: Parser<V>) {
-  if (!IS_INSTRUMENTED) {
+  if (!INST) {
     return parser
   }
 
+  const nameCol = name.padEnd(10)
+
   const instrumented: Parser<V> = (input) => {
-    const result = parser(input)
-    if (result.stat == PS.failure) {
-      console.log(`[parser] fail: ${name.padEnd(10)} | ${result.error}`)
+    const res = parser(input)
+    const restCol = res.slice.slice(0, 10).padEnd(10)
+
+    if (res.stat === PS.success)  {
+      if (INST & INST_SUCCESS) {
+        console.log(`[parser] ✔ ${nameCol} | ${restCol} -> ${res.value}`)
+      }
+    }
+    else {
+      if (INST & INST_FAILURE) {
+        console.log(`[parser] ✘ ${nameCol} | ${restCol} -> ${res.error}`)
+      }
     }
 
-    return result
+    return res
   }
 
   Object.defineProperty(instrumented, "name", { value: name })
@@ -88,7 +101,7 @@ export function debug<A>(
 
 // dump the escaped string
 export function dump(string: string): string {
-  if (!IS_INSTRUMENTED) {
+  if (!INST) {
     return string
   }
 

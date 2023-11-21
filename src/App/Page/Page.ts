@@ -70,7 +70,21 @@ export class Page {
     // replace <w:template> elements w/ their contents
     const $tmpls = doc.getElementsByTagName("w:template")
     for (const $t of $tmpls) {
-      $t.replaceWith(...$t.childNodes)
+      const nodes = Array.from($t.childNodes)
+
+      let src = 0
+      let dst = nodes.length
+
+      if (nodes[dst - 1].textContent === "\n") {
+        dst -= 1
+      }
+
+      if (nodes[src].textContent === "\n") {
+        src += 1
+        dst -= 1
+      }
+
+      $t.replaceWith(...nodes.slice(src, dst))
     }
 
     // format the result

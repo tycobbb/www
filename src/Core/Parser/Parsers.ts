@@ -142,12 +142,12 @@ export function unless<A>(
 // a parser the validates the value of another parser
 export function validate<A>(
   p1: Parser<A>,
-  validate: (input: Slice, res: ParserSuccess<A>) => ParserResult<A>,
+  validate: (res: ParserSuccess<A>, input: Slice) => ParserResult<A>,
 ): Parser<A> {
   return parser(validate.name, (input) => {
     const r1 = p1(input)
     if (r1.stat === PS.success) {
-      return validate(input, r1)
+      return validate(r1, input)
     }
 
     return r1
@@ -194,7 +194,7 @@ export function sequence<A>(
       p1,
       ...Aggregate.array<A>()
     ),
-    (input, res) => {
+    (res, input) => {
       const n = res.value.length
       if (n < min) {
         return ParserResult.error(input, `repeat: ${input.slice(0, 10)}... matched ${n} < ${min}`)

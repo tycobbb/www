@@ -1,4 +1,4 @@
-import { assertEquals, clean } from "../../Test/mod.ts"
+import { assertEquals, squeeze } from "../../Test/mod.ts"
 import { TemplateFrag } from "./TemplateFrag.ts"
 import { TemplateHtml } from "./TemplateHtml.ts"
 
@@ -28,7 +28,7 @@ test("it compiles w:frag elements", () => {
 
   // deno-lint-ignore no-explicit-any
   const actual = plugin.processTemplate(input, null as any)
-  assertEquals(clean(/^ {4}(?=\s*\S)/gm, actual.trim()), output.trim())
+  assertEquals(squeeze(actual), squeeze(output))
 })
 
 test("it compiles w:frag elements w/ slots", () => {
@@ -43,9 +43,13 @@ test("it compiles w:frag elements w/ slots", () => {
     >
       <p>test</p>
 
-      <w:slot name="slot">
-        <p>test slot</p>
+      <w:slot name="asel">
+        <p>test element slot</p>
       </w:slot>
+
+      <p w:slot="attr">
+        test attr slot
+      </p>
     </w:frag>
   `
 
@@ -53,13 +57,14 @@ test("it compiles w:frag elements w/ slots", () => {
     <%~
       frag("./test.f.html", {
         test: "one",
-slot: "\\n        <p>test slot</p>\\n      ",
-body: "\\n      <p>test</p>\\n\\n      \\n    "
+        asel: " <p > test element slot </p> ",
+        attr: " <p > test attr slot </p> ",
+        body: " <p > test </p> "
       })
     %>
   `
 
   // deno-lint-ignore no-explicit-any
   const actual = plugin.processTemplate(input, null as any)
-  assertEquals(clean(/^ {4}(?=\s*\S)/gm, actual.trim()), output.trim())
+  assertEquals(squeeze(actual), squeeze(output))
 })

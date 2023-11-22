@@ -7,6 +7,7 @@ import { TemplatePath } from "./TemplatePath.ts"
 import { TemplateHtmlCompiler, TemplateHtmlElementCompiler } from "./TemplateHtmlCompiler.ts"
 import { TemplateHtml } from "./TemplateHtml.ts"
 import { trim } from "../String.ts"
+import { HtmlElementNode } from "../Html/Html.ts";
 
 // -- types --
 // include helper fn
@@ -16,6 +17,12 @@ type TemplateIncludeFn
 // frag helper fn
 type TemplateFragFn
   = (child: string, parent: string, cfg: EtaConfig) => unknown
+
+// a compiled fragment slot
+interface TemplateFragSlot {
+  name: string,
+  body: string
+}
 
 // -- constants --
 const k = {
@@ -84,10 +91,28 @@ export class TemplateFrag {
     compile(el: HtmlElement, html: TemplateHtmlCompiler): string | null {
       const m = this
 
-      // validate el
-      if (el.name !== k.frag.name) {
-        return null
+      // compile fragments into helpers
+      if (el.name === k.frag.name) {
+        return m.#compileFrag(el, html)
       }
+
+      // compile the html element
+      return `
+        <${el.name}
+          ${
+            Object
+              .keys(el.attrs)
+              .map((name) => `${name}=${el.attrs[name]}`)
+              .join(" ")
+          }
+        >
+          ${el.children != null ? html.compile(el.children) : ""}
+        </${el.name}>
+      `
+    }
+
+    #compileFrag(el: HtmlElement, html: TemplateHtmlCompiler): string {
+      const m = this
 
       // validate path
       const { path, ...attrs } = el.attrs
@@ -97,16 +122,26 @@ export class TemplateFrag {
 
       // compile children
       if (el.children != null) {
-        // split children into body and slots
         const body: HtmlNode[] = []
-        for (const c of el.children) {
-          // if not a slot, add to body
-          if (c.kind !== NK.element || c.element.name !== k.frag.slot) {
-            body.push(c)
+        for (const node of el.children) {
+          // if the child is a slot, precompile it
+          let slot: TemplateFragSlot | null = null
+          if (node.kind === NK.element) {
+            const el = node.element
+            if (el.name === k.frag.slot) {
+              slot = m.#compileSlotFromEl(node, html)
+            } else if (el.attrs[k.frag.slot] != null) {
+              slot = m.#compileSlotFromAttr(node, html)
+            }
           }
-          // otherwise, compile the slot
+
+          // add any slots as attributes
+          if (slot != null) {
+            attrs[slot.name] = slot.body
+          }
+          // but otherwise assemble the body
           else {
-            attrs[c.element.attrs.name] = m.#compileSlot(c.element, html)
+            body.push(node)
           }
         }
 
@@ -127,10 +162,12 @@ export class TemplateFrag {
     }
 
     // compile a slot element
-    #compileSlot(el: HtmlElement, html: TemplateHtmlCompiler): string {
+    #compileSlotFromEl(node: HtmlElementNode, html: TemplateHtmlCompiler): TemplateFragSlot {
+      const el = node.element
+
       // validate el
       const name = el.attrs.name
-      if (name == null) {
+      if (name == null || name.length === 0) {
         throw new Error("w:slot must have a `name`")
       }
 
@@ -139,7 +176,29 @@ export class TemplateFrag {
       }
 
       // and compile it
-      return html.compile(el.children)
+      return {
+        name,
+        body: html.compile(el.children)
+      }
+    }
+
+    #compileSlotFromAttr(node: HtmlElementNode, html: TemplateHtmlCompiler): TemplateFragSlot {
+      const el = node.element
+
+      // validate el
+      const name = el.attrs[k.frag.slot]
+      if (name == null || name.length === 0) {
+        throw new Error("w:slot must have a `name`")
+      }
+
+      // remove the slot attribute
+      delete el.attrs[k.frag.slot]
+
+      // and compile it
+      return {
+        name,
+        body: html.compile([node])
+      }
     }
   }
 }

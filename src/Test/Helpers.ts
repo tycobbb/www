@@ -1,12 +1,21 @@
 // -- constants --
 const k = {
-  whitespace: /\s*/g
+  whitespace: /\s+/g,
+  escapes: /\\n/g,
 }
 
 // -- impls --
 // removes all whitespace
 export function scrub(text: string): string {
   return clean(k.whitespace, text)
+}
+
+// trim & replace any whitespace with a single space
+export function squeeze(text: string): string {
+  return text
+    .replaceAll(k.escapes, "")
+    .replaceAll(k.whitespace, " ")
+    .trim()
 }
 
 // trim & remove extra tabs

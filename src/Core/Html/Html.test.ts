@@ -18,7 +18,7 @@ test("it matches elements", () => {
 
     <a href="https://test.url">
       test link
-    />
+    </a>
 
     <w:frag
       path="./test"
@@ -42,13 +42,23 @@ test("it matches elements", () => {
       },
       children: null,
     }),
-    HtmlNode.text(clean(/^ {2}(?=\s*\S)/gm, `
+    HtmlNode.text(`
 
-      <a href="https://test.url">
-        test link
-      />
+    `),
+    HtmlNode.element({
+      name: "a",
+      attrs: {
+        href: "https://test.url",
+      },
+      children: [
+        HtmlNode.text(`
+      test link
+    `),
+      ],
+    }),
+    HtmlNode.text(`
 
-    `)),
+    `),
     HtmlNode.element({
       name: "w:frag",
       attrs: {

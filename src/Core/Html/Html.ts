@@ -1,7 +1,7 @@
+import { HtmlContext } from "./HtmlContext.ts"
 import { Parser, ParserStatus as PS, } from "../Parser/mod.ts"
 import {
   any,
-  cache,
   delimited,
   first,
   inner,
@@ -10,21 +10,20 @@ import {
   outer,
   pair,
   pattern,
-  pred,
   right,
   sparse,
   str,
   surround,
   then,
-  trio,
   unless,
   whitespace,
+  validate,
 } from "../Parser/mod.ts"
 
 // -- constants --
 const k = {
   // identifiers
-  identifier: {
+  id: {
     name: /^[a-zA-Z]([\w:-]*\w)?/,
   },
   // body element
@@ -35,11 +34,6 @@ const k = {
 }
 
 // -- types --
-// a parsing configuration
-export type HtmlConfig = Readonly<{
-  elements: ReadonlySet<string>
-}>
-
 // the possible parsed node types
 export enum HtmlNodeKind {
   element,
@@ -50,8 +44,14 @@ import NK = HtmlNodeKind
 
 // a parsed html node
 export type HtmlNode
-  = { kind: NK.element, element: HtmlElement }
-  | { kind: NK.text, text: string }
+  = HtmlElementNode
+  | HtmlTextNode
+
+export type HtmlElementNode =
+  { kind: NK.element, element: HtmlElement }
+
+export type HtmlTextNode =
+  { kind: NK.text, text: string }
 
 export const HtmlNode = {
   // create a text node
@@ -86,12 +86,13 @@ export class Html {
   // -- lifetime --
   // create a new html parser
   constructor(elements: string[]) {
-    // init config
-    const cfg = Object.freeze({
-      elements: Object.freeze(new Set(elements))
-    })
+    // init context
+    const elm = Object.freeze(new Set(elements))
+    const cfg = Object.freeze({ elements: elm })
+    const ctx = new HtmlContext(cfg)
 
-    this.#decode = nodes(cfg, null)
+    // bind decode fn
+    this.#decode = nodes(ctx, null)
   }
 
   // -- queries --
@@ -109,12 +110,12 @@ export class Html {
 // -- i/parsers
 // a parser for a sequence of nodes
 function nodes(
-  cfg: HtmlConfig,
+  ctx: HtmlContext,
   close: Parser<unknown> | null,
 ): Parser<HtmlNode[]> {
   return sparse(
     map(
-      element(cfg),
+      element(ctx),
       HtmlNode.element,
     ),
     unless(
@@ -127,47 +128,36 @@ function nodes(
 
 // a parser for an element
 function element(
-  cfg: HtmlConfig
+  ctx: HtmlContext
 ): Parser<HtmlElement> {
   return then(
     // open tag
-    open(cfg),
+    open(),
     // the rest, closed by the same name
-    (name) => body(cfg, name),
+    (name) => {
+      // push the name onto the stack
+      ctx.push(name)
+
+      // and try and parse the body
+      return body(ctx)
+    },
   )
 }
 
 // a parser for an element's opening tag
-function open(
-  cfg: HtmlConfig,
-): Parser<string> {
+function open(): Parser<string> {
   return right(
     pair(
       literal("<"),
       whitespace(),
     ),
-    pred(
-      identifier(),
-      (name) => cfg.elements.has(name)
-    ),
+    identifier(),
   )
 }
 
 // a parser for an element's body
 function body(
-  cfg: HtmlConfig,
-  name: string,
-): Parser<HtmlElement> {
-  return cache(
-    k.body.cache,
-    `html/body/${name}`,
-    () => $body(cfg, name),
-  )
-}
-
-function $body(
-  cfg: HtmlConfig,
-  name: string,
+  ctx: HtmlContext,
 ): Parser<HtmlElement> {
   return map(
     pair(
@@ -183,14 +173,24 @@ function $body(
         // or with children
         inner(
           literal(">"),
-          children(cfg, name),
-          close(name),
+          children(ctx),
+          validate(
+            close(),
+            (res) => {
+              const name = ctx.peek()
+              if (res.value !== name) {
+                throw new Error(`[html] tag <${name}> cannot be closed by </${res.value}>`)
+              }
+
+              return res
+            }
+          )
         ),
       ),
     ),
     // convert into element
     ([attrs, children]) => ({
-      name,
+      name: ctx.pop(),
       attrs,
       children
     })
@@ -234,12 +234,12 @@ function attrValue(): Parser<string> {
   return str()
 }
 
-// a parser for a named close tag
-function close(name: string): Parser<unknown> {
-  return trio(
+// a parser for a close tag
+function close(): Parser<string> {
+  return inner(
     literal("</"),
     surround(
-      literal(name),
+      identifier(),
       whitespace()
     ),
     literal(">"),
@@ -247,12 +247,12 @@ function close(name: string): Parser<unknown> {
 }
 
 // a parser for children closed by a named tag
-function children(cfg: HtmlConfig, name: string) {
-  return nodes(cfg, close(name))
+function children(ctx: HtmlContext) {
+  return nodes(ctx, close())
 }
 
 // -- i/p/shared
 // a parser for an identifier
 function identifier(): Parser<string> {
-  return pattern(k.identifier.name)
+  return pattern(k.id.name)
 }

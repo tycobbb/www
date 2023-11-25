@@ -91,28 +91,10 @@ export class TemplateFrag {
     compile(el: HtmlElement, html: TemplateHtmlCompiler): string | null {
       const m = this
 
-      // compile fragments into helpers
-      if (el.name === k.frag.name) {
-        return m.#compileFrag(el, html)
+      // ignore non-fragments
+      if (el.name !== k.frag.name) {
+        return null
       }
-
-      // compile the html element
-      return `
-        <${el.name}
-          ${
-            Object
-              .keys(el.attrs)
-              .map((name) => `${name}=${el.attrs[name]}`)
-              .join(" ")
-          }
-        >
-          ${el.children != null ? html.compile(el.children) : ""}
-        </${el.name}>
-      `
-    }
-
-    #compileFrag(el: HtmlElement, html: TemplateHtmlCompiler): string {
-      const m = this
 
       // validate path
       const { path, ...attrs } = el.attrs

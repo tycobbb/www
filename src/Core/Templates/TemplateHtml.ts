@@ -37,14 +37,29 @@ export class TemplateHtml implements TemplateHtmlCompiler {
 
   // compile an element
   #compileElement(el: HtmlElement): string {
-    for (const element of this.#elements) {
+    const m = this
+
+    // try the element-specific compilers
+    for (const element of m.#elements) {
       const compiled = element.compile(el, this)
       if (compiled != null) {
         return compiled
       }
     }
 
-    throw new Error(`[tmpls] found no compiler for ${el.name}`)
+    // if none apply, compile as a raw element
+    return `
+      <${el.name}
+        ${
+          Object
+            .keys(el.attrs)
+            .map((name) => `${name}=${el.attrs[name]}`)
+            .join(" ")
+        }
+      >
+        ${el.children != null ? m.compile(el.children) : ""}
+      </${el.name}>
+    `
   }
 
   // -- helpers --

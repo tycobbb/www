@@ -14,7 +14,7 @@ export class TemplateHtml implements TemplateHtmlCompiler {
 
   // -- lifetime --
   constructor(elements: TemplateHtmlElementCompiler[]) {
-    this.#html = new Html(elements.flatMap((el) => el.names))
+    this.#html = new Html()
     this.#elements = elements
   }
 
@@ -53,7 +53,7 @@ export class TemplateHtml implements TemplateHtmlCompiler {
         ${
           Object
             .keys(el.attrs)
-            .map((name) => `${name}=${el.attrs[name]}`)
+            .map((name) => `${name}="${el.attrs[name]}"`)
             .join(" ")
         }
       >

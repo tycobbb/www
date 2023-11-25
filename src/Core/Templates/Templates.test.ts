@@ -1,4 +1,4 @@
-import { assertEquals, assertLength, scrub, stubEvents, undent } from "../../Test/mod.ts"
+import { assertEquals, assertLength, scrub, stubEvents, squeeze, undent } from "../../Test/mod.ts"
 import { Templates } from "./Templates.ts"
 import { TemplateEvent } from "./TemplateEvent.ts"
 
@@ -132,4 +132,23 @@ test("it emits query events", async () => {
   await tmpl.render("posts")
   assertLength(evts.all, 1)
   assertEquals(evts.all[0], TemplateEvent.query("posts/*", "posts" ))
+})
+
+test("it compiles html", async () => {
+  reset()
+  tmpl.add("test", undent(`
+    <a-test
+      key-of="test"
+      styles="top: 5%; left: min(420px, 69%);"
+    />
+  `))
+
+  const res = await tmpl.render("test")
+  assertEquals(squeeze(res), squeeze(`
+    <a-test
+      key-of="test"
+      styles="top: 5%; left: min(420px, 69%);"
+    >
+    </a-test>
+  `))
 })

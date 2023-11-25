@@ -67,7 +67,7 @@ const HelperNode = {
 }
 
 // a helper call
-type Helper = {
+interface Helper {
   name: string,
   args: HelperArg[] | null
 }
@@ -86,6 +86,7 @@ type HelperArgPart
 export class TemplateParent {
   // -- props --
   // the helper config
+  // TODO: move this to the k constant pile
   #cfg: HelperConfig = Object.freeze({
     fns: Object.freeze(new Set(TemplateHelpers.all))
   })

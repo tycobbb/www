@@ -1,3 +1,4 @@
+import { makeElement } from "../../Test/Factories/HtmlFactories.ts";
 import { assertEquals, clean, undent } from "../../Test/mod.ts"
 import { Html, HtmlNode } from "./Html.ts"
 
@@ -5,10 +6,8 @@ import { Html, HtmlNode } from "./Html.ts"
 const { test } = Deno
 
 // -- tests --
-test("it matches elements", () => {
-  const html = new Html([
-    "w:frag"
-  ])
+test("it parses an element tree", () => {
+  const html = new Html()
 
   const input = `
     <w:frag
@@ -82,6 +81,42 @@ test("it matches elements", () => {
         `)),
       ],
     }),
+  ]
+
+  const actual = html.decode(input.trim())
+  assertEquals(actual, output)
+})
+
+test("it parses void elements", () => {
+  const html = new Html()
+
+  const input = undent(`
+    <br>
+    <embed>
+    <hr>
+    <img>
+    <input>
+    <link>
+    <meta>
+    <source>
+  `)
+
+  const output: HtmlNode[] = [
+    HtmlNode.element(makeElement({ name: "br" })),
+    HtmlNode.text("\n"),
+    HtmlNode.element(makeElement({ name: "embed" })),
+    HtmlNode.text("\n"),
+    HtmlNode.element(makeElement({ name: "hr" })),
+    HtmlNode.text("\n"),
+    HtmlNode.element(makeElement({ name: "img" })),
+    HtmlNode.text("\n"),
+    HtmlNode.element(makeElement({ name: "input" })),
+    HtmlNode.text("\n"),
+    HtmlNode.element(makeElement({ name: "link" })),
+    HtmlNode.text("\n"),
+    HtmlNode.element(makeElement({ name: "meta" })),
+    HtmlNode.text("\n"),
+    HtmlNode.element(makeElement({ name: "source" })),
   ]
 
   const actual = html.decode(input.trim())

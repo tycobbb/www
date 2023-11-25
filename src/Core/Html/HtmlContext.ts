@@ -8,16 +8,8 @@ export type HtmlConfig = Readonly<{
 // the html parser's context & state
 export class HtmlContext {
   // -- props --
-  // the html config
-  readonly cfg: HtmlConfig
-
   // the current stack of node names
   readonly #stack: string[] = []
-
-  // -- lifetime --
-  constructor(cfg: HtmlConfig) {
-    this.cfg = cfg
-  }
 
   // -- commands --
   // push a new name onto the top of the stack

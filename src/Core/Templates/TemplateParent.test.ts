@@ -1,4 +1,5 @@
 import { assertEquals, undent } from "../../Test/mod.ts"
+import { makeEtaConfig } from "../../Test/Factories/TmplFactories.ts"
 import { TemplateParent } from "./TemplateParent.ts"
 
 // -- setup --
@@ -10,12 +11,12 @@ test("it compiles helpers", () => {
   const input = `
     include(5 + "test" + 3,Object.assign(it,{body:tR},__lP),{a:"1",b:"2"})
   `
+
   const output = `
     include(5 + "test" + 3,"parent",Object.assign(it,{body:tR},__lP),{a:"1",b:"2"})
   `
 
-  // deno-lint-ignore no-explicit-any
-  const actual = plugin.processFnString(input.trim(), { path: "parent" } as any)
+  const actual = plugin.processFnString(input.trim(), makeEtaConfig({ path: "parent" }))
   assertEquals(actual, output.trim())
 })
 
@@ -24,12 +25,12 @@ test("it compiles nested helpers", () => {
   const input = `
     include("test1",include("test2"))
   `
+
   const output = `
     include("test1","parent",include("test2","parent"))
   `
 
-  // deno-lint-ignore no-explicit-any
-  const actual = plugin.processFnString(input.trim(), { path: "parent" } as any)
+  const actual = plugin.processFnString(input.trim(), makeEtaConfig({ path: "parent" }))
   assertEquals(actual, output.trim())
 })
 
@@ -38,11 +39,11 @@ test("it doesn't modify quoted strings", () => {
   const input = `
     'this is (plaintext)'
   `
+
   const output = `
     'this is (plaintext)'
   `
 
-  // deno-lint-ignore no-explicit-any
-  const actual = plugin.processFnString(undent(input), { path: "parent" } as any)
+  const actual = plugin.processFnString(undent(input), makeEtaConfig({ path: "parent" }))
   assertEquals(actual, undent(output))
 })

@@ -10,6 +10,7 @@ import {
   outer,
   pair,
   pattern,
+  pred,
   right,
   sparse,
   str,
@@ -26,11 +27,22 @@ const k = {
   id: {
     name: /^[a-zA-Z]([\w:-]*\w)?/,
   },
-  // body element
-  body: {
-    // cache for lazily-evaluated parsers keyed by path
-    cache: <{[key: string]: Parser<HtmlElement>}>{}
-  }
+  void: Object.freeze(new Set([
+    "area",
+    "base",
+    "br",
+    "col",
+    "embed",
+    "hr",
+    "img",
+    "input",
+    "link",
+    "meta",
+    "param",
+    "source",
+    "track",
+    "wbr",
+  ]))
 }
 
 // -- types --
@@ -85,11 +97,9 @@ export class Html {
 
   // -- lifetime --
   // create a new html parser
-  constructor(elements: string[]) {
+  constructor() {
     // init context
-    const elm = Object.freeze(new Set(elements))
-    const cfg = Object.freeze({ elements: elm })
-    const ctx = new HtmlContext(cfg)
+    const ctx = new HtmlContext()
 
     // bind decode fn
     this.#decode = nodes(ctx, null)
@@ -168,6 +178,11 @@ function body(
       ),
       // close tag...
       first(
+        // void
+        pred(
+          literal(">"),
+          () => k.void.has(ctx.peek()),
+        ),
         // self-closing
         literal("/>"),
         // or with children

@@ -184,7 +184,10 @@ function body(
           () => k.void.has(ctx.peek()),
         ),
         // self-closing
-        literal("/>"),
+        map(
+          literal("/>"),
+          () => []
+        ),
         // or with children
         inner(
           literal(">"),

@@ -39,7 +39,7 @@ test("it parses an element tree", () => {
         path: "./test",
         test: "one",
       },
-      children: null,
+      children: [],
     }),
     HtmlNode.text(`
 
@@ -75,7 +75,7 @@ test("it parses an element tree", () => {
             path: "./test",
             test: "three",
           },
-          children: null,
+          children: [],
         }),
         HtmlNode.text(clean(/ {4}$/gm, `
         `)),

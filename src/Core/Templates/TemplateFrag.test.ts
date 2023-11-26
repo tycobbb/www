@@ -57,9 +57,9 @@ test("it compiles w:frag elements w/ slots", () => {
     <%~
       frag("./test.f.html", {
         test: "one",
-        asel: " <p > test element slot </p> ",
-        attr: " <p > test attr slot </p> ",
-        body: " <p > test </p> "
+        asel: " <p >test element slot</p> ",
+        attr: "<p > test attr slot </p>",
+        body: " <p >test</p> "
       })
     %>
   `

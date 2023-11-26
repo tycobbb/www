@@ -1,6 +1,7 @@
 import { EtaConfig } from "https://deno.land/x/eta@v1.12.3/config.ts"
 import { Html, HtmlNode, HtmlElement, HtmlNodeKind as NK, HtmlElementAttrs } from "../Html/mod.ts"
 import { TemplateHtmlCompiler, TemplateHtmlElementCompiler } from "./TemplateHtmlCompiler.ts"
+import { trim } from "../String.ts";
 
 // -- impls --
 // an eta plugin that compiles build-time w:<html> elements into helper calls
@@ -48,7 +49,7 @@ export class TemplateHtml implements TemplateHtmlCompiler {
     }
 
     // if none apply, compile as a raw element
-    return `
+    const open = trim(`
       <${el.name}
         ${
           Object
@@ -57,13 +58,19 @@ export class TemplateHtml implements TemplateHtmlCompiler {
             .join(" ")
         }
       >
-        ${el.children != null ? m.compile(el.children) : ""}
-      </${el.name}>
-    `
+    `)
+
+    // this is a void tag
+    if (el.children == null) {
+      return open
+    }
+
+    // this is not a void tag
+    return `${open}${m.compile(el.children)}</${el.name}>`
   }
 
   // -- helpers --
-  /// compile element attributes into a js- object key-value pairs
+  /// compile element attributes into a js-object key-value pairs
   static compileAttrs(attrs: HtmlElementAttrs) {
     const result = Object
       .entries(attrs)

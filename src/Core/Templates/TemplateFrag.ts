@@ -103,7 +103,7 @@ export class TemplateFrag {
       }
 
       // compile children
-      if (el.children != null) {
+      if (el.children != null && el.children.length !== 0) {
         const body: HtmlNode[] = []
         for (const node of el.children) {
           // if the child is a slot, precompile it
@@ -153,7 +153,7 @@ export class TemplateFrag {
         throw new Error("w:slot must have a `name`")
       }
 
-      if (el.children == null) {
+      if (el.children == null || el.children.length === 0) {
         throw new Error("w:slot must have `children`")
       }
 

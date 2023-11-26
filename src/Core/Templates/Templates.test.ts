@@ -75,7 +75,6 @@ test("it includes a layout", async () => {
   tmpl.add("page/layout", `
     0<%= it.body %>2
   `)
-
   tmpl.add("page/test", `
     <% layout("./layout") %>
     1
@@ -137,6 +136,7 @@ test("it emits query events", async () => {
 test("it compiles html", async () => {
   reset()
   tmpl.add("test", undent(`
+    <br>
     <a-test
       key-of="test"
       styles="top: 5%; left: min(420px, 69%);"
@@ -145,10 +145,10 @@ test("it compiles html", async () => {
 
   const res = await tmpl.render("test")
   assertEquals(squeeze(res), squeeze(`
+    <br >
     <a-test
       key-of="test"
       styles="top: 5%; left: min(420px, 69%);"
-    >
-    </a-test>
+    ></a-test>
   `))
 })

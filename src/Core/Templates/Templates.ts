@@ -4,6 +4,7 @@ import { EventStream, EventBus, EventListener } from "../Events.ts"
 import { TemplateEvent } from "./TemplateEvent.ts"
 import { TemplateCache } from "./TemplateCache.ts"
 import { TemplateHtml } from "./TemplateHtml.ts"
+import { TemplateRoot } from "./TemplateRoot.ts"
 import { TemplateFrag } from "./TemplateFrag.ts"
 import { TemplateData } from "./TemplateData.ts"
 import { TemplateDataIndex } from "./TemplateDataIndex.ts"
@@ -136,6 +137,7 @@ export class Templates {
 
         // compile w:frag html elements
         new TemplateHtml([
+          new TemplateRoot.Compiler(),
           new TemplateFrag.Compiler(),
           new TemplateQuery.Compiler()
         ]),

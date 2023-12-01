@@ -1,19 +1,23 @@
 import { Parser, ParserStatus as PS, Aggregate } from "../Parser/mod.ts"
+import { segments, unemoji } from "../String.ts"
 import {
   any,
-  left,
+  first,
+  just,
   map,
-  pair,
   pattern,
-  right,
   repeatUntil,
+  right,
   sequence,
+  surround,
+  trio,
   whitespace,
 } from "../Parser/mod.ts"
 
 // -- constants --
 const k = {
-  date: /^(.*)\s*(\n|$)/,
+  date: /^(.*)\n?/,
+  like: /^(.*)\n?/,
   divider: /^\n?---\s*\n/,
 }
 
@@ -22,6 +26,7 @@ const k = {
 export interface TwPost {
   body: string,
   date: Date,
+  like: string[]
 }
 
 // -- impls --
@@ -53,7 +58,7 @@ export class Tw {
 // a parser for a sequence of posts
 function posts(): Parser<TwPost[]> {
   return sequence(
-    left(
+    surround(
       post(),
       whitespace()
     ),
@@ -63,13 +68,15 @@ function posts(): Parser<TwPost[]> {
 // a parser for a single post
 function post(): Parser<TwPost> {
   return map(
-    pair(
+    trio(
       body(),
-      date()
+      date(),
+      likes()
     ),
-    ([body, date]) => ({
+    ([body, date, like]) => ({
       body,
-      date
+      date,
+      like
     })
   )
 }
@@ -91,6 +98,17 @@ function date(): Parser<Date> {
   return map(
     pattern(k.date, 1),
     (match) => new Date(match)
+  )
+}
+
+// a parser for the post likes
+function likes(): Parser<string[]> {
+  return first(
+    map(
+      pattern(k.like, 1),
+      (match) => segments(match).map(unemoji)
+    ),
+    just(() => [])
   )
 }
 

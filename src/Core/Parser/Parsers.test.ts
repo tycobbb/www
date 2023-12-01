@@ -28,6 +28,11 @@ test("it matches a literal", () => {
   assertParser(match("lest string"), ParserResult.fault("lest string"))
 })
 
+test("it matches a pattern", () => {
+  const match = pattern(/(test1)./, 1)
+  assertParser(match("test1 test2"), ParserResult.value("test1", "test2"))
+})
+
 test("it maps a value", () => {
   const match = map(
     letter,

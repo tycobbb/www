@@ -30,9 +30,16 @@ export const Aggregate = {
 }
 
 // -- i/parsers
-// a parse that always errors
+// a parser that always errors
 export function never<A>(input: string): ParserResult<A> {
   return ParserResult.error(input, `never: fails`)
+}
+
+// a parser that always succeeds
+export function just<A>(value: () => A): Parser<A> {
+  return parser(just.name, (input) => {
+    return ParserResult.value(value(), input)
+  })
 }
 
 // a parser for a literal string
@@ -55,6 +62,36 @@ export function any(input: Slice): ParserResult<string> {
   } else {
     return ParserResult.value(input[0], input.slice(1))
   }
+}
+
+// a parser that matches a pattern
+export function pattern(
+  regex: RegExp,
+  group: number = 0
+): Parser<string> {
+  return parser(pattern.name, (input) => {
+    // try the pattern
+    const match = input.match(regex)
+
+    // if no match, fail
+    if (match == null) {
+      return ParserResult.error(input, `pattern: "${dump(input.slice(0, 10) + "...")}" did not match ${regex}`)
+    }
+
+    // if this matched after the first index, an exception
+    if (match.index !== 0) {
+      throw new Error(`[parser] pattern: ${regex} may only match at beginning of string, '^'`)
+    }
+
+    // otherwise, match the slice
+    const val = match[group]
+    const res = ParserResult.value(
+      val,
+      input.slice(match[0].length)
+    )
+
+    return res
+  })
 }
 
 // -- i/combinators
@@ -151,36 +188,6 @@ export function validate<A>(
     }
 
     return r1
-  })
-}
-
-// a parser that matches a pattern
-export function pattern(
-  regex: RegExp,
-  group: number = 0
-): Parser<string> {
-  return parser(pattern.name, (input) => {
-    // try the pattern
-    const match = input.match(regex)
-
-    // if no match, fail
-    if (match == null) {
-      return ParserResult.error(input, `pattern: "${dump(input.slice(0, 10) + "...")}" did not match ${regex}`)
-    }
-
-    // if this matched after the first index, an exception
-    if (match.index !== 0) {
-      throw new Error(`[parser] pattern: ${regex} may only match at beginning of string, '^'`)
-    }
-
-    // otherwise, match the slice
-    const val = match[group]
-    const res = ParserResult.value(
-      val,
-      input.slice(val.length)
-    )
-
-    return res
   })
 }
 

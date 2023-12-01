@@ -1,5 +1,6 @@
 import { assertEquals, undent } from "../../Test/mod.ts"
 import { Tw, TwPost } from "./Tw.ts"
+import { unemoji } from "../String.ts"
 
 // -- setup --
 const { test } = Deno
@@ -15,6 +16,7 @@ test("it matches posts", () => {
     & some <span>tags</span>
     ---
     2023-11-11T10:00:00-05:00
+    ❤️
 
     ---
     a second post
@@ -30,12 +32,14 @@ test("it matches posts", () => {
 
         & some <span>tags</span>
       `),
-      date: new Date(1699714800000)
+      date: new Date(1699714800000),
+      like: [unemoji("❤")]
     }, {
       body: undent(`
         a second post
       `),
-      date: new Date(1699808400000)
+      date: new Date(1699808400000),
+      like: []
     },
   ]
 

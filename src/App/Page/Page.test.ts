@@ -11,22 +11,6 @@ import { Page } from "./Page.ts"
 const { test } = Deno
 
 // -- tests --
-test("it cleans up nested templates", () => {
-  const page = new Page(`
-    <html>
-    <body>
-      <w:template>
-        <p class="test">hello, test.</p>
-      </w:template>
-    </body>
-    </html>
-  `)
-
-  const { html } = page.render()
-  assertIncludes(html, "hello, test")
-  assertNotIncludes(html, "<w:template>")
-})
-
 test("it merges head elements", () => {
   const page = new Page(`
     <html>

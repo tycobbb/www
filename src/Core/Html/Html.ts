@@ -194,10 +194,10 @@ function body(
           children(ctx),
           validate(
             close(),
-            (res) => {
+            (res, input) => {
               const name = ctx.peek()
               if (res.value !== name) {
-                throw new Error(`[html] tag <${name}> cannot be closed by </${res.value}>`)
+                throw new Error(`[html] tag <${name}> cannot be closed by </${res.value}>\n    at "${input.slice(0, 60).replaceAll(/\s+/g, " ")}..."`)
               }
 
               return res

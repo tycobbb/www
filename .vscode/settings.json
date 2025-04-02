@@ -1,0 +1,15 @@
+{
+  "editor.tabSize": 2,
+  "editor.codeLens": true,
+  "deno.enable": true,
+  "deno.testing.args": [
+    "--inspect-wait",
+    "--allow-all",
+    "--no-check"
+  ],
+  "deno.lint": true,
+  "deno.unstable": true,
+  "[typescript]": {
+    "editor.formatOnSave": true
+  },
+}

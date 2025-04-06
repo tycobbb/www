@@ -40,7 +40,7 @@ export class TemplateQuery {
   // a cache for storing and rendering stored templates
   #cache: TemplateCache
 
-  // an event bus for template events
+  // a bus for template events
   #evts: EventStream<TemplateEvent>
 
   // -- lifetime --
@@ -95,7 +95,7 @@ export class TemplateQuery {
 
   // -- compiler --
   // an eta plugin that compiles build-time query elements into helper calls
-  static Compiler = class TemplateQueryCompiler implements TemplateHtmlElementCompiler  {
+  static Compiler = class TemplateQueryCompiler implements TemplateHtmlElementCompiler {
     // -- TemplateHtmlElementCompiler --
     get names(): string[] {
       return [

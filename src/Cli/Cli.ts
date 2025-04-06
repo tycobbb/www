@@ -14,6 +14,7 @@ type SaveMsg = {
 // interface to cli i/o
 export class Cli {
   // -- deps --
+  // a bus for app events
   #evts: Events
 
   // -- props --

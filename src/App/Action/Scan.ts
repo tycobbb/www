@@ -19,8 +19,13 @@ export class Scan implements Action {
   static readonly get = transient(() => new Scan())
 
   // -- deps --
+  // the app config
   #cfg: Config
+
+  // a bus for app events
   #evts: Events
+
+  // the page graph
   #pages: Pages
 
   // -- lifetime --

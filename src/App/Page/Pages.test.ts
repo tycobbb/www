@@ -99,6 +99,21 @@ test("it deletes nodes w/ a compiled representation", async () => {
 test("it warns when a template throws an error during compilation", async () => {
   const pages = initPages()
 
+  const path = src.join("./e2.p.html")
+  await pages.change(FileRef.init(path))
+
+  await pages.render()
+  assertLength(evts.all, 1)
+
+  const evt = evts.all[0]
+  assert(evt.name === "show-warning")
+  assertIncludes(evt.msg, "the template 'e2.p.html' threw an error during compilation")
+  assertNotEquals(evt.cause, null)
+})
+
+test("it warns when a template throws an error during rendering", async () => {
+  const pages = initPages()
+
   const path = src.join("./e1.p.html")
   await pages.change(FileRef.init(path))
 
@@ -107,6 +122,6 @@ test("it warns when a template throws an error during compilation", async () => 
 
   const evt = evts.all[0]
   assert(evt.name === "show-warning")
-  assertIncludes(evt.msg, "the template 'e1.p.html' threw an error during compilation")
+  assertIncludes(evt.msg, "the template 'e1.p.html' threw an error during rendering")
   assertNotEquals(evt.cause, null)
 })

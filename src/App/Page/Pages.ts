@@ -13,7 +13,7 @@ export class Pages {
   static readonly get = single(() => new Pages())
 
   // -- deps --
-  // a stream of file events
+  // a bus for app events
   #evts: Events
 
   // the template renderer
@@ -79,7 +79,9 @@ export class Pages {
     }
     // otherwise, add it to the templates
     else {
-      m.#tmpl.add(node.id, await node.read())
+      // TODO: this will catch compilation errors; it's not clear what that might be for a data file
+      // add & compile its template
+      await m.#compile(node)
 
       // if it's data, also render it so that it's available on first compile
       // TODO: make data deferrable
@@ -87,6 +89,20 @@ export class Pages {
         await m.#renderData(node)
       }
     }
+  }
+
+  // compiles and caches the template for a node. if compilation fails, returns false
+  async #compile(node: PageNode): Promise<boolean> {
+    const m = this
+
+    try {
+      m.#tmpl.add(node.id, await node.read())
+    } catch (err) {
+      m.#warn(`the template '${node.path.rel}' threw an error during compilation`, err)
+      return false
+    }
+
+    return true
   }
 
   // remove the page or layout for this path, if one exists
@@ -136,16 +152,17 @@ export class Pages {
           continue
         }
 
-        // get id
-        const id = node.id
+        // add & compile its template
+        const isCompiled = await m.#compile(node)
 
-        // refresh its template
-        m.#tmpl.add(id, await node.read())
+        // if compiled, render the node
+        if (isCompiled) {
+          const isRendered = await m.#renderNode(node)
 
-        // render the node; if rendering short-circuited, don't clear
-        const isRendered = await m.#renderNode(node)
-        if (!isRendered) {
-          continue
+          // if rendering short-circuited, don't clear
+          if (!isRendered) {
+            continue
+          }
         }
 
         // clear its flag
@@ -211,7 +228,7 @@ export class Pages {
     try {
       text = await m.#tmpl.render(node.id)
     } catch (err) {
-      m.#warn(`the template '${node.path.rel}' threw an error during compilation`, err)
+      m.#warn(`the template '${node.path.rel}' threw an error during rendering`, err)
       return true
     }
 

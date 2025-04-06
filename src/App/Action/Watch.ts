@@ -23,8 +23,13 @@ export class Watch implements Action {
   static readonly get = transient(() => new Watch())
 
   // -- deps --
+  // the app config
   #cfg: Config
+
+  // a bus for app events
   #evts: Events
+
+  // the page graph
   #pages: Pages
 
   // -- props --

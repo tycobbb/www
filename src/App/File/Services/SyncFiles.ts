@@ -9,7 +9,10 @@ export class SyncFiles {
   static readonly get = transient(() => new SyncFiles())
 
   // -- deps --
+  // the app config
   #cfg: Config
+
+  // a bus for app events
   #evts: Events
 
   // -- lifetime --

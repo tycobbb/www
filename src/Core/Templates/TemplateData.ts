@@ -14,7 +14,7 @@ export class TemplateData {
   // the template data store
   #indx: TemplateDataIndex
 
-  // an event bus for template events
+  // a bus for template events
   #evts: EventStream<TemplateEvent>
 
   // -- props --

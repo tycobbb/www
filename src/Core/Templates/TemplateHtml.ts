@@ -1,7 +1,7 @@
 import { EtaConfig } from "https://deno.land/x/eta@v1.12.3/config.ts"
 import { Html, HtmlNode, HtmlElement, HtmlNodeKind as NK, HtmlElementAttrs } from "../Html/mod.ts"
-import { TemplateHtmlCompiler, TemplateHtmlElementCompiler } from "./TemplateHtmlCompiler.ts"
 import { trim } from "../String.ts";
+import { TemplateHtmlCompiler, TemplateHtmlElementCompiler } from "./TemplateHtmlCompiler.ts"
 
 // -- impls --
 // an eta plugin that compiles build-time w:<html> elements into helper calls

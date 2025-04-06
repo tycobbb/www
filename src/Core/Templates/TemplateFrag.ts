@@ -43,7 +43,7 @@ const k = {
 // -- impls --
 export class TemplateFrag {
   // -- props --
-  // an event bus for template events
+  // a bus for template events
   #evts: EventStream<TemplateEvent>
 
   // -- lifetime --
@@ -78,7 +78,7 @@ export class TemplateFrag {
 
   // -- compiler --
   // an eta plugin that compiles build-time frag elements into helper calls
-  static Compiler = class TemplateFragCompiler implements TemplateHtmlElementCompiler  {
+  static Compiler = class TemplateFragCompiler implements TemplateHtmlElementCompiler {
     // -- TemplateHtmlElementCompiler --
     get names(): string[] {
       return [

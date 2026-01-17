@@ -232,13 +232,21 @@ function attrs(): Parser<HtmlElementAttrs> {
 
 // a parser for an attr
 function attr(): Parser<[string, string]> {
-  return outer(
-    attrName(),
-    surround(
-      literal("="),
-      whitespace(),
+  return first(
+    // a key-value attribute, e.g. `href="http://test.com"`
+    outer(
+      attrName(),
+      surround(
+        literal("="),
+        whitespace(),
+      ),
+      attrValue()
     ),
-    attrValue()
+    // a named attribute with no value, e.g. `controls`
+    map(
+      attrName(),
+      (name) => [name, ""]
+    )
   )
 }
 

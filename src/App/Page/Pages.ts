@@ -67,13 +67,12 @@ export class Pages {
   async #create(file: FileRef): Promise<void> {
     const m = this
 
-    // add it to the databse
+    // add it to the database
     const node = new PageNode(file)
     m.#index.add(node)
 
     // do extra work based on kind
     const type = file.kind.type
-
     if (type === "page") {
       node.flag()
     }

@@ -16,8 +16,8 @@ import NK = HtmlNodeKind
 // -- impls --
 export class TemplateRoot {
   // -- compiler --
-  // a compile for <w:template> elements
-  static Compiler = class TemplateRotCompiler implements TemplateHtmlElementCompiler  {
+  // a compiler for <w:template> elements
+  static Compiler = class TemplateRootCompiler implements TemplateHtmlElementCompiler {
     // compile an element
     compile(el: HtmlElement, html: TemplateHtmlCompiler): string | null {
       // validate el

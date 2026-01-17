@@ -11,7 +11,8 @@ export class TemplateCache {
   // -- commands --
   // register the compiled template
   add(path: string, raw: string) {
-    E.templates.define(path, E.compile(raw, { path }))
+    const m = this
+    E.templates.define(path, m.#compile(path, raw))
   }
 
   // register the compiled child template
@@ -26,7 +27,11 @@ export class TemplateCache {
     }
 
     // and compile the child
-    children.set(key, E.compile(raw, { path }))
+    children.set(key, m.#compile(path, raw))
+  }
+
+  #compile(path: string, raw: string): TemplateFunction {
+    return E.compile(raw, { path })
   }
 
   // -- queries --

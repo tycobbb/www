@@ -1,5 +1,5 @@
-import { makeElement } from "../../Test/Factories/HtmlFactories.ts";
 import { assertEquals, clean, undent } from "../../Test/mod.ts"
+import { makeElement } from "../../Test/Factories/HtmlFactories.ts";
 import { Html, HtmlNode } from "./Html.ts"
 
 // -- setup --
@@ -13,6 +13,7 @@ test("it parses an element tree", () => {
     <w:frag
       path="./test"
       test="one"
+      well
     />
 
     <a href="https://test.url">
@@ -38,6 +39,7 @@ test("it parses an element tree", () => {
       attrs: {
         path: "./test",
         test: "one",
+        well: "",
       },
       children: [],
     }),
